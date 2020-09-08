@@ -1,0 +1,81 @@
+#pragma once
+
+#include <iostream>
+#include <random>
+#include <vector>
+#include <string>
+#include <map>
+#include <math.h>
+#include <tuple>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <Eigen/Dense>
+#include <ctime>
+#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
+#include <chrono>
+#include "utilities.h"
+
+using namespace std;
+using namespace std::chrono;
+
+/*-----------------------------------------------------------*/
+/*                 Random device initializer                 */
+/*-----------------------------------------------------------*/
+class RandomDevice {
+private:
+public:
+	unsigned long rand_seed;
+	default_random_engine engine;
+	/*-----------------------------------------------------------*/
+	/*                 Random device Constructor                 */
+	/*-----------------------------------------------------------*/
+	RandomDevice(unsigned long n);
+
+	/*-----------------------------------------------------------*/
+	/*              Uniform distribtuion generator               */
+	/*-----------------------------------------------------------*/
+	double randUniform(double min, double max);
+
+	/*-----------------------------------------------------------*/
+	/*               Uniform integer distribtuion                */
+	/*-----------------------------------------------------------*/
+	int randUniformInt(int low, int high);
+
+	/*-----------------------------------------------------------*/
+	/*               Normal distribtuion generator               */
+	/*-----------------------------------------------------------*/
+	double randNormal(double mean, double std);
+
+	/*-----------------------------------------------------------*/
+	/*      Random uniform distribution for a population         */
+	/*-----------------------------------------------------------*/
+	Eigen::ArrayXXf uniform_dist(double low, double high, int size_x, int size_y);
+
+	/*-----------------------------------------------------------*/
+	/*      Normal uniform distribution for a population         */
+	/*-----------------------------------------------------------*/
+	Eigen::ArrayXXf normal_dist(double low, double high, int size_x, int size_y);
+
+	/*-----------------------------------------------------------*/
+	/*      Randomly select population members (probability)     */
+	/*-----------------------------------------------------------*/
+	Eigen::ArrayXf Random_choice_prob(int pop_size, double percentage_pop);
+
+	/*-----------------------------------------------------------*/
+	/*       Randomly select population members (shuffle)        */
+	/*-----------------------------------------------------------*/
+	Eigen::VectorXi Random_choice(Eigen::ArrayXf input, int n_choices);
+
+	/*-----------------------------------------------------------*/
+	/*                Randomly generate a number                 */
+	/*-----------------------------------------------------------*/
+	double rand();
+
+	/*-----------------------------------------------------------*/
+	/*                  Random device Destructor                 */
+	/*-----------------------------------------------------------*/
+	~RandomDevice();
+};
+

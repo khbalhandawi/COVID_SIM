@@ -1,0 +1,8 @@
+*.aps
+*.bin
+*.png
+*.bmp
+x64/
+build/
+.vs/
+Debug/
