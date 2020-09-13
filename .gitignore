@@ -2,7 +2,14 @@
 *.bin
 *.png
 *.bmp
+*.iobj
+*.ipdb
+*.pdb
+*.dat
 x64/
-build/
+build/data
+build/population
+build/render
+build/cpp_corona_simulation.exe
 .vs/
 Debug/

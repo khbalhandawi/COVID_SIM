@@ -1,19 +1,22 @@
 #include "simulation.h"
 
-simulation::simulation(Configuration Config_init) : 
+simulation::simulation(Configuration Config_init, unsigned long seed) :
 	Population_trackers(Config_init, grid_coords, ground_covered),
 	RandomDevice(seed),
 	pop_tracker(Config_init, grid_coords, ground_covered), my_rand(seed)
 {
 
 	Config = Config_init;
-	// seed random generator
-	/* using nano-seconds instead of seconds */
-	unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
 	// initialize simulation
 	frame = 0;
 	// load visualizer
 	vis = visualizer();
+
+	// If user specified seed should be used
+	if (Config.constant_seed) {
+		my_rand.load_state();
+		cout << "random_check: " << my_rand.rand() << endl;
+	}
 
 	// Initialize base classes
 	population_init();
@@ -137,17 +140,6 @@ void simulation::tstep()
 		population(select_rows(cond), Eigen::all) = update_repulsive_forces(population(select_rows(cond), Eigen::all), 
 																			Config.social_distance_factor);
 
-		//cout << "SD Factor: " << Config.social_distance_factor << endl;
-		//cout << population(Eigen::all, { 1,2, 11, 17, 15,16 }) << endl; // NaN is present at 1093 and 1571
-
-	}
-
-	for (int idx : population.col(0)) {
-
-		if (population.row(idx).isNaN().any()) {
-			cout << population(idx, { 0,1,2,3,4,15,16 }) << endl;
-			//cout << population.row(idx);
-		}
 	}
 
 	//======================================================================================//
@@ -168,6 +160,10 @@ void simulation::tstep()
 	}
 
 	if (population.col(1).isNaN().any()) {
+		cout << "================================" << endl;
+		cout << "Saving random seed state" << endl;
+		my_rand.save_state();
+		cout << "random_check: " << my_rand.rand() << endl;
 		throw "Division by zero condition!";
 	}
 
@@ -230,7 +226,6 @@ void simulation::tstep()
 
 	//report stuff to console
 	if ((Config.verbose) && ((frame % Config.report_freq) == 0)) {
-		cout << endl;
 		cout << frame;
 		cout << ": healthy: " << pop_tracker.susceptible.back();
 		cout << ": infected: " << pop_tracker.infectious.back();
@@ -239,7 +234,7 @@ void simulation::tstep()
 		cout << ": fatalitites: " << pop_tracker.fatalities.back();
 		cout << ": of total: " << Config.pop_size;
 		if (Config.track_GC) {
-			cout << ": ground covered: " << pop_tracker.mean_perentage_covered.back();
+			cout << ": ground covered: " << pop_tracker.mean_perentage_covered.back()*100;
 		}
 		cout << endl;
 	}
@@ -275,7 +270,7 @@ void simulation::callback()
 		if (Config.patient_Z_loc == "random") {
 			population(0, 6) = 1;
 			population(0, 8) = 50;
-			population(0, 10) = 1;
+			population(0, 10) = 0; // do not place in treatment
 		}
 		else if (Config.patient_Z_loc == "central") {
 
@@ -293,7 +288,7 @@ void simulation::callback()
 
 			population(minRow, 6) = 1;
 			population(minRow, 8) = 50;
-			population(minRow, 10) = 1;
+			population(minRow, 10) = 0; // do not place in treatment
 		}
 
 	}
@@ -363,13 +358,16 @@ void simulation::run()
 		Eigen::ArrayXXf pop_infectious = population(select_rows_any(cond), Eigen::all); // infectious individuals
 
 
-		cout << "-----stopping-----" << endl;
+		cout << "\n\n" << "-----stopping-----" << endl;
 		cout << "total timesteps taken: " << to_string(frame) << endl;
-		cout << "total dead: " << to_string(pop_fatality.rows()) << endl;
+		cout << "total fatalities: " << to_string(pop_fatality.rows()) << endl;
 		cout << "total recovered: " << to_string(pop_recovered.rows()) << endl;
 		cout << "total infected: " << to_string(pop_infected.rows()) << endl;
 		cout << "total infectious: " << to_string(pop_infectious.rows()) << endl;
 		cout << "total unaffected: " << to_string(pop_susceptible.rows()) << endl;
+		if (Config.track_GC) {
+			cout << "Mean % explored: " << pop_tracker.mean_perentage_covered.back() << endl;
+		}
 	}
 
 }

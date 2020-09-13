@@ -12,269 +12,339 @@
 #include <chrono>
 #include <windows.h>
 #include <iomanip>
+#include <sstream>
+#include <iterator>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
-int main()
+/*-----------------------------------------------------------*/
+/*              Post process simulation results              */
+/*-----------------------------------------------------------*/
+vector<double> processInput(int i,simulation *sim, ofstream *file)
 {
-	std::cout << "Hello World!\n";
+	sim->run();
+	
+	int infected, fatalities, SD_thresh, E, T, f;
+	double mean_distance, mean_GC, SD;
 
-	// initialize
-	Configuration Config;
+	SD = sim->Config.social_distance_factor / 0.0001;
+	SD_thresh = sim->Config.social_distance_threshold_on;
+	E = sim->Config.social_distance_violation;
+	T = sim->Config.number_of_tests;
 
-	// set number of simulation steps
-	Config.simulation_steps = 3000;
-	Config.pop_size = 1000;
-	Config.n_gridpoints = 10;
-	Config.track_position = false;
-	Config.track_GC = true;
-	Config.update_every_n_frame = 1;
-	Config.endif_no_infections = false;
-	Config.SD_act_onset = true;
-	Config.patient_Z_loc = "central";
+	infected = *max_element(sim->pop_tracker.infectious.begin(), sim->pop_tracker.infectious.end());
+	fatalities = sim->pop_tracker.fatalities.back();
+	mean_distance = (sim->pop_tracker.distance_travelled.back() / double(sim->frame)) * 100.0 * 2000;
+	mean_GC = (sim->pop_tracker.mean_perentage_covered.back() / double(sim->frame)) * 100.0 * 2000;
 
-	double area_scaling = 1.0 / double(Config.pop_size) / 600.0;
-	double distance_scaling = 1.0 / sqrt(double(Config.pop_size) / 600.0);
-	double force_scaling = pow(distance_scaling,4);
-	double count_scaling = double(Config.pop_size) / 600.0;
+	f = sim->frame;
 
-	// set visuals
-	Config.plot_style = "default"; // can also be dark
-	Config.plot_text_style = "default"; // can also be LaTeX
-	Config.visualise = false;
-	Config.add_cross = true; // plot a cross
-	Config.visualise_every_n_frame = 1;
-	Config.n_plots = 1; // only scatter plot
-	Config.plot_last_tstep = true;
-	Config.verbose = true;
-	Config.report_freq = 50; // report results every 50 frames
-	Config.save_plot = false;
-	Config.save_data = false;
-	// Config.marker_size = (2700 - Config.pop_size) / 140;
-	Config.marker_size = 5;
+	int n_vars = 4;
+	vector<double> matrix_out, matrix_opt; // unstripped matrix
+	matrix_out.push_back(i);
+	matrix_out.push_back(SD);
+	matrix_out.push_back(SD_thresh);
+	matrix_out.push_back(E);
+	matrix_out.push_back(T);
+	matrix_out.push_back(infected); matrix_opt.push_back(infected);
+	matrix_out.push_back(fatalities); matrix_opt.push_back(fatalities);
+	matrix_out.push_back(mean_distance); matrix_opt.push_back(mean_distance);
+	matrix_out.push_back(mean_GC); matrix_opt.push_back(mean_GC);
+	matrix_out.push_back(f);
 
-	// set infection parameters
-	Config.infection_chance = 0.3;
-	Config.infection_range = 0.03 * distance_scaling;
-	Config.mortality_chance = 0.09; // global baseline chance of dying from the disease
-	Config.incubation_period = 5;
+	// Convert int to ostring stream
+	ostringstream oss;
+	oss.precision(11);
+	if (!matrix_out.empty())
+	{
+		// Convert all but the last element to avoid a trailing ","
+		copy(matrix_out.begin(), matrix_out.end() - 1,
+			ostream_iterator<double>(oss, ","));
 
-	// set movement parameters
-	Config.speed = 0.15 * distance_scaling;
-	Config.max_speed = 0.3 * distance_scaling;
-	Config.dt = 0.01;
+		// Now add the last element with no delimiter
+		oss << matrix_out.back();
+	}
 
-	Config.wander_step_size = 0.01 * distance_scaling;
-	Config.gravity_strength = 0;
-	Config.wander_step_duration = Config.dt * 10;
+	file->precision(11);
+	// Write ostring stream to file
+	if (file->is_open())
+	{
+		(*file) << oss.str() << '\n';
+	}
+	
+	return matrix_opt;
 
-	// run 0 (Business as usual)
-	//Config.social_distance_factor = 0.0001 * 0.0 * force_scaling;
-
-	// run 1 (social distancing)
-	//Config.social_distance_factor = 0.0001 * 0.3 * force_scaling;
-
-	// run 2 (social distancing with violators)
-	//Config.social_distance_factor = 0.0001 * 0.3 * force_scaling;
-	//Config.social_distance_violation = 20;
-
-	// run 3 (self-isolation scenario)
-	Config.healthcare_capacity = 150;
-	Config.wander_factor_dest = 0.1;
-	Config.set_self_isolation(100, 1.0, { -0.26, 0.02, 0.0, 0.28 }, false);
-
-	// run 4 (self - isolation scenario with social distancing)
-	Config.social_distance_factor = 0.0001 * 0.1 * force_scaling;
-	Config.social_distance_threshold_on = 15; // number of people
-	Config.testing_threshold_on = 15; // number of people
-
-	simulation sim(Config);
-	//sim.population_init();
-	//sim.initialize_simulation();
-	// run, hold CTRL + C in terminal to end scenario early
-	sim.run();
 }
 
-//int main()
-//{
-//	std::cout << "hello world!\n";
-//
-//	unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
-//
-//	RandomDevice my_rand(seed);
-//
-//	int n_choices = 5;
-//
-//	Eigen::ArrayXf input(7);
-//	input << 2,3,4,5,6,9,10 ;
-//
-//	vector<int> indices = sequence(0, input.rows(), 1);
-//	shuffle(indices.begin(), indices.end(), my_rand.engine);
-//
-//	cout << "======================" << endl;
-//	for (int i = 0; i < indices.size(); i++) {
-//		cout << indices[i] << endl;
-//	}
-//	cout << "-------------" << endl;
-//
-//	indices = slice(indices, 0, n_choices);
-//
-//	cout << "======================" << endl;
-//	for (int i = 0; i < indices.size(); i++) {
-//		cout << indices[i] << endl;
-//	}
-//	cout << "-------------" << endl;
-//
-//	Eigen::ArrayXf output_f = input(indices);
-//	Eigen::VectorXi output = output_f.col(0).cast<int>();
-//
-//	cout << output << endl;
-//
-//	Eigen::ArrayXf duplicate(10);
-//
-//	duplicate << 10, 10, 20, 20, 30, 30, 30, 10, 20, 40;
-//
-//	vector<float> duplicate_vec(duplicate.rows()); Map<ArrayXf>(&duplicate_vec[0], duplicate.rows(), 1) = duplicate;
-//
-//	unique_elements(duplicate_vec);
-//
-//	for (int i : duplicate_vec)
-//		std::cout << i << " ";
-//	std::cout << "\n";
-//
-//	Configuration Config;
-//	double mortality_chance = Config.mortality_chance;
-//
-//	compute_mortality(56, mortality_chance, Config.risk_age, Config.critical_age,
-//		Config.critical_mortality_chance, Config.risk_increase);
-//
-//	cout << "mortality: " << mortality_chance << endl;
-//
-//	Eigen::ArrayXf p1(2), p2(2);
-//	p1 << 0.74898833, 0.77640605;
-//	p2 << 0.748951077, 0.776557982;
-//
-//	Eigen::ArrayXXf test(2,2);
-//	int id;
-//
-//	test << p1, p2;
-//
-//	cout << test << endl;
-//
-//	cout << p1 - p2 << endl;
-//	cout << pairwise_dist(test, id) << endl;
-//
-//
-//}
+/*-----------------------------------------------------------*/
+/*                    Load configuration                     */
+/*-----------------------------------------------------------*/
+void load_config(Configuration *config, const char *config_file)
+{	
+	map<string,string Configuration::*> mapper;
+	mapper["simulation_steps"] = &Configuration::simulation_steps_in;
+	mapper["pop_size"] = &Configuration::pop_size_in;
+	mapper["n_gridpoints"] = &Configuration::n_gridpoints_in;
+	mapper["track_position"] = &Configuration::track_position_in;
+	mapper["track_GC"] = &Configuration::track_GC_in;
+	mapper["update_every_n_frame"] = &Configuration::update_every_n_frame_in;
+	mapper["endif_no_infections"] = &Configuration::endif_no_infections_in;
+	mapper["SD_act_onset"] = &Configuration::SD_act_onset_in;
+	mapper["patient_Z_loc"] = &Configuration::patient_Z_loc_in;
+	mapper["plot_style"] = &Configuration::plot_style_in;
+	mapper["plot_text_style"] = &Configuration::plot_text_style_in;
+	mapper["visualise"] = &Configuration::visualise_in;
+	mapper["add_cross"] = &Configuration::add_cross_in;
+	mapper["visualise_every_n_frame"] = &Configuration::visualise_every_n_frame_in;
+	mapper["n_plots"] = &Configuration::n_plots_in;
+	mapper["plot_last_tstep"] = &Configuration::plot_last_tstep_in;
+	mapper["verbose"] = &Configuration::verbose_in;
+	mapper["report_freq"] = &Configuration::report_freq_in;
+	mapper["save_plot"] = &Configuration::save_plot_in;
+	mapper["save_data"] = &Configuration::save_data_in;
+	mapper["marker_size"] = &Configuration::marker_size_in;
+	mapper["infection_chance"] = &Configuration::infection_chance_in;
+	mapper["infection_range"] = &Configuration::infection_range_in;
+	mapper["mortality_chance"] = &Configuration::mortality_chance_in;
+	mapper["incubation_period"] = &Configuration::incubation_period_in;
+	mapper["speed"] = &Configuration::speed_in;
+	mapper["max_speed"] = &Configuration::max_speed_in;
+	mapper["dt"] = &Configuration::dt_in;
+	mapper["wander_step_size"] = &Configuration::wander_step_size_in;
+	mapper["gravity_strength"] = &Configuration::gravity_strength_in;
+	mapper["mortality_chance"] = &Configuration::mortality_chance_in;
+	mapper["mortality_chance"] = &Configuration::mortality_chance_in;
+	mapper["wander_step_duration"] = &Configuration::wander_step_duration_in;
+	mapper["constant_seed"] = &Configuration::constant_seed_in;
+	mapper["thresh_type"] = &Configuration::thresh_type_in;
+	mapper["social_distance_threshold_off"] = &Configuration::social_distance_threshold_off_in;
+	mapper["social_distance_threshold_on"] = &Configuration::social_distance_threshold_on_in;
+	mapper["trace_path"] = &Configuration::trace_path_in;
 
-	//Configuration config;
-	//config.simulation_steps = 2000;
-	//config.pop_size = 1000;
-	//config.n_gridpoints = 33;
-	//config.xbounds = { 0.0,1.0 };
-	//config.ybounds = { 0.0,1.0 };
-	//config.social_distance_violation = 1000;
-	//config.track_GC = false;
-	//config.update_every_n_frame = 1;
-	//config.max_speed = 0.25;
-	//config.dt = 0.01;
-	//config.social_distance_factor = 0.3;
+	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
+	string line, value, value_str;
 
-	///*-----------------------------------------------------------*/
-	///*                  Debug individual methods                 */
-	///*-----------------------------------------------------------*/
-	//// seed random generator
-	///* using nano-seconds instead of seconds */
-	//unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
-	//RandomDevice my_rand(seed);
+	while (file.good()) {
+		getline(file, line, '\n');
+		istringstream is_line(line);
+		vector<string> key_value_pair;
 
-	//// debug color palette
-	//vector<string> x = config.get_palette();
+		while (getline(is_line, value, '=')) {
+			key_value_pair.push_back(value.c_str());
+		}
+		config->*(mapper[key_value_pair[0]])=key_value_pair[1];
+	}
+}
 
-	//// debug lockdown
-	//config.set_lockdown(&my_rand, 0.9, 0.5);
-	////config.set_lockdown();
+/*-----------------------------------------------------------*/
+/*                    Main execution call                    */
+/*-----------------------------------------------------------*/
+int main(int argc, char* argv[])
+{
+	
+	bool debug;
+	double SD;
+	int run, n_violators, test_capacity, healthcare_capacity;
 
-	//// debug population initialization
-	//Eigen::ArrayXXf population = initialize_population(config, &my_rand);
+	// Check if this is an external system call
+    if (argc > 2) {
+		debug = false;
+	} 
+	else {
+		debug = true;
+	}
 
-	//// debug ground covered initialization
-	//Eigen::ArrayXXf grid_coords, ground_covered;
-	//tie(grid_coords, ground_covered) = initialize_ground_covered_matrix(config.pop_size, config.n_gridpoints, config.xbounds, config.ybounds);
+	if (debug) {
+		// initialize
+		Configuration Config;
 
-	//Population_trackers pop_tracker(config, grid_coords, ground_covered);
-	//pop_tracker.update_counts(population, 0);
+		// set number of simulation steps
+		Config.simulation_steps = 3000;
+		Config.pop_size = 1000;
+		Config.n_gridpoints = 10;
+		Config.track_position = false;
+		Config.track_GC = true;
+		Config.update_every_n_frame = 1;
+		Config.endif_no_infections = false;
+		Config.SD_act_onset = true;
+		Config.patient_Z_loc = "central";
 
-	//save_data(population, pop_tracker);
-	//save_population(population, 1, "population");
+		double area_scaling = 1.0 / double(Config.pop_size) / 600.0;
+		double distance_scaling = 1.0 / sqrt(double(Config.pop_size) / 600.0);
+		double force_scaling = pow(distance_scaling,2);
+		double count_scaling = double(Config.pop_size) / 600.0;
 
-	//// test RNG
-	////for (int i = 0; i < 100; i++) { 
-	////	cout << my_rand.rand() << endl;
-	////}
+		// set visuals
+		Config.plot_style = "default"; // can also be dark
+		Config.plot_text_style = "default"; // can also be LaTeX
+		Config.visualise = false;
+		Config.add_cross = true; // plot a cross
+		Config.visualise_every_n_frame = 1;
+		Config.n_plots = 1; // only scatter plot
+		Config.plot_last_tstep = true;
+		Config.verbose = true;
+		Config.report_freq = 50; // report results every 50 frames
+		Config.save_plot = false;
+		Config.save_data = false;
+		// Config.marker_size = (2700 - Config.pop_size) / 140;
+		Config.marker_size = 5;
 
-	//Eigen::ArrayXXf _xbounds(config.pop_size, 2), _ybounds(config.pop_size, 2);
-	//double buffer = 0.0;
+		// set infection parameters
+		Config.infection_chance = 0.3;
+		Config.infection_range = 0.03 * distance_scaling;
+		Config.mortality_chance = 0.09; // global baseline chance of dying from the disease
+		Config.incubation_period = 5;
 
-	//_xbounds << Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.xbounds[0] + buffer),
-	//			Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.xbounds[1] - buffer);
-	//
-	//_ybounds << Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.ybounds[0] + buffer),
-	//			Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.ybounds[1] - buffer);
-	//
-	//population = update_wall_forces(population, _xbounds, _ybounds);
-	//population = update_velocities(population, config.max_speed, config.dt);
-	//population = update_repulsive_forces(population, config.social_distance_factor);
+		// set movement parameters
+		Config.speed = 0.15 * distance_scaling;
+		Config.max_speed = 0.3 * distance_scaling;
+		Config.dt = 0.01;
 
-	//double time = 1.0, last_step_change = 0.1;
-	//tie(population, last_step_change) = update_gravity_forces(population, time, last_step_change, &my_rand);
+		Config.wander_step_size = 0.01 * distance_scaling;
+		Config.gravity_strength = 0;
+		Config.wander_step_duration = Config.dt * 10;
 
-	//vector<double> outputs = get_motion_parameters(config.xbounds[0], config.ybounds[0], config.xbounds[1], config.ybounds[1]);
+		// run 0 (Business as usual)
+		//Config.social_distance_factor = 0.0001 * 0.0 * force_scaling;
 
-	///*-----------------------------------------------------------*/
-	///*                 Minimum working simulation                */
-	///*-----------------------------------------------------------*/
-	//// seed random generator
-	///* using nano-seconds instead of seconds */
-	//unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
-	//RandomDevice my_rand(seed);
+		// run 1 (social distancing)
+		//Config.social_distance_factor = 0.0001 * 0.3 * force_scaling;
 
-	//Eigen::ArrayXXf population = initialize_population(config, &my_rand);
-	//population(Eigen::all, { 1,2 }) << 0.0849588, 0.213444,
-	//0.437875, 0.59214,
-	//0.73224, 0.45096,
-	//0.674879, 0.786657,
-	//0.903503, 0.497677,
-	//0.470838, 0.872818,
-	//0.205956, 0.306843,
-	//0.219279, 0.726152,
-	//0.230023, 0.39993,
-	//0.601939, 0.134491;
+		// run 2 (social distancing with violators)
+		//Config.social_distance_factor = 0.0001 * 0.3 * force_scaling;
+		//Config.social_distance_violation = 20;
 
-	//cout << population(Eigen::all, { 1,2 }) << endl;
+		// run 3 (self-isolation scenario)
+		Config.healthcare_capacity = 150;
+		Config.wander_factor_dest = 0.1;
+		Config.set_self_isolation(100, 1.0, { -0.26, 0.02, 0.0, 0.28 }, false);
 
-	//Eigen::ArrayXXf grid_coords, ground_covered;
-	//tie(grid_coords, ground_covered) = initialize_ground_covered_matrix(config.pop_size, config.n_gridpoints, config.xbounds, config.ybounds);
-	//Population_trackers pop_tracker(config, grid_coords, ground_covered);
+		// run 4 (self - isolation scenario with social distancing)
+		Config.social_distance_factor = 0.0001 * 0.1 * force_scaling;
+		Config.social_distance_threshold_on = 15; // number of people
+		Config.testing_threshold_on = 15; // number of people
 
-	//Eigen::ArrayXXf _xbounds(config.pop_size, 2), _ybounds(config.pop_size, 2);
-	//double buffer = 0.0;
+		// seed random generator
+		/* using nano-seconds instead of seconds */
+		unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
 
-	//_xbounds << Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.xbounds[0] + buffer),
-	//Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.xbounds[1] - buffer);
+		simulation sim(Config, seed);
+		//sim.population_init();
+		//sim.initialize_simulation();
+		// run, hold CTRL + C in terminal to end scenario early
+		sim.run();
+	} 
+	else if (!debug) {
 
-	//_ybounds << Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.ybounds[0] + buffer),
-	//Eigen::ArrayXf::Ones(config.pop_size, 1) * (config.ybounds[1] - buffer);
+		/*-----------------------------------------------------------*/
+		/*                Read command line arguments                */
+		/*-----------------------------------------------------------*/
 
-	//for (int i = 0; i < config.simulation_steps; i++)
-	//{
-	//	population = update_wall_forces(population, _xbounds, _ybounds);
-	//	population = update_repulsive_forces(population, config.social_distance_factor);
+		run = stoi(argv[1]);
 
-	//	population = update_velocities(population, config.max_speed, config.dt);
-	//	population = update_positions(population, config.dt);
+		// Model variables
+		n_violators = stoi(argv[2]);
+		SD = atof(argv[3]);
+		test_capacity = stoi(argv[4]);
 
-	//	pop_tracker.update_counts(population, i);
+		// Model parameters
+		healthcare_capacity = stoi(argv[5]);
 
-	//	if ((i % 50) == 0) { cout << i << endl; }
-	//}
+		// Log file name
+		string log_file;
+		if (argc == 7) {
+			string filename = argv[6];
+			log_file = "data/" + filename;
+		} 
+		else { // if no file name argument provided use defaults
+			log_file = "data/opt_run.log";
+		}
+
+		// Display input arguments
+		cout << "\n" << "================= starting =================" << endl;
+		cout << "E: " << n_violators << " | SD: " << SD << " | T: " << test_capacity << " | H_c: " << healthcare_capacity << " | output: " << log_file <<"\n";
+
+		/*-----------------------------------------------------------*/
+		/*            Simulation configuration variables             */
+		/*-----------------------------------------------------------*/
+		// initialize
+		Configuration Config;
+
+		const char config_file[] = "Configuration.ini";
+
+		load_config(&Config, config_file);
+		Config.set_from_file();
+
+		double area_scaling = 1.0 / double(Config.pop_size) / 600.0;
+		double distance_scaling = 1.0 / sqrt(double(Config.pop_size) / 600.0);
+		double force_scaling = pow(distance_scaling,2);
+		double count_scaling = double(Config.pop_size) / 600.0;
+
+		/*-----------------------------------------------------------*/
+		/*                      Design variables                     */
+		/*-----------------------------------------------------------*/
+
+        Config.social_distance_factor = 1e-6 * SD * force_scaling;
+        Config.social_distance_violation = n_violators; // number of people
+        Config.healthcare_capacity = healthcare_capacity;
+
+		if (test_capacity > 0) {
+			Config.testing_threshold_on = 15; // number of people 
+			Config.wander_factor_dest = 0.1;
+			Config.set_self_isolation(test_capacity, 1.0, { -0.26, 0.02, 0.0, 0.28 }, false);
+		}
+
+		/*-----------------------------------------------------------*/
+		/*                    Log blackbox outputs                   */
+		/*-----------------------------------------------------------*/
+
+		// seed random generator
+		/* using nano-seconds instead of seconds */
+		unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
+
+		simulation sim(Config, seed);
+
+		check_folder("data");
+		string filename = "matlab_out_Blackbox.log";
+		string full_filename = "data/" + filename;
+
+		// Output evaluation to file
+
+		vector<double> matrix_opt;
+		ofstream output_file;
+
+		if (run == 0) {
+			output_file.open(log_file, ofstream::out);
+
+			output_file.precision(11);
+			output_file << "index,SD_factor,threshold,essential_workers,testing_capacity," << 
+						   "n_infected,n_fatalaties,mean_distance,mean_GC,n_steps" << endl;
+		}
+		else {
+			output_file.open(log_file, ofstream::app);
+			output_file.precision(11);
+		}
+
+		matrix_opt = processInput(run, &sim, &output_file);
+		output_file.close();
+
+		double infected = matrix_opt[0]; 
+		double fatalities = matrix_opt[1];
+		double mean_distance = matrix_opt[2];
+		double mean_GC = matrix_opt[3];
+        
+		double obj_1 = -mean_GC;
+		double obj_2 = fatalities;
+		double c1 = infected - healthcare_capacity;
+
+		ofstream output_file_opt(full_filename);
+		output_file_opt.precision(10); // number of decimal places to output
+		output_file_opt << obj_1 << " " << obj_2 << " " << c1 << endl;
+		output_file_opt.close();
+		cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+
+	}
+
+}

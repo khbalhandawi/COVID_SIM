@@ -134,11 +134,13 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 	// Avoid walls
 	Eigen::ArrayXXf wall_force = Eigen::ArrayXXf::Zero(pop_size, 2);
 
-	Eigen::ArrayXf to_lower_x = population.col(1) - xbounds.col(0);
-	Eigen::ArrayXf to_lower_y = population.col(2) - ybounds.col(0);
+	float epsilon = 1e-5;
 
-	Eigen::ArrayXf to_upper_x = xbounds.col(1) - population.col(1);
-	Eigen::ArrayXf to_upper_y = ybounds.col(1) - population.col(2);
+	Eigen::ArrayXf to_lower_x = population.col(1) - xbounds.col(0) + epsilon;
+	Eigen::ArrayXf to_lower_y = population.col(2) - ybounds.col(0) + epsilon;
+
+	Eigen::ArrayXf to_upper_x = xbounds.col(1) - population.col(1) + epsilon;
+	Eigen::ArrayXf to_upper_y = ybounds.col(1) - population.col(2) + epsilon;
 
 	// Bounce individuals within the world
 	ArrayXXb bounce_lo_x(to_lower_x.rows(), 2), bounce_lo_y(to_lower_x.rows(), 2);
@@ -233,112 +235,21 @@ Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double socia
 
 	int pop_size = population.rows();
 
-	float epsilon = 1e-4; // to avoid division by zero errors
+	float epsilon = 1e-5; // to avoid division by zero errors
 	Eigen::ArrayXXf dist = pairwise_dist(population(Eigen::all, { 1,2 })) + epsilon;
-
-	Eigen::ArrayXXf dist_sqrt = dist.sqrt();
 	dist += Eigen::MatrixXf::Identity(pop_size, pop_size).array();
-	dist_sqrt += Eigen::MatrixXf::Identity(pop_size, pop_size).array();
-
-	//cout.precision(20);
-
-	//cout << dist(1092, 1570) << endl;
-	//cout << dist(1570, 1092) << endl;
-	//cout << population(1092, { 1,2 }) << endl;
-	//cout << population(1570, { 1,2 }) << endl;
-
-	//cout << pairwise_dist(population({ 1092,1570 }, { 1,2 }), id) << endl;
 
 	Eigen::ArrayXXf to_point_x = pairwise_diff(population.col(1));
 	Eigen::ArrayXXf to_point_y = pairwise_diff(population.col(2));
 
-	//cout << "to point x" << endl;
-	//for (int idx : population.col(0)) {
-
-	//	if (to_point_x.row(idx).isNaN().any()) {
-
-	//		int id_col = 0;
-	//		for (float col : to_point_x.row(idx)) {
-
-	//			if (isnan(col)) {
-
-	//				cout << "row: " << idx << " col: " << id_col << endl;
-	//				cout << population(idx, { 1,2 }) << endl;
-	//				//cout << population.row(idx);
-	//			}
-
-	//			id_col++;
-	//		}
-
-	//	}
-	//}
-
-	//cout << "dist_sqrt" << endl;
-	//for (int idx : population.col(0)) {
-
-	//	if (dist_sqrt.row(idx).isNaN().any()) {
-
-	//		int id_col = 0;
-	//		for (float col : dist_sqrt.row(idx)) {
-
-	//			if (isnan(col)) {
-
-	//				cout << "row: " << idx << " col: " << id_col << endl;
-	//				//cout << population.row(idx);
-	//			}
-
-	//			id_col++;
-	//		}
-
-	//	}
-	//}
-
-	//cout << "dist" << endl;
-	//for (int idx : population.col(0)) {
-
-	//	if (dist.row(idx).isNaN().any()) {
-
-	//		int id_col = 0;
-	//		for (float col : dist.row(idx)) {
-
-	//			if (isnan(col)) {
-
-	//				cout << "row: " << idx << " col: " << id_col << endl;
-	//				//cout << population.row(idx);
-	//			}
-
-	//			id_col++;
-	//		}
-
-	//	}
-	//}
-
 	//Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / dist.pow(2.5)).rowwise().sum();
 	//Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / dist.pow(2.5)).rowwise().sum();
 
-	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / (dist * dist * dist_sqrt)).rowwise().sum();
-	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / (dist * dist * dist_sqrt)).rowwise().sum();
+	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / (dist * dist * dist)).rowwise().sum();
+	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / (dist * dist * dist)).rowwise().sum();
 
-	//id = 0;
-	//for (float force : repulsion_force_x) {
-
-	//	if ((isinf(force)) || (isnan(force))) {
-	//		repulsion_force_x(id) = 0.0;
-	//		repulsion_force_y(id) = 0.0;
-	//		cout << "row: " << id << endl;
-	//		//cout << "to_point" << endl;
-	//		//cout << to_point_x.row(id) << endl;
-	//		//cout << to_point_y.row(id) << endl;
-	//		//cout << "dist" << endl;
-	//		//cout << dist.row(id) << endl;
-	//		//cout << "dist_sqrt" << endl;
-	//		//cout << dist_sqrt.row(id) << endl;
-	//		//cout << "population" << endl;
-	//		//cout << population.col(1).transpose() << endl;
-	//		//cout << population.col(2).transpose() << endl;
-	//	}
-	//	id++;
-	//}
+	// (repulsion_force_x).isNaN().select(0,repulsion_force_x);
+	// (repulsion_force_y).isNaN().select(0,repulsion_force_y);
 
 	population.col(15) += repulsion_force_x;
 	population.col(16) += repulsion_force_y;

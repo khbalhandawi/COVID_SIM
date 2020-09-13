@@ -194,10 +194,10 @@ void check_folder(string folder)
 	DWORD const ftyp = GetFileAttributesA(folder.c_str());
 
 	if ((ftyp != INVALID_FILE_ATTRIBUTES) && (ftyp & FILE_ATTRIBUTE_DIRECTORY)) {
-		printf("%s is a directory\n", folder); // this is a directory!
+		// printf("%s is a directory\n", folder); // this is a directory!
 	}
 	else {
-		printf("%s is not a directory, creating ...\n", folder); // this is not a directory!
+		// printf("%s is not a directory, creating ...\n", folder); // this is not a directory!
 		_mkdir(dir.c_str());
 	}
 }
@@ -207,34 +207,7 @@ void check_folder(string folder)
 /*-----------------------------------------------------------*/
 Eigen::ArrayXXf pairwise_dist(Eigen::ArrayXXf a)
 {
-	//Eigen::ArrayXXf D(a.rows(), a.rows());
-
-	//for (int i = 0; i < a.rows(); i++)
-	//{
-	//	D.col(i) = (a.rowwise() - a.row(i)).matrix().rowwise().norm();
-	//}
-
-	//cout << D << endl;
-	//cout << "===============" << endl;
-
 	Eigen::ArrayXf D2 = a.rowwise().squaredNorm(); // hurts precision
-	//Eigen::ArrayXf D2 = a.rowwise().norm().pow(2); // better precision
-
-	//cout << "D2: " << endl;
-	//for (int idx = 0; idx <= D2.rows(); idx++) {
-
-	//	if (isnan(D2[idx])) {
-	//		cout << D2[idx] << endl;
-	//		//cout << a.row(idx - 1) << endl;
-	//		//cout << a.row(idx) << endl;
-	//		//cout << a.row(idx + 1) << endl;
-
-	//		id_out = idx;
-	//		//cout << population.row(idx);
-	//	}
-	//}
-	//cout << "=====================" << endl;
-
 	Eigen::ArrayXXf dist = D2.rowwise().replicate(a.rows()) + D2.transpose().colwise().replicate(a.rows());
 	Eigen::ArrayXXf twoAB = 2.*a.matrix()*a.matrix().transpose();
 	dist -= twoAB; // needs a square root
@@ -247,14 +220,7 @@ Eigen::ArrayXXf pairwise_dist(Eigen::ArrayXXf a)
 /*-----------------------------------------------------------*/
 Eigen::ArrayXXf pairwise_diff(Eigen::ArrayXf a)
 {
-	//Eigen::ArrayXXf D(a.rows(), a.rows());
-	//for (int i = 0; i < a.rows(); i++)
-	//{
-	//	D.col(i) = (a.rowwise() - a.row(i));
-	//}
-
 	Eigen::ArrayXXf dist = a.transpose().colwise().replicate(a.rows()) - a.rowwise().replicate(a.rows());
-
 	return dist;
 }
 
@@ -318,4 +284,3 @@ void unique_elements(vector<float> &v)
 	// v now holds {1 2 3 4 5 x x}, where 'x' is indeterminate
 	v.erase(last, v.end());
 }
-

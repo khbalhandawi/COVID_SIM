@@ -91,40 +91,41 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumilative distance
 	}
 	else {
-		distance_travelled.push_back(0.0); // mean cumilative distance
+		distance_travelled.push_back(0.0); // mean cumulative distance
 	}
 
 	// Compute and track ground covered
-	if ((Config.track_GC) & (frame % Config.update_every_n_frame == 0)) {
+	if (Config.track_GC) {
+		if (frame % Config.update_every_n_frame == 0) {
 
-		// Track ground covered
-		int n_inside_world = int((population.col(11) == 0).count());
-		Eigen::ArrayXXf position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
-		Eigen::ArrayXXf GC_matrix =  ground_covered(select_rows(population.col(11) == 0), all);
+			// Track ground covered
+			int n_inside_world = int((population.col(11) == 0).count());
+			Eigen::ArrayXXf position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
+			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
 
-		// 1D
-		Eigen::ArrayXf pos_vector_x = position_vector.col(0);
-		Eigen::ArrayXf pos_vector_y = position_vector.col(1);
+			// 1D
+			Eigen::ArrayXf pos_vector_x = position_vector.col(0);
+			Eigen::ArrayXf pos_vector_y = position_vector.col(1);
 
-		Eigen::ArrayXXf g1 = grid_coords.col(0).replicate(1, n_inside_world);
-		Eigen::ArrayXXf g2 = grid_coords.col(1).replicate(1, n_inside_world);
-		Eigen::ArrayXXf g3 = grid_coords.col(2).replicate(1, n_inside_world);
-		Eigen::ArrayXXf g4 = grid_coords.col(3).replicate(1, n_inside_world);
+			Eigen::ArrayXXf g1 = grid_coords.col(0).replicate(1, n_inside_world);
+			Eigen::ArrayXXf g2 = grid_coords.col(1).replicate(1, n_inside_world);
+			Eigen::ArrayXXf g3 = grid_coords.col(2).replicate(1, n_inside_world);
+			Eigen::ArrayXXf g4 = grid_coords.col(3).replicate(1, n_inside_world);
 
-		Eigen::ArrayXXf l_x = -1 * (g1.rowwise() - pos_vector_x.transpose()).transpose();
-		Eigen::ArrayXXf l_y = -1 * (g2.rowwise() - pos_vector_y.transpose()).transpose();
-		Eigen::ArrayXXf u_x = (g3.rowwise() - pos_vector_x.transpose()).transpose();
-		Eigen::ArrayXXf u_y = (g4.rowwise() - pos_vector_y.transpose()).transpose();
+			Eigen::ArrayXXf l_x = -1 * (g1.rowwise() - pos_vector_x.transpose()).transpose();
+			Eigen::ArrayXXf l_y = -1 * (g2.rowwise() - pos_vector_y.transpose()).transpose();
+			Eigen::ArrayXXf u_x = (g3.rowwise() - pos_vector_x.transpose()).transpose();
+			Eigen::ArrayXXf u_y = (g4.rowwise() - pos_vector_y.transpose()).transpose();
 
-		ArrayXXb conds = (l_x > 0) && (u_x > 0) && (l_y > 0) && (u_y > 0);
+			ArrayXXb conds = (l_x > 0) && (u_x > 0) && (l_y > 0) && (u_y > 0);
 
-		GC_matrix += conds.cast<float>();
-		ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
+			GC_matrix += conds.cast<float>();
+			ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
 
-		// count number of non-zeros rowwise
-		perentage_covered = (ground_covered != 0).rowwise().count().cast<float>() / grid_coords.rows();
-		mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
-
+			// count number of non-zeros rowwise
+			perentage_covered = (ground_covered != 0).rowwise().count().cast<float>() / grid_coords.rows();
+			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
+		}
 	}
 	else {
 		mean_perentage_covered.push_back(0.0); // mean ground covered

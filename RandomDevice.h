@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <chrono>
 #include "utilities.h"
+#include <fstream>
 
 using namespace std;
 using namespace std::chrono;
@@ -28,6 +29,9 @@ private:
 public:
 	unsigned long rand_seed;
 	default_random_engine engine;
+	uniform_real_distribution<float> distribution_ur;
+	uniform_int_distribution<int> distribution_ui;
+	normal_distribution<float> distribution_norm;
 	/*-----------------------------------------------------------*/
 	/*                 Random device Constructor                 */
 	/*-----------------------------------------------------------*/
@@ -72,6 +76,16 @@ public:
 	/*                Randomly generate a number                 */
 	/*-----------------------------------------------------------*/
 	double rand();
+
+	/*-----------------------------------------------------------*/
+	/*               Save random generator state                 */
+	/*-----------------------------------------------------------*/
+	void save_state();
+
+	/*-----------------------------------------------------------*/
+	/*               Load random generator state                 */
+	/*-----------------------------------------------------------*/
+	void load_state();
 
 	/*-----------------------------------------------------------*/
 	/*                  Random device Destructor                 */

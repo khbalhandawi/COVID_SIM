@@ -59,24 +59,24 @@ RandomDevice::RandomDevice(unsigned long n) : rand_seed(n), engine(n) { }
 /*              Uniform distribtuion generator               */
 /*-----------------------------------------------------------*/
 double RandomDevice::randUniform(double low, double high) {
-	uniform_real_distribution<float> distribution(low, high);
-	return distribution(engine);
+	uniform_real_distribution<float> distribution_ur(low, high);
+	return distribution_ur(engine);
 }
 
 /*-----------------------------------------------------------*/
 /*               Uniform integer distribtuion                */
 /*-----------------------------------------------------------*/
 int RandomDevice::randUniformInt(int low, int high) {
-	uniform_int_distribution<int> distribution(low, high);
-	return distribution(engine);
+	uniform_int_distribution<int> distribution_ui(low, high);
+	return distribution_ui(engine);
 }
 
 /*-----------------------------------------------------------*/
 /*              Normal distribtuion generator               */
 /*-----------------------------------------------------------*/
 double RandomDevice::randNormal(double mean, double std) {
-	normal_distribution<float> distribution(mean, std);
-	return distribution(engine);
+	normal_distribution<float> distribution_norm(mean, std);
+	return distribution_norm(engine);
 }
 
 /*-----------------------------------------------------------*/
@@ -181,6 +181,50 @@ Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices)
 double RandomDevice::rand() {
 	//fraction of the population that will obey the lockdown
 	return randUniform(0.0, 1.0);
+}
+
+/*-----------------------------------------------------------*/
+/*               Save random generator state                 */
+/*-----------------------------------------------------------*/
+void RandomDevice::save_state() {
+	// save state
+	std::cout << std::endl << "Saving state...\n";
+	{
+		std::ofstream fout("seed.dat");
+		fout << engine;
+		fout.close();
+		std::ofstream fout2("distribution_ur.dat");
+		fout2 << distribution_ur;
+		fout2.close();
+		std::ofstream fout3("distribution_ui.dat");
+		fout3 << distribution_ui;
+		fout3.close();
+		std::ofstream fout4("distribution_norm.dat");
+		fout4 << distribution_norm;
+		fout4.close();
+	}
+}
+
+/*-----------------------------------------------------------*/
+/*               Load random generator state                 */
+/*-----------------------------------------------------------*/
+void RandomDevice::load_state() {
+	// load state
+	std::cout << std::endl << "Loading...\n";
+	{
+		std::ifstream fin("seed.dat");
+		fin >> engine;
+		fin.close();
+		std::ifstream fin2("distribution_ur.dat");
+		fin2 >> distribution_ur;
+		fin2.close();
+		std::ifstream fin3("distribution_ui.dat");
+		fin3 >> distribution_ui;
+		fin3.close();
+		std::ifstream fin4("distribution_norm.dat");
+		fin4 >> distribution_norm;
+		fin4.close();
+	}
 }
 
 /*-----------------------------------------------------------*/

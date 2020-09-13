@@ -68,7 +68,7 @@ public:
 	/*-----------------------------------------------------------*/
 	/*                        Constructor                        */
 	/*-----------------------------------------------------------*/
-	simulation(Configuration Config);
+	simulation(Configuration Config, unsigned long seed);
 
 	/*-----------------------------------------------------------*/
 	/*                        Destructor                         */

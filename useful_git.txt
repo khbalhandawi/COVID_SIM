@@ -1,0 +1,5 @@
+git add -u
+git commit -- amend -- no-edit
+git push -f origin master
+REM https://stackoverflow.com/questions/7527982/applying-gitignore-to-committed-files/7528016
+for /F "tokens=*" %a in ('git ls-files -ci --exclude-standard') do @git rm --cached "%a"
