@@ -87,8 +87,8 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 		Eigen::ArrayXXf speed_vector = population(select_rows(population.col(11) == 0), { 3,4 }); // speed of individuals within world
 		Eigen::ArrayXf distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
 
-		total_distance(select_rows(population.col(11) == 0), all) += distance_individuals; // cumilative distance travelled
-		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumilative distance
+		total_distance(select_rows(population.col(11) == 0), all) += distance_individuals; // cumulative distance travelled
+		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumulative distance
 	}
 	else {
 		distance_travelled.push_back(0.0); // mean cumulative distance

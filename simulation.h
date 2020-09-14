@@ -8,6 +8,7 @@
 #include "RandomDevice.h"
 #include "visualizer.h"
 #include "infection.h"
+#include "tic_toc.h"
 
 class simulation : Population_trackers, RandomDevice
 {
@@ -15,6 +16,7 @@ public:
 	Configuration Config;
 	Population_trackers pop_tracker;
 	RandomDevice my_rand;
+	TicToc tc;
 	// initialize times
 	int frame;
 	double time;
