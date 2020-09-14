@@ -134,13 +134,13 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 	// Avoid walls
 	Eigen::ArrayXXf wall_force = Eigen::ArrayXXf::Zero(pop_size, 2);
 
-	float epsilon = 1e-5;
+	float epsilon = 1e-15;
 
-	Eigen::ArrayXf to_lower_x = population.col(1) - xbounds.col(0) + epsilon;
-	Eigen::ArrayXf to_lower_y = population.col(2) - ybounds.col(0) + epsilon;
+	Eigen::ArrayXf to_lower_x = population.col(1) - xbounds.col(0);
+	Eigen::ArrayXf to_lower_y = population.col(2) - ybounds.col(0);
 
-	Eigen::ArrayXf to_upper_x = xbounds.col(1) - population.col(1) + epsilon;
-	Eigen::ArrayXf to_upper_y = ybounds.col(1) - population.col(2) + epsilon;
+	Eigen::ArrayXf to_upper_x = xbounds.col(1) - population.col(1);
+	Eigen::ArrayXf to_upper_y = ybounds.col(1) - population.col(2);
 
 	// Bounce individuals within the world
 	ArrayXXb bounce_lo_x(to_lower_x.rows(), 2), bounce_lo_y(to_lower_x.rows(), 2);
@@ -168,19 +168,19 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 	lo_outside_x << (to_lower_x < 0.0); // , (population.col(3) < 0);
 	lo_outside_y << (to_lower_y < 0.0); // , (population.col(4) < 0);
 
-	wall_force(select_rows(lo_outside_x), { 0 }) += (1 / to_lower_x(select_rows(lo_outside_x)).pow(1)).abs();
-	wall_force(select_rows(lo_outside_y), { 1 }) += (1 / to_lower_y(select_rows(lo_outside_y)).pow(1)).abs();
-	// wall_force(select_rows(lo_outside_x), { 0 }) -= (1 / to_lower_x(select_rows(lo_outside_x)).pow(1)).abs();
-	// wall_force(select_rows(lo_outside_y), { 0 }) -= (1 / to_lower_x(select_rows(lo_outside_y)).pow(1)).abs();
+	wall_force(select_rows(lo_outside_x), { 0 }) += 1.0 / (to_lower_x(select_rows(lo_outside_x)).pow(1).abs() + epsilon);
+	wall_force(select_rows(lo_outside_y), { 1 }) += 1.0 / (to_lower_y(select_rows(lo_outside_y)).pow(1).abs() + epsilon);
+	// wall_force(select_rows(lo_outside_x), { 0 }) -= (1.0 / to_lower_x(select_rows(lo_outside_x)).pow(1)).abs();
+	// wall_force(select_rows(lo_outside_y), { 0 }) -= (1.0 / to_lower_x(select_rows(lo_outside_y)).pow(1)).abs();
 
 	ArrayXXb ur_outside_x(to_upper_x.rows(), 1), ur_outside_y(to_upper_y.rows(), 1);
 	ur_outside_x << (to_upper_x < 0.0); // , (population.col(3) < 0);
 	ur_outside_y << (to_upper_y < 0.0); // , (population.col(4) < 0);
 
-	wall_force(select_rows(ur_outside_x), { 0 }) += (1 / to_lower_x(select_rows(ur_outside_x)).pow(1)).abs();
-	wall_force(select_rows(ur_outside_y), { 1 }) += (1 / to_lower_y(select_rows(ur_outside_y)).pow(1)).abs();
-	// wall_force(select_rows(ur_outside_x), { 0 }) -= (1 / to_upper_x(select_rows(ur_outside_x)).pow(1)).abs();
-	// wall_force(select_rows(ur_outside_y), { 0 }) -= (1 / to_upper_y(select_rows(ur_outside_y)).pow(1)).abs();
+	wall_force(select_rows(ur_outside_x), { 0 }) += 1.0 / (to_lower_x(select_rows(ur_outside_x)).pow(1).abs() + epsilon);
+	wall_force(select_rows(ur_outside_y), { 1 }) += 1.0 / (to_lower_y(select_rows(ur_outside_y)).pow(1).abs() + epsilon);
+	// wall_force(select_rows(ur_outside_x), { 0 }) -= (1.0 / to_upper_x(select_rows(ur_outside_x)).pow(1)).abs();
+	// wall_force(select_rows(ur_outside_y), { 0 }) -= (1.0 / to_upper_y(select_rows(ur_outside_y)).pow(1)).abs();
 
 	// // Repelling force
 	// wall_force[:, i] += np.maximum((-1 / wall_buffer * *1 + 1 / to_lower * *1), 0)
@@ -198,16 +198,16 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 	inside_wall_upper_x << (to_upper_x < wall_buffer), (to_lower_x > -bounce_buffer);
 	inside_wall_upper_y << (to_upper_y < wall_buffer), (to_lower_y > -bounce_buffer);
 
-	Eigen::ArrayXf tlx_s = to_lower_x(select_rows(inside_wall_lower_x));
-	Eigen::ArrayXf tly_s = to_lower_y(select_rows(inside_wall_lower_y));
-	Eigen::ArrayXf tux_s = to_upper_x(select_rows(inside_wall_upper_x));
-	Eigen::ArrayXf tuy_s = to_upper_y(select_rows(inside_wall_upper_y));
+	Eigen::ArrayXf tlx_s = to_lower_x(select_rows(inside_wall_lower_x)).abs() + epsilon;
+	Eigen::ArrayXf tly_s = to_lower_y(select_rows(inside_wall_lower_y)).abs() + epsilon;
+	Eigen::ArrayXf tux_s = to_upper_x(select_rows(inside_wall_upper_x)).abs() + epsilon;
+	Eigen::ArrayXf tuy_s = to_upper_y(select_rows(inside_wall_upper_y)).abs() + epsilon;
 
-	wall_force(select_rows(inside_wall_lower_x), { 0 }) += (1 / tlx_s * tlx_s);
-	wall_force(select_rows(inside_wall_lower_y), { 1 }) += (1 / tly_s * tly_s);
+	wall_force(select_rows(inside_wall_lower_x), { 0 }) += 1.0 / ( tlx_s * tlx_s );
+	wall_force(select_rows(inside_wall_lower_y), { 1 }) += 1.0 / ( tly_s * tly_s );
 
-	wall_force(select_rows(inside_wall_upper_x), { 0 }) -= (1 / tux_s * tux_s);
-	wall_force(select_rows(inside_wall_upper_y), { 1 }) -= (1 / tuy_s * tuy_s);
+	wall_force(select_rows(inside_wall_upper_x), { 0 }) -= 1.0 / ( tux_s * tux_s );
+	wall_force(select_rows(inside_wall_upper_y), { 1 }) -= 1.0 / ( tuy_s * tuy_s );
 
 	population(Eigen::all, { 15,16 }) += wall_force;
 
@@ -235,9 +235,9 @@ Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double socia
 
 	int pop_size = population.rows();
 
-	float epsilon = 1e-5; // to avoid division by zero errors
-	Eigen::ArrayXXf dist = pairwise_dist(population(Eigen::all, { 1,2 })) + epsilon;
-	dist += Eigen::MatrixXf::Identity(pop_size, pop_size).array();
+	float epsilon = 1e-30; // to avoid division by zero errors
+	Eigen::ArrayXXf dist = pairwise_dist(population(Eigen::all, { 1,2 }));
+	// dist += Eigen::MatrixXf::Identity(pop_size, pop_size).array();
 
 	Eigen::ArrayXXf to_point_x = pairwise_diff(population.col(1));
 	Eigen::ArrayXXf to_point_y = pairwise_diff(population.col(2));
@@ -245,8 +245,8 @@ Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double socia
 	//Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / dist.pow(2.5)).rowwise().sum();
 	//Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / dist.pow(2.5)).rowwise().sum();
 
-	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / (dist * dist * dist)).rowwise().sum();
-	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / (dist * dist * dist)).rowwise().sum();
+	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / ((dist * dist * dist) + epsilon)).rowwise().sum();
+	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / ((dist * dist * dist) + epsilon)).rowwise().sum();
 
 	// (repulsion_force_x).isNaN().select(0,repulsion_force_x);
 	// (repulsion_force_y).isNaN().select(0,repulsion_force_y);
@@ -328,11 +328,11 @@ vector<double> get_motion_parameters(double xmin, double ymin, double xmax, doub
 	lower and upper bounds of the destination area set.
 	*/
 
-	double x_center = xmin + ((xmax - xmin) / 2);
-	double y_center = ymin + ((ymax - ymin) / 2);
+	double x_center = xmin + ((xmax - xmin) / 2.0);
+	double y_center = ymin + ((ymax - ymin) / 2.0);
 
-	double x_wander = (xmax - xmin) / 2;
-	double y_wander = (ymax - ymin) / 2;
+	double x_wander = (xmax - xmin) / 2.0;
+	double y_wander = (ymax - ymin) / 2.0;
 
 	return { x_center, y_center, x_wander, y_wander };
 }

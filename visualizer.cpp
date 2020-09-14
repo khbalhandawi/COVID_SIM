@@ -231,47 +231,6 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 	keywords["color"] = palette[3];
 	plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
 
-	////vector<double> vec(susceptible.data(), susceptible.data() + susceptible.rows() * susceptible.cols());
-	//VectorXd v1 = susceptible.col(0);
-	//vector<double> v2;
-	//v2.resize(v1.size());
-	//VectorXd::Map(&v2[0], v1.size()) = v1;
-
-	//map<string, string> keywords;
-
-	//if (susceptible.rows() > 0) {
-	//	vector<double> susceptible_x = to_std_vector(susceptible.col(0));
-	//	vector<double> susceptible_y = to_std_vector(susceptible.col(1));
-
-	//	//keywords["label"] = "susceptible";
-	//	keywords["color"] = palette[0];
-	//	plt::scatter(susceptible_x, susceptible_y, Config.marker_size, keywords);
-	//}
-
-	//if (infected.rows() > 0) {
-	//	vector<double> infected_x = to_std_vector(infected.col(0));
-	//	vector<double> infected_y = to_std_vector(infected.col(1));
-	//	//keywords["label"] = "infected";
-	//	keywords["color"] = palette[1];
-	//	plt::scatter(infected_x, infected_y, Config.marker_size, keywords);
-	//}
-
-	//if (recovered.rows() > 0) {
-	//	vector<double> recovered_x = to_std_vector(recovered.col(0));
-	//	vector<double> recovered_y = to_std_vector(recovered.col(1));
-	//	//keywords["label"] = "recovered";
-	//	keywords["color"] = palette[2];
-	//	plt::scatter(recovered_x, recovered_y, Config.marker_size, keywords);
-	//}
-
-	//if (fatalities.rows() > 0) {
-	//	vector<double> fatalities_x = to_std_vector(fatalities.col(0));
-	//	vector<double> fatalities_y = to_std_vector(fatalities.col(1));
-	//	//keywords["label"] = "fatalities";
-	//	keywords["color"] = palette[3];
-	//	plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
-	//}
-
 	//add text descriptors
 	string output_string = "timestep: " + to_string(frame) +
 		" total: " + to_string(population.rows()) +
@@ -439,50 +398,6 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 	plt::scatter(recovered_x, recovered_y, Config.marker_size, keywords);
 	keywords["color"] = palette[3];
 	plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
-
-	////vector<double> vec(susceptible.data(), susceptible.data() + susceptible.rows() * susceptible.cols());
-	//VectorXd v1 = susceptible.col(0);
-	//vector<double> v2;
-	//v2.resize(v1.size());
-	//VectorXd::Map(&v2[0], v1.size()) = v1;
-
-	//map<string, string> keywords;
-	////keywords["markersize"] = to_string(Config.marker_size);
-	////keywords["marker"] = ".";
-	////keywords["linestyle"] = "";
-
-	//if (susceptible.rows() > 0) {
-	//	vector<double> susceptible_x = to_std_vector(susceptible.col(0));
-	//	vector<double> susceptible_y = to_std_vector(susceptible.col(1));
-
-	//	//keywords["label"] = "susceptible";
-	//	keywords["color"] = palette[0];
-	//	plt::scatter(susceptible_x, susceptible_y, Config.marker_size, keywords);
-	//}
-
-	//if (infected.rows() > 0) {
-	//	vector<double> infected_x = to_std_vector(infected.col(0));
-	//	vector<double> infected_y = to_std_vector(infected.col(1));
-	//	//keywords["label"] = "infected";
-	//	keywords["color"] = palette[1];
-	//	plt::scatter(infected_x, infected_y, Config.marker_size, keywords);
-	//}
-
-	//if (recovered.rows() > 0) {
-	//	vector<double> recovered_x = to_std_vector(recovered.col(0));
-	//	vector<double> recovered_y = to_std_vector(recovered.col(1));
-	//	//keywords["label"] = "recovered";
-	//	keywords["color"] = palette[2];
-	//	plt::scatter(recovered_x, recovered_y, Config.marker_size, keywords);
-	//}
-
-	//if (fatalities.rows() > 0) {
-	//	vector<double> fatalities_x = to_std_vector(fatalities.col(0));
-	//	vector<double> fatalities_y = to_std_vector(fatalities.col(1));
-	//	//keywords["label"] = "fatalities";
-	//	keywords["color"] = palette[3];
-	//	plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
-	//}
 
 	// Trace path of random individual
 	if (Config.trace_path) {

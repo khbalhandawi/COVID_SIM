@@ -338,7 +338,7 @@ if __name__ == '__main__':
     # min_bin_width_i = 15 # for discrete distributions
     # min_bin_width_f = 5 # for discrete distributions
 
-    n_samples = 50
+    n_samples = 500
     n_bins = 30 # for continuous distributions
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
@@ -393,29 +393,29 @@ if __name__ == '__main__':
     # design parameters
     healthcare_capacity = 50
 
-    for n_violators in n_violators_sweep:
+    # for n_violators in n_violators_sweep:
     # for test_capacity in test_capacities:
-    # for SD in SD_factors:
+    for SD in SD_factors:
 
-        legend_label = 'Number of essential workers ($E$) = %i people' %(n_violators)
+        # legend_label = 'Number of essential workers ($E$) = %i people' %(n_violators)
         # legend_label = 'Testing capacity ($T$) = %i people' %(test_capacity)
-        # legend_label = 'Social distancing factor ($S$)= %f' %(SD)
+        legend_label = 'Social distancing factor ($S$)= %f' %(SD)
 
         if new_run:
             #=====================================================================#
             # Essential workers sweep
-            SD = 0.05 # force amplitude
-            test_capacity = 0 # number of people
-
-            design_variables = [n_violators, SD, test_capacity]
-            parameters = [healthcare_capacity]
-            #=====================================================================#
-            # SD sweep
-            # n_violators = 0 # number of people
+            # SD = 0.05 # force amplitude
             # test_capacity = 0 # number of people
 
             # design_variables = [n_violators, SD, test_capacity]
             # parameters = [healthcare_capacity]
+            #=====================================================================#
+            # SD sweep
+            n_violators = 0 # number of people
+            test_capacity = 0 # number of people
+
+            design_variables = [n_violators, SD, test_capacity]
+            parameters = [healthcare_capacity]
             #=====================================================================#
             # Testing sweep
             # n_violators = 0 # number of people

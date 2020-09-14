@@ -75,7 +75,7 @@ void simulation::tstep()
 	Eigen::ArrayXXf at_destination = population(select_rows(population.col(12) == 1), Eigen::all); // arrived individuals
 	Eigen::ArrayXXf pop_hospitalized = population(select_rows(population.col(10) == 1), Eigen::all); // hospitalized individuals
 	Eigen::ArrayXXf pop_infected = population(select_rows(population.col(6) == 1), Eigen::all); // infected individuals
-
+	tc.tic(); // reset clock
 	//======================================================================================//
 	// check destinations if active
 	// define motion vectors if destinations active and not everybody is at destination
@@ -140,6 +140,11 @@ void simulation::tstep()
 		population(select_rows(cond), Eigen::all) = update_repulsive_forces(population(select_rows(cond), Eigen::all), 
 																			Config.social_distance_factor);
 
+		if (population.col(15).isNaN().any()) {
+			cout << "Infinite repulsive forces!" << endl;
+			throw "Infinite repulsive forces!";
+		}
+	
 	}
 
 	//======================================================================================//
@@ -156,7 +161,12 @@ void simulation::tstep()
 					Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.ybounds[1] - buffer);
 
 		population(select_rows(population.col(11) == 0), Eigen::all) = update_wall_forces(population(select_rows(population.col(11) == 0), Eigen::all),
-																						  _xbounds, _ybounds);
+																				  _xbounds, _ybounds);
+
+		if (population.col(15).isNaN().any()) {
+			cout << "Infinite wall forces!" << endl;
+			throw "Infinite wall forces!";
+		}
 	}
 
 	if (population.col(1).isNaN().any()) {
@@ -164,6 +174,7 @@ void simulation::tstep()
 		cout << "Saving random seed state" << endl;
 		my_rand.save_state();
 		cout << "random_check: " << my_rand.rand() << endl;
+		cout << "Division by zero condition!" << endl;
 		throw "Division by zero condition!";
 	}
 
@@ -231,11 +242,12 @@ void simulation::tstep()
 		cout << ": infected: " << pop_tracker.infectious.back();
 		cout << ": recovered: " << pop_tracker.recovered.back();
 		cout << ": in treatment: " << pop_hospitalized.rows();
-		cout << ": fatalitites: " << pop_tracker.fatalities.back();
+		cout << ": fatalities: " << pop_tracker.fatalities.back();
 		cout << ": of total: " << Config.pop_size;
 		if (Config.track_GC) {
 			cout << ": ground covered: " << pop_tracker.mean_perentage_covered.back()*100;
 		}
+		cout << " time: " << tc.toc() << " ms";
 		cout << endl;
 	}
 
@@ -321,7 +333,7 @@ void simulation::run()
 
 		tstep();
 
-		// check whether to end if no infecious persons remain.
+		// check whether to end if no infectious persons remain.
 		// check if frame is above some threshold to prevent early breaking when simulation
 		// starts initially with no infections.
 		if ((Config.endif_no_infections) && (frame >= 300)) {
