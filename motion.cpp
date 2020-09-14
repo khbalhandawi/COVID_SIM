@@ -90,14 +90,14 @@ Eigen::ArrayXXd update_velocities(Eigen::ArrayXXd population, double max_speed, 
 	dt : float
 	Time increment used for incrementing velocity due to forces
 	*/
-
+	double epsilon = 1e-15;
 	// Apply force
 	population.col(3) += population.col(15) * dt;
 	population.col(4) += population.col(16) * dt;
 
 	// Limit speed
 	Eigen::ArrayXd speed = population(Eigen::all, { 3,4 }).rowwise().norm(); // current distance travelled
-	population(select_rows(speed > max_speed), { 3,4 }).colwise() *= max_speed / speed(select_rows(speed > max_speed));
+	population(select_rows(speed > max_speed), { 3,4 }).colwise() *= max_speed / ( speed(select_rows(speed > max_speed)) + epsilon );
 
 	// Limit force
 	population(Eigen::all, { 15,16 }) = 0.0;
@@ -285,7 +285,7 @@ tuple<Eigen::ArrayXXd, double> update_gravity_forces(Eigen::ArrayXXd population,
 	strength of attracion to perturbation,
 	length of time perturbation is present
 	*/
-
+	double epsilon = 1e-15;
 	int pop_size = population.rows();
 
 	// Gravity
@@ -301,8 +301,8 @@ tuple<Eigen::ArrayXXd, double> update_gravity_forces(Eigen::ArrayXXd population,
 			Eigen::ArrayXXd to_well = (gravity_well - population(Eigen::all, { 1,2 }));
 			Eigen::ArrayXd dist = to_well.rowwise().norm().array();
 
-			population(select_rows(dist != 0), { 15 }) += gravity_strength * to_well(select_rows(dist != 0), { 0 }) / (dist(select_rows(dist != 0)).pow(3));
-			population(select_rows(dist != 0), { 16 }) += gravity_strength * to_well(select_rows(dist != 0), { 1 }) / (dist(select_rows(dist != 0)).pow(3));
+			population(select_rows(dist != 0), { 15 }) += gravity_strength * to_well(select_rows(dist != 0), { 0 }) / (dist(select_rows(dist != 0)).pow(3) + epsilon);
+			population(select_rows(dist != 0), { 16 }) += gravity_strength * to_well(select_rows(dist != 0), { 1 }) / (dist(select_rows(dist != 0)).pow(3) + epsilon);
 		}
 
 	}

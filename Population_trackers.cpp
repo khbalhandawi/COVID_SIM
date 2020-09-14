@@ -195,7 +195,7 @@ Eigen::ArrayXXd initialize_population(Configuration Config, RandomDevice *my_ran
 	ybounds : 2d array
 	lower and upper bounds of y axis
 	*/
-
+	double epsilon = 1e-15;
 	// initialize population matrix
 	Eigen::ArrayXXd population = Eigen::ArrayXXd::Zero(Config.pop_size, 19);
 	// initalize unique IDs
@@ -207,7 +207,7 @@ Eigen::ArrayXXd initialize_population(Configuration Config, RandomDevice *my_ran
 	// initialize random speeds - 0.25 to 0.25
 	Eigen::ArrayXXd vect_un = my_rand->uniform_dist(-1, 1, Config.pop_size, 2);
 
-	Eigen::ArrayXXd speed_vector = vect_un.array().colwise() / vect_un.rowwise().norm();
+	Eigen::ArrayXXd speed_vector = vect_un.array().colwise() / ( vect_un.rowwise().norm() + epsilon );
 	population(Eigen::all, { 3,4 }) = Config.max_speed * speed_vector;
 
 	// initalize ages

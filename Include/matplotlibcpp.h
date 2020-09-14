@@ -228,7 +228,7 @@ private:
         s_python_function_xlim = safe_import(pymod, "xlim");
         s_python_function_ion = safe_import(pymod, "ion");
         s_python_function_ginput = safe_import(pymod, "ginput");
-        s_python_function_save = safe_import(pylabmod, "savefig");
+        s_python_function_save = safe_import(pymod, "savefig");
         s_python_function_annotate = safe_import(pymod,"annotate");
         s_python_function_cla = safe_import(pymod, "cla");
         s_python_function_clf = safe_import(pymod, "clf");
@@ -1446,7 +1446,7 @@ bool stem(const std::vector<Numeric>& y, const std::string& format = "")
 }
 
 template<typename Numeric>
-void text(Numeric x, Numeric y, const std::string& s = "")
+void text(Numeric x, Numeric y, const std::string& s = "", const std::map<std::string, std::string> &keywords = {})
 {
     detail::_interpreter::get();
 
@@ -1455,10 +1455,18 @@ void text(Numeric x, Numeric y, const std::string& s = "")
     PyTuple_SetItem(args, 1, PyFloat_FromDouble(y));
     PyTuple_SetItem(args, 2, PyString_FromString(s.c_str()));
 
-    PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_text, args);
+    // construct keyword args
+    PyObject* kwargs = PyDict_New();
+    for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it)
+    {
+        PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
+    }
+
+    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_text, args, kwargs);
     if(!res) throw std::runtime_error("Call to text() failed.");
 
     Py_DECREF(args);
+    Py_DECREF(kwargs);
     Py_DECREF(res);
 }
 
@@ -2164,7 +2172,7 @@ inline void pause(Numeric interval)
     Py_DECREF(res);
 }
 
-inline void save(const std::string& filename)
+inline void save(const std::string& filename, const std::map<std::string, std::string> &keywords = {})
 {
     detail::_interpreter::get();
 
@@ -2173,11 +2181,20 @@ inline void save(const std::string& filename)
     PyObject* args = PyTuple_New(1);
     PyTuple_SetItem(args, 0, pyfilename);
 
-    PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_save, args);
-    if (!res) throw std::runtime_error("Call to save() failed.");
+    // construct keyword args
+    PyObject* kwargs = PyDict_New();
+    for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it)
+    {
+        PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
+    }
+
+    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_save, args, kwargs);
+    if(!res) throw std::runtime_error("Call to save() failed.");
 
     Py_DECREF(args);
+    Py_DECREF(kwargs);
     Py_DECREF(res);
+
 }
 
 inline void clf() {

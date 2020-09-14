@@ -14,7 +14,7 @@ from subprocess import PIPE,STDOUT
 # Execute system commands and return output to console
 def system_command(command):
 
-    #CREATE_NO_WINDOW = 0x08000000 # Creat no console window flag
+    #CREATE_NO_WINDOW = 0x08000000 # Create no console window flag
 
     p = subprocess.Popen(command,shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
                          ) # disable windows errors
@@ -22,7 +22,7 @@ def system_command(command):
     for line in iter(p.stdout.readline, b''):
         line = line.decode('utf-8')
         print(line.rstrip()) # print line by line
-        # rstrip() to reomove \n separator
+        # rstrip() to remove \n separator
 
     output, error = p.communicate()
     if p.returncode != 0: # crash the program
@@ -31,8 +31,8 @@ def system_command(command):
 #==============================================================================#
 # C++ COMMAND
 def cpp_application( i, design_variables, parameters, output_file_n, debug = False ):
-    design_variables_str = ' '.join(map(str,design_variables)) # print variables as space demilited string
-    parameters_str = ' '.join(map(str,parameters)) # print parameters as space demilited string
+    design_variables_str = ' '.join(map(str,design_variables)) # print variables as space delimited string
+    parameters_str = ' '.join(map(str,parameters)) # print parameters as space delimited string
     command = "cpp_corona_simulation %i %s %s %s" %(i, design_variables_str, parameters_str, output_file_n)
     
     print(command)
@@ -391,7 +391,7 @@ if __name__ == '__main__':
     # SD_factors = SD_factors[run:]
 
     # design parameters
-    healthcare_capacity = 50
+    healthcare_capacity = 150
 
     # for n_violators in n_violators_sweep:
     # for test_capacity in test_capacities:
@@ -440,7 +440,6 @@ if __name__ == '__main__':
                 fatalities_i = pickle.load(fid)
                 GC_i = pickle.load(fid)
                 distance_i = pickle.load(fid)
-                print(distance_i)
                 distance_i = [i for i in distance_i if i <= 0.15] # eliminate outliers
 
         label_name = u'Maximum number of infected ($I(\mathbf{x})$)'
