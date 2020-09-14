@@ -44,7 +44,7 @@
  /*-----------------------------------------------------------*/
  /*                      Update positions                     */
  /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_positions(Eigen::ArrayXXf population, double dt)
+Eigen::ArrayXXd update_positions(Eigen::ArrayXXd population, double dt)
 {
 	/*update positions of all people
 
@@ -72,7 +72,7 @@ Eigen::ArrayXXf update_positions(Eigen::ArrayXXf population, double dt)
 /*-----------------------------------------------------------*/
 /*                      Update velocities                    */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed, double dt)
+Eigen::ArrayXXd update_velocities(Eigen::ArrayXXd population, double max_speed, double dt)
 {
 	/*update positions of all people
 
@@ -96,7 +96,7 @@ Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed, 
 	population.col(4) += population.col(16) * dt;
 
 	// Limit speed
-	Eigen::ArrayXf speed = population(Eigen::all, { 3,4 }).rowwise().norm(); // current distance travelled
+	Eigen::ArrayXd speed = population(Eigen::all, { 3,4 }).rowwise().norm(); // current distance travelled
 	population(select_rows(speed > max_speed), { 3,4 }).colwise() *= max_speed / speed(select_rows(speed > max_speed));
 
 	// Limit force
@@ -108,7 +108,7 @@ Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed, 
 /*-----------------------------------------------------------*/
 /*                      Update wall forces                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf xbounds, Eigen::ArrayXXf ybounds,
+Eigen::ArrayXXd update_wall_forces(Eigen::ArrayXXd population, Eigen::ArrayXXd xbounds, Eigen::ArrayXXd ybounds,
 	double wall_buffer, double bounce_buffer)
 {
 	/*checks which people are about to go out of bounds and corrects
@@ -132,15 +132,15 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 	int pop_size = population.rows();
 
 	// Avoid walls
-	Eigen::ArrayXXf wall_force = Eigen::ArrayXXf::Zero(pop_size, 2);
+	Eigen::ArrayXXd wall_force = Eigen::ArrayXXd::Zero(pop_size, 2);
 
-	float epsilon = 1e-15;
+	double epsilon = 1e-15;
 
-	Eigen::ArrayXf to_lower_x = population.col(1) - xbounds.col(0);
-	Eigen::ArrayXf to_lower_y = population.col(2) - ybounds.col(0);
+	Eigen::ArrayXd to_lower_x = population.col(1) - xbounds.col(0);
+	Eigen::ArrayXd to_lower_y = population.col(2) - ybounds.col(0);
 
-	Eigen::ArrayXf to_upper_x = xbounds.col(1) - population.col(1);
-	Eigen::ArrayXf to_upper_y = ybounds.col(1) - population.col(2);
+	Eigen::ArrayXd to_upper_x = xbounds.col(1) - population.col(1);
+	Eigen::ArrayXd to_upper_y = ybounds.col(1) - population.col(2);
 
 	// Bounce individuals within the world
 	ArrayXXb bounce_lo_x(to_lower_x.rows(), 2), bounce_lo_y(to_lower_x.rows(), 2);
@@ -198,10 +198,10 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 	inside_wall_upper_x << (to_upper_x < wall_buffer), (to_lower_x > -bounce_buffer);
 	inside_wall_upper_y << (to_upper_y < wall_buffer), (to_lower_y > -bounce_buffer);
 
-	Eigen::ArrayXf tlx_s = to_lower_x(select_rows(inside_wall_lower_x)).abs() + epsilon;
-	Eigen::ArrayXf tly_s = to_lower_y(select_rows(inside_wall_lower_y)).abs() + epsilon;
-	Eigen::ArrayXf tux_s = to_upper_x(select_rows(inside_wall_upper_x)).abs() + epsilon;
-	Eigen::ArrayXf tuy_s = to_upper_y(select_rows(inside_wall_upper_y)).abs() + epsilon;
+	Eigen::ArrayXd tlx_s = to_lower_x(select_rows(inside_wall_lower_x)).abs() + epsilon;
+	Eigen::ArrayXd tly_s = to_lower_y(select_rows(inside_wall_lower_y)).abs() + epsilon;
+	Eigen::ArrayXd tux_s = to_upper_x(select_rows(inside_wall_upper_x)).abs() + epsilon;
+	Eigen::ArrayXd tuy_s = to_upper_y(select_rows(inside_wall_upper_y)).abs() + epsilon;
 
 	wall_force(select_rows(inside_wall_lower_x), { 0 }) += 1.0 / ( tlx_s * tlx_s );
 	wall_force(select_rows(inside_wall_lower_y), { 1 }) += 1.0 / ( tly_s * tly_s );
@@ -218,7 +218,7 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double social_distance_factor)
+Eigen::ArrayXXd update_repulsive_forces(Eigen::ArrayXXd population, double social_distance_factor)
 {
 	/*calculated repulsive forces between individuals
 
@@ -235,18 +235,18 @@ Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double socia
 
 	int pop_size = population.rows();
 
-	float epsilon = 1e-30; // to avoid division by zero errors
-	Eigen::ArrayXXf dist = pairwise_dist(population(Eigen::all, { 1,2 }));
-	// dist += Eigen::MatrixXf::Identity(pop_size, pop_size).array();
+	double epsilon = 1e-15; // to avoid division by zero errors
+	Eigen::ArrayXXd dist = pairwise_dist(population(Eigen::all, { 1,2 }));
+	// dist += Eigen::MatrixXd::Identity(pop_size, pop_size).array();
 
-	Eigen::ArrayXXf to_point_x = pairwise_diff(population.col(1));
-	Eigen::ArrayXXf to_point_y = pairwise_diff(population.col(2));
+	Eigen::ArrayXXd to_point_x = pairwise_diff(population.col(1));
+	Eigen::ArrayXXd to_point_y = pairwise_diff(population.col(2));
 
 	//Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / dist.pow(2.5)).rowwise().sum();
 	//Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / dist.pow(2.5)).rowwise().sum();
 
-	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / ((dist * dist * dist) + epsilon)).rowwise().sum();
-	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / ((dist * dist * dist) + epsilon)).rowwise().sum();
+	Eigen::ArrayXd repulsion_force_x = -social_distance_factor * (to_point_x / ((dist * dist * dist) + epsilon)).rowwise().sum();
+	Eigen::ArrayXd repulsion_force_y = -social_distance_factor * (to_point_y / ((dist * dist * dist) + epsilon)).rowwise().sum();
 
 	// (repulsion_force_x).isNaN().select(0,repulsion_force_x);
 	// (repulsion_force_y).isNaN().select(0,repulsion_force_y);
@@ -261,7 +261,7 @@ Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double socia
 /*-----------------------------------------------------------*/
 /*                    Update gravity forces                  */
 /*-----------------------------------------------------------*/
-tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population, double time, double last_step_change, RandomDevice *my_rand, double wander_step_size,
+tuple<Eigen::ArrayXXd, double> update_gravity_forces(Eigen::ArrayXXd population, double time, double last_step_change, RandomDevice *my_rand, double wander_step_size,
 	double gravity_strength, double wander_step_duration)
 {
 	/*updates random perturbation in forces near individuals to cause random motion
@@ -292,14 +292,14 @@ tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population,
 	if (wander_step_size != 0.0) {
 		if ((time - last_step_change) > wander_step_duration)
 		{
-			Eigen::ArrayXXf vect_un = my_rand->uniform_dist(-1, 1, pop_size, 2);
-			Eigen::ArrayXXf vect = vect_un.colwise() / vect_un.rowwise().norm().array();
+			Eigen::ArrayXXd vect_un = my_rand->uniform_dist(-1, 1, pop_size, 2);
+			Eigen::ArrayXXd vect = vect_un.colwise() / vect_un.rowwise().norm().array();
 
-			Eigen::ArrayXXf gravity_well = population(Eigen::all, { 1,2 }) + wander_step_size * vect;
+			Eigen::ArrayXXd gravity_well = population(Eigen::all, { 1,2 }) + wander_step_size * vect;
 			last_step_change = time;
 
-			Eigen::ArrayXXf to_well = (gravity_well - population(Eigen::all, { 1,2 }));
-			Eigen::ArrayXf dist = to_well.rowwise().norm().array();
+			Eigen::ArrayXXd to_well = (gravity_well - population(Eigen::all, { 1,2 }));
+			Eigen::ArrayXd dist = to_well.rowwise().norm().array();
 
 			population(select_rows(dist != 0), { 15 }) += gravity_strength * to_well(select_rows(dist != 0), { 0 }) / (dist(select_rows(dist != 0)).pow(3));
 			population(select_rows(dist != 0), { 16 }) += gravity_strength * to_well(select_rows(dist != 0), { 1 }) / (dist(select_rows(dist != 0)).pow(3));

@@ -16,20 +16,20 @@ using namespace std;
 /*-----------------------------------------------------------*/
 /*                     Finds nearby IDs                      */
 /*-----------------------------------------------------------*/
-void find_nearby(Eigen::ArrayXXf population, vector<double> infection_zone, Eigen::ArrayXf &indices, int &infected_number,
-	bool traveling_infects = false, string kind = "healthy", Eigen::ArrayXXf infected_previous_step = {});
+void find_nearby(Eigen::ArrayXXd population, vector<double> infection_zone, Eigen::ArrayXd &indices, int &infected_number,
+	bool traveling_infects = false, string kind = "healthy", Eigen::ArrayXXd infected_previous_step = {});
 
 /*-----------------------------------------------------------*/
 /*                    Find new infections                    */
 /*-----------------------------------------------------------*/
-void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, Configuration Config, int frame,
+void infect(Eigen::ArrayXXd &population, Eigen::ArrayXXd &destinations, Configuration Config, int frame,
 	RandomDevice *my_rand, bool send_to_location = false, vector<double> location_bounds = {}, 
 	int location_no = 1, double location_odds = 1.0, bool test_flag = false);
 
 /*-----------------------------------------------------------*/
 /*                     Recover or die                        */
 /*-----------------------------------------------------------*/
-void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config, RandomDevice *my_rand);
+void recover_or_die(Eigen::ArrayXXd &population, int frame, Configuration Config, RandomDevice *my_rand);
 
 /*-----------------------------------------------------------*/
 /*                     Compute mortality                     */
@@ -41,4 +41,4 @@ void compute_mortality(int age, double &mortality_chance, int risk_age = 50,
 /*-----------------------------------------------------------*/
 /*              healthcare population infection              */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor = 0.2);
+Eigen::ArrayXXd healthcare_infection_correction(Eigen::ArrayXXd worker_population, RandomDevice *my_rand, double healthcare_risk_factor = 0.2);

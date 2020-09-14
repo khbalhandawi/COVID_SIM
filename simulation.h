@@ -25,23 +25,23 @@ public:
 	bool above_deact_thresh;
 	bool above_test_thresh;
 	// initialize default population
-	Eigen::ArrayXXf population;
+	Eigen::ArrayXXd population;
 	// initalise destinations vector
-	Eigen::ArrayXXf destinations;
+	Eigen::ArrayXXd destinations;
 	// initalise grid for tracking population positions
-	Eigen::ArrayXXf grid_coords;
-	Eigen::ArrayXXf ground_covered;
+	Eigen::ArrayXXd grid_coords;
+	Eigen::ArrayXXd ground_covered;
 	// RNG
 	unsigned long seed;
 	// Visualization
 	visualizer vis;
 	// Ppopulation segments
-	Eigen::ArrayXXf outside_world; // outside main world
-	Eigen::ArrayXXf inside_world; // inside main world
-	Eigen::ArrayXXf travelling_pop; // travelling individuals
-	Eigen::ArrayXXf at_destination; // arrived individuals
-	Eigen::ArrayXXf pop_infected; // infected individuals
-	Eigen::ArrayXXf pop_hospitalized; // hospitalized individuals
+	Eigen::ArrayXXd outside_world; // outside main world
+	Eigen::ArrayXXd inside_world; // inside main world
+	Eigen::ArrayXXd travelling_pop; // travelling individuals
+	Eigen::ArrayXXd at_destination; // arrived individuals
+	Eigen::ArrayXXd pop_infected; // infected individuals
+	Eigen::ArrayXXd pop_hospitalized; // hospitalized individuals
 	/*-----------------------------------------------------------*/
 	/*                 (Re)initialize population                 */
 	/*-----------------------------------------------------------*/

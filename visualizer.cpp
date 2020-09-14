@@ -167,7 +167,7 @@ void visualizer::build_fig_SIR(Configuration Config, vector<int> fig_size)
 /*-----------------------------------------------------------*/
 /*                  Update figure time step                  */
 /*-----------------------------------------------------------*/
-void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame)
+void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXd population, Population_trackers pop_tracker, int frame)
 {
 	//construct plot and visualise
 
@@ -206,20 +206,20 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 	/*--------------------------------------------------*/
 	// plot population segments
 
-	Eigen::ArrayXXf susceptible = population(select_rows(population.col(6) == 0), { 1,2 });
-	Eigen::ArrayXXf infected = population(select_rows(population.col(6) == 1), { 1,2 });
-	Eigen::ArrayXXf recovered = population(select_rows(population.col(6) == 2), { 1,2 });
-	Eigen::ArrayXXf fatalities = population(select_rows(population.col(6) == 3), { 1,2 });
+	Eigen::ArrayXXd susceptible = population(select_rows(population.col(6) == 0), { 1,2 });
+	Eigen::ArrayXXd infected = population(select_rows(population.col(6) == 1), { 1,2 });
+	Eigen::ArrayXXd recovered = population(select_rows(population.col(6) == 2), { 1,2 });
+	Eigen::ArrayXXd fatalities = population(select_rows(population.col(6) == 3), { 1,2 });
 
-	vector<float> susceptible_x(susceptible.rows()); Map<ArrayXf>(&susceptible_x[0], susceptible.rows(), 1) = susceptible.col(0);
-	vector<float> infected_x(infected.rows()); Map<ArrayXf>(&infected_x[0], infected.rows(), 1) = infected.col(0);
-	vector<float> recovered_x(recovered.rows()); Map<ArrayXf>(&recovered_x[0], recovered.rows(), 1) = recovered.col(0);
-	vector<float> fatalities_x(fatalities.rows()); Map<ArrayXf>(&fatalities_x[0], fatalities.rows(), 1) = fatalities.col(0);
+	vector<double> susceptible_x(susceptible.rows()); Map<ArrayXd>(&susceptible_x[0], susceptible.rows(), 1) = susceptible.col(0);
+	vector<double> infected_x(infected.rows()); Map<ArrayXd>(&infected_x[0], infected.rows(), 1) = infected.col(0);
+	vector<double> recovered_x(recovered.rows()); Map<ArrayXd>(&recovered_x[0], recovered.rows(), 1) = recovered.col(0);
+	vector<double> fatalities_x(fatalities.rows()); Map<ArrayXd>(&fatalities_x[0], fatalities.rows(), 1) = fatalities.col(0);
 
-	vector<float> susceptible_y(susceptible.rows()); Map<ArrayXf>(&susceptible_y[0], susceptible.rows(), 1) = susceptible.col(1);
-	vector<float> infected_y(infected.rows()); Map<ArrayXf>(&infected_y[0], infected.rows(), 1) = infected.col(1);
-	vector<float> recovered_y(recovered.rows()); Map<ArrayXf>(&recovered_y[0], recovered.rows(), 1) = recovered.col(1);
-	vector<float> fatalities_y(fatalities.rows()); Map<ArrayXf>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
+	vector<double> susceptible_y(susceptible.rows()); Map<ArrayXd>(&susceptible_y[0], susceptible.rows(), 1) = susceptible.col(1);
+	vector<double> infected_y(infected.rows()); Map<ArrayXd>(&infected_y[0], infected.rows(), 1) = infected.col(1);
+	vector<double> recovered_y(recovered.rows()); Map<ArrayXd>(&recovered_y[0], recovered.rows(), 1) = recovered.col(1);
+	vector<double> fatalities_y(fatalities.rows()); Map<ArrayXd>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
 
 	map<string, string> keywords;
 	keywords["color"] = palette[0];
@@ -337,7 +337,7 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 /*-----------------------------------------------------------*/
 /*       Update figure time step (scatter plot only)         */
 /*-----------------------------------------------------------*/
-void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame)
+void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXd population, Population_trackers pop_tracker, int frame)
 {
 	//construct plot and visualise
 
@@ -374,20 +374,20 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 
 	/*--------------------------------------------------*/
 	// plot population segments
-	Eigen::ArrayXXf susceptible = population(select_rows(population.col(6) == 0), { 1,2 });
-	Eigen::ArrayXXf infected = population(select_rows(population.col(6) == 1), { 1,2 });
-	Eigen::ArrayXXf recovered = population(select_rows(population.col(6) == 2), { 1,2 });
-	Eigen::ArrayXXf fatalities = population(select_rows(population.col(6) == 3), { 1,2 });
+	Eigen::ArrayXXd susceptible = population(select_rows(population.col(6) == 0), { 1,2 });
+	Eigen::ArrayXXd infected = population(select_rows(population.col(6) == 1), { 1,2 });
+	Eigen::ArrayXXd recovered = population(select_rows(population.col(6) == 2), { 1,2 });
+	Eigen::ArrayXXd fatalities = population(select_rows(population.col(6) == 3), { 1,2 });
 
-	vector<float> susceptible_x(susceptible.rows()); Map<ArrayXf>(&susceptible_x[0], susceptible.rows(), 1) = susceptible.col(0);
-	vector<float> infected_x(infected.rows()); Map<ArrayXf>(&infected_x[0], infected.rows(), 1) = infected.col(0);
-	vector<float> recovered_x(recovered.rows()); Map<ArrayXf>(&recovered_x[0], recovered.rows(), 1) = recovered.col(0);
-	vector<float> fatalities_x(fatalities.rows()); Map<ArrayXf>(&fatalities_x[0], fatalities.rows(), 1) = fatalities.col(0);
+	vector<double> susceptible_x(susceptible.rows()); Map<ArrayXd>(&susceptible_x[0], susceptible.rows(), 1) = susceptible.col(0);
+	vector<double> infected_x(infected.rows()); Map<ArrayXd>(&infected_x[0], infected.rows(), 1) = infected.col(0);
+	vector<double> recovered_x(recovered.rows()); Map<ArrayXd>(&recovered_x[0], recovered.rows(), 1) = recovered.col(0);
+	vector<double> fatalities_x(fatalities.rows()); Map<ArrayXd>(&fatalities_x[0], fatalities.rows(), 1) = fatalities.col(0);
 
-	vector<float> susceptible_y(susceptible.rows()); Map<ArrayXf>(&susceptible_y[0], susceptible.rows(), 1) = susceptible.col(1);
-	vector<float> infected_y(infected.rows()); Map<ArrayXf>(&infected_y[0], infected.rows(), 1) = infected.col(1);
-	vector<float> recovered_y(recovered.rows()); Map<ArrayXf>(&recovered_y[0], recovered.rows(), 1) = recovered.col(1);
-	vector<float> fatalities_y(fatalities.rows()); Map<ArrayXf>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
+	vector<double> susceptible_y(susceptible.rows()); Map<ArrayXd>(&susceptible_y[0], susceptible.rows(), 1) = susceptible.col(1);
+	vector<double> infected_y(infected.rows()); Map<ArrayXd>(&infected_y[0], infected.rows(), 1) = infected.col(1);
+	vector<double> recovered_y(recovered.rows()); Map<ArrayXd>(&recovered_y[0], recovered.rows(), 1) = recovered.col(1);
+	vector<double> fatalities_y(fatalities.rows()); Map<ArrayXd>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
 
 	map<string, string> keywords;
 	keywords["color"] = palette[0];
@@ -401,11 +401,11 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 
 	// Trace path of random individual
 	if (Config.trace_path) {
-		Eigen::ArrayXXf grid_coords = pop_tracker.grid_coords;
-		Eigen::ArrayXf ground_covered = pop_tracker.ground_covered.row(0);
-		Eigen::ArrayXXf active_grids = grid_coords(select_rows(ground_covered != 0), Eigen::all);
+		Eigen::ArrayXXd grid_coords = pop_tracker.grid_coords;
+		Eigen::ArrayXd ground_covered = pop_tracker.ground_covered.row(0);
+		Eigen::ArrayXXd active_grids = grid_coords(select_rows(ground_covered != 0), Eigen::all);
 
-		Eigen::ArrayXf grid;
+		Eigen::ArrayXd grid;
 		keywords["color"] = "r";
 		keywords["marker"] = "s";
 		vector<double> corner;
@@ -451,7 +451,7 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 /*-----------------------------------------------------------*/
 /*            Update figure time step (SIR only)             */
 /*-----------------------------------------------------------*/
-void visualizer::draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame)
+void visualizer::draw_SIRonly(Configuration Config, Eigen::ArrayXXd population, Population_trackers pop_tracker, int frame)
 {
 	// construct plot and visualise
 

@@ -44,8 +44,8 @@
  /*-----------------------------------------------------------*/
  /*                     Finds nearby IDs                      */
  /*-----------------------------------------------------------*/
-void find_nearby(Eigen::ArrayXXf population, vector<double> infection_zone, Eigen::ArrayXf &indices, int &infected_number, 
-	bool traveling_infects, string kind, Eigen::ArrayXXf infected_previous_step)
+void find_nearby(Eigen::ArrayXXd population, vector<double> infection_zone, Eigen::ArrayXd &indices, int &infected_number, 
+	bool traveling_infects, string kind, Eigen::ArrayXXd infected_previous_step)
 {
 	/*finds nearby IDs
 
@@ -112,7 +112,7 @@ void find_nearby(Eigen::ArrayXXf population, vector<double> infection_zone, Eige
 /*-----------------------------------------------------------*/
 /*                    Find new infections                    */
 /*-----------------------------------------------------------*/
-void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, 
+void infect(Eigen::ArrayXXd &population, Eigen::ArrayXXd &destinations, 
 	Configuration Config, int frame, RandomDevice *my_rand, bool send_to_location, 
 	vector<double> location_bounds, int location_no, double location_odds, bool test_flag)
 {
@@ -171,13 +171,13 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	*/
 
 	// mark those already infected first
-	Eigen::ArrayXXf infected_previous_step = population(select_rows(population.col(6) == 1), Eigen::all);
-	Eigen::ArrayXXf healthy_previous_step = population(select_rows(population.col(6) == 0), Eigen::all);
+	Eigen::ArrayXXd infected_previous_step = population(select_rows(population.col(6) == 1), Eigen::all);
+	Eigen::ArrayXXd healthy_previous_step = population(select_rows(population.col(6) == 0), Eigen::all);
 
 	vector<int> new_infections;
-	Eigen::ArrayXf patient, person;
+	Eigen::ArrayXd patient, person;
 	vector<double> infection_zone;
-	Eigen::ArrayXf indices;
+	Eigen::ArrayXd indices;
 	int infected_number;
 
 	// if less than half are infected, slice based on infected (to speed up computation)
@@ -244,7 +244,7 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 		ArrayXXb cond(Config.pop_size, 3);
 
 		// randomly pick individuals for testing
-		Eigen::ArrayXXf inside_world = population(select_rows(population.col(11) == 0), Eigen::all);
+		Eigen::ArrayXXd inside_world = population(select_rows(population.col(11) == 0), Eigen::all);
 		int n_samples = min(Config.number_of_tests, int(inside_world.rows()));
 
 		// flag these individuals for testing
@@ -260,8 +260,8 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 		if (select_rows(cond).size() > 0) {
 
 			population(Choices, 18) = 0; // reset testing flags
-			Eigen::ArrayXXf tested_pop = population(select_rows(cond), Eigen::all);
-			Eigen::ArrayXXf hospitalized_pop = population(select_rows(population.col(10) == 1), Eigen::all);
+			Eigen::ArrayXXd tested_pop = population(select_rows(cond), Eigen::all);
+			Eigen::ArrayXXd hospitalized_pop = population(select_rows(population.col(10) == 1), Eigen::all);
 
 			int room_left = (Config.healthcare_capacity - hospitalized_pop.rows());
 			n_samples = min(int(tested_pop.rows()), room_left);
@@ -287,7 +287,7 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 /*-----------------------------------------------------------*/
 /*                     Recover or die                        */
 /*-----------------------------------------------------------*/
-void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config, RandomDevice *my_rand)
+void recover_or_die(Eigen::ArrayXXd &population, int frame, Configuration Config, RandomDevice *my_rand)
 {
 	/*see whether to recover or die
 
@@ -335,16 +335,16 @@ void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config
 	*/
 
 	// find infected people
-	Eigen::ArrayXXf infected_people = population(select_rows(population.col(6) == 1), Eigen::all);
+	Eigen::ArrayXXd infected_people = population(select_rows(population.col(6) == 1), Eigen::all);
 
 	// define vector of how long everyone has been sick
-	Eigen::ArrayXf illness_duration_vector = frame - infected_people.col(8);
+	Eigen::ArrayXd illness_duration_vector = frame - infected_people.col(8);
 
-	Eigen::ArrayXf recovery_odds_vector = (illness_duration_vector - Config.recovery_duration[0]) / (Config.recovery_duration[1] - Config.recovery_duration[0]);
+	Eigen::ArrayXd recovery_odds_vector = (illness_duration_vector - Config.recovery_duration[0]) / (Config.recovery_duration[1] - Config.recovery_duration[0]);
 	recovery_odds_vector.max(0); // clip odds less than 0
 
 	// update states of sick people
-	Eigen::ArrayXf indices = infected_people(select_rows(recovery_odds_vector >= infected_people.col(9)), { 0 });
+	Eigen::ArrayXd indices = infected_people(select_rows(recovery_odds_vector >= infected_people.col(9)), { 0 });
 
 	vector<int> recovered;
 	vector<int> fatalities;
@@ -460,9 +460,9 @@ void compute_mortality(int age, double &mortality_chance, int risk_age,
 		double b = pow((mortality_chance / ((double(risk_age) - 1) + a)),pw);
 
 		// define linespace
-		Eigen::ArrayXf x = Eigen::ArrayXf::LinSpaced(critical_age, 0, critical_age);
+		Eigen::ArrayXd x = Eigen::ArrayXd::LinSpaced(critical_age, 0, critical_age);
 		// find values
-		Eigen::ArrayXf risk_values = (x + a).pow(pw) * b;
+		Eigen::ArrayXd risk_values = (x + a).pow(pw) * b;
 		mortality_chance = risk_values[age - 1];
 	}
 	// if (age <= risk_age) simply return the base mortality chance
@@ -476,7 +476,7 @@ void compute_mortality(int age, double &mortality_chance, int risk_age,
 /*-----------------------------------------------------------*/
 /*              healthcare population infection              */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor)
+Eigen::ArrayXXd healthcare_infection_correction(Eigen::ArrayXXd worker_population, RandomDevice *my_rand, double healthcare_risk_factor)
 {
 	/*corrects infection to healthcare population.
 
@@ -494,8 +494,8 @@ Eigen::ArrayXXf healthcare_infection_correction(Eigen::ArrayXXf worker_populatio
 		Can be used to simulate healthcare personell having extra protections in place(< 1)
 		or being more at risk due to exposure, fatigue, or other factors(> 1)
 	*/
-	Eigen::ArrayXXf sick_workers;
-	Eigen::ArrayXf cure_vector;
+	Eigen::ArrayXXd sick_workers;
+	Eigen::ArrayXd cure_vector;
 
 	if (healthcare_risk_factor < 0) {
 		// set 1 - healthcare_risk_factor workers to non sick

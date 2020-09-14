@@ -59,7 +59,7 @@ RandomDevice::RandomDevice(unsigned long n) : rand_seed(n), engine(n) { }
 /*              Uniform distribtuion generator               */
 /*-----------------------------------------------------------*/
 double RandomDevice::randUniform(double low, double high) {
-	uniform_real_distribution<float> distribution_ur(low, high);
+	uniform_real_distribution<double> distribution_ur(low, high);
 	return distribution_ur(engine);
 }
 
@@ -75,23 +75,23 @@ int RandomDevice::randUniformInt(int low, int high) {
 /*              Normal distribtuion generator               */
 /*-----------------------------------------------------------*/
 double RandomDevice::randNormal(double mean, double std) {
-	normal_distribution<float> distribution_norm(mean, std);
+	normal_distribution<double> distribution_norm(mean, std);
 	return distribution_norm(engine);
 }
 
 /*-----------------------------------------------------------*/
 /*      Random uniform distribution for a population         */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf RandomDevice::uniform_dist(double low, double high, int size_x, int size_y)
+Eigen::ArrayXXd RandomDevice::uniform_dist(double low, double high, int size_x, int size_y)
 {
 
 	// uniform distribution with low = low, high = high (using NullaryExpr)
 	//default_random_engine generator;
 	//Eigen::ArrayXf uniform_vector = Eigen::ArrayXf::NullaryExpr(size_x, size_y, [&]() { return generate_canonical<double, 32>(urng); });
-	//uniform_real_distribution<float> dist(low, high);
+	//uniform_real_distribution<double> dist(low, high);
 
-	auto distribution = [&](float) {return randUniform(low, high); };
-	Eigen::ArrayXXf uniform_vector = Eigen::ArrayXXf::NullaryExpr(size_x, size_y, distribution);
+	auto distribution = [&](double) {return randUniform(low, high); };
+	Eigen::ArrayXXd uniform_vector = Eigen::ArrayXXd::NullaryExpr(size_x, size_y, distribution);
 
 	//// normal distribution with mean = mean, stdev = std (using Eigen::Rand)
 	//Eigen::Rand::Vmt19937_64 generator;
@@ -107,7 +107,7 @@ Eigen::ArrayXXf RandomDevice::uniform_dist(double low, double high, int size_x, 
 /*-----------------------------------------------------------*/
 /*      Normal uniform distribution for a population         */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf RandomDevice::normal_dist(double mean, double std, int size_x, int size_y)
+Eigen::ArrayXXd RandomDevice::normal_dist(double mean, double std, int size_x, int size_y)
 {
 	// normal distribution with mean = mean, stdev = std (using NullaryExpr)
 	//default_random_engine generator;
@@ -115,8 +115,8 @@ Eigen::ArrayXXf RandomDevice::normal_dist(double mean, double std, int size_x, i
 	//auto distribution = [&](double) {return dist(generator); };
 	//Eigen::ArrayXXf normal_vector = Eigen::ArrayXf::NullaryExpr(size_x, size_y, distribution);
 
-	auto distribution = [&](float) {return randNormal(mean, std); };
-	Eigen::ArrayXXf normal_vector = Eigen::ArrayXXf::NullaryExpr(size_x, size_y, distribution);
+	auto distribution = [&](double) {return randNormal(mean, std); };
+	Eigen::ArrayXXd normal_vector = Eigen::ArrayXXd::NullaryExpr(size_x, size_y, distribution);
 
 	// normal distribution with mean = mean, stdev = std (using Eigen::Rand)
 	//Eigen::Rand::Vmt19937_64 generator;
@@ -130,14 +130,14 @@ Eigen::ArrayXXf RandomDevice::normal_dist(double mean, double std, int size_x, i
 /*-----------------------------------------------------------*/
 /*      Randomly select population members (probability)     */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXf RandomDevice::Random_choice_prob(int pop_size, double percentage_pop) {
+Eigen::ArrayXd RandomDevice::Random_choice_prob(int pop_size, double percentage_pop) {
 	//fraction of the population that will obey the lockdown
-	Eigen::ArrayXf initial_vector = Eigen::ArrayXf::Zero(pop_size, 1);
+	Eigen::ArrayXd initial_vector = Eigen::ArrayXd::Zero(pop_size, 1);
 
 	//lockdown vector is 1 for those not complying
 
-	Eigen::ArrayXf rand = uniform_dist(0, 1, pop_size, 1);
-	Eigen::ArrayXf random_choice_vector = (rand >= percentage_pop).select(initial_vector, 1);
+	Eigen::ArrayXd rand = uniform_dist(0, 1, pop_size, 1);
+	Eigen::ArrayXd random_choice_vector = (rand >= percentage_pop).select(initial_vector, 1);
 
 	return random_choice_vector;
 }
@@ -145,7 +145,7 @@ Eigen::ArrayXf RandomDevice::Random_choice_prob(int pop_size, double percentage_
 /*-----------------------------------------------------------*/
 /*       Randomly select population members (shuffle)        */
 /*-----------------------------------------------------------*/
-Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices) {
+Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXd input, int n_choices) {
 	//fraction of the population that will obey the lockdown
 
 	//auto distribution = [&](int) {return randUniformInt(0, input.rows()); }; // generate a random integer
@@ -167,7 +167,7 @@ Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices)
 	//cout << "-------------" << endl;
 	////cout << input << endl;
 
- 	Eigen::ArrayXf output_f = input(indices);
+ 	Eigen::ArrayXd output_f = input(indices);
 	Eigen::VectorXi output = output_f.col(0).cast<int>();
 
 	//Eigen::VectorXi output;

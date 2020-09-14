@@ -45,11 +45,11 @@
 /*-----------------------------------------------------------*/
 /*                    Select block of data                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf Select_block(Eigen::ArrayXXf input, std::vector<int> cols, int n_rows, Eigen::ArrayXf cond_vector, int cond_value, string cond_type)
+Eigen::ArrayXXd Select_block(Eigen::ArrayXXd input, std::vector<int> cols, int n_rows, Eigen::ArrayXd cond_vector, int cond_value, string cond_type)
 {
-	Eigen::ArrayXf zero_vector = Eigen::ArrayXf::Zero(n_rows, 1);
-	Eigen::ArrayXXf output(n_rows, cols.size());
-	Eigen::ArrayXf col;
+	Eigen::ArrayXd zero_vector = Eigen::ArrayXd::Zero(n_rows, 1);
+	Eigen::ArrayXXd output(n_rows, cols.size());
+	Eigen::ArrayXd col;
 
 	for (size_t n = 0; n < cols.size(); ++n) {
 
@@ -132,9 +132,9 @@ tuple<vector<int>, vector<int>> select_rows_cols(ArrayXXb conds)
 /*-----------------------------------------------------------*/
 /*              Function for repeating a vector              */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXf repeat(Eigen::ArrayXf A, int n_times)
+Eigen::ArrayXd repeat(Eigen::ArrayXd A, int n_times)
 {
-	Eigen::ArrayXf B(A.rows()*(n_times));
+	Eigen::ArrayXd B(A.rows()*(n_times));
 
 	for (int i = 0; i < A.rows(); i++) {
 
@@ -205,11 +205,11 @@ void check_folder(string folder)
 /*-----------------------------------------------------------*/
 /*    Function for computing the pairwise norm of a vector   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf pairwise_dist(Eigen::ArrayXXf a)
+Eigen::ArrayXXd pairwise_dist(Eigen::ArrayXXd a)
 {
-	Eigen::ArrayXf D2 = a.rowwise().squaredNorm(); // hurts precision
-	Eigen::ArrayXXf dist = D2.rowwise().replicate(a.rows()) + D2.transpose().colwise().replicate(a.rows());
-	Eigen::ArrayXXf twoAB = 2.*a.matrix()*a.matrix().transpose();
+	Eigen::ArrayXd D2 = a.rowwise().squaredNorm(); // hurts precision
+	Eigen::ArrayXXd dist = D2.rowwise().replicate(a.rows()) + D2.transpose().colwise().replicate(a.rows());
+	Eigen::ArrayXXd twoAB = 2.*a.matrix()*a.matrix().transpose();
 	dist -= twoAB; // needs a square root
 
 	return dist;
@@ -218,9 +218,9 @@ Eigen::ArrayXXf pairwise_dist(Eigen::ArrayXXf a)
 /*-----------------------------------------------------------*/
 /* Function for computing the pairwise difference of a vector*/
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf pairwise_diff(Eigen::ArrayXf a)
+Eigen::ArrayXXd pairwise_diff(Eigen::ArrayXd a)
 {
-	Eigen::ArrayXXf dist = a.transpose().colwise().replicate(a.rows()) - a.rowwise().replicate(a.rows());
+	Eigen::ArrayXXd dist = a.transpose().colwise().replicate(a.rows()) - a.rowwise().replicate(a.rows());
 	return dist;
 }
 
@@ -272,7 +272,7 @@ vector<int> slice(vector<int> const &v, int m, int n)
 /*-----------------------------------------------------------*/
 /*               Unique elements of std::vector              */
 /*-----------------------------------------------------------*/
-void unique_elements(vector<float> &v)
+void unique_elements(vector<double> &v)
 {
 	// remove consecutive (adjacent) duplicates
 	auto last = unique(v.begin(), v.end());

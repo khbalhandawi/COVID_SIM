@@ -69,12 +69,12 @@ void simulation::tstep()
 	takes a time step in the simulation
 	*/
 	
-	Eigen::ArrayXXf outside_world = population(select_rows(population.col(11) != 0), Eigen::all); // outside main world
-	Eigen::ArrayXXf inside_world = population(select_rows(population.col(11) == 0), Eigen::all); // inside main world
-	Eigen::ArrayXXf travelling_pop = population(select_rows(population.col(12) == 0), Eigen::all); // travelling individuals
-	Eigen::ArrayXXf at_destination = population(select_rows(population.col(12) == 1), Eigen::all); // arrived individuals
-	Eigen::ArrayXXf pop_hospitalized = population(select_rows(population.col(10) == 1), Eigen::all); // hospitalized individuals
-	Eigen::ArrayXXf pop_infected = population(select_rows(population.col(6) == 1), Eigen::all); // infected individuals
+	Eigen::ArrayXXd outside_world = population(select_rows(population.col(11) != 0), Eigen::all); // outside main world
+	Eigen::ArrayXXd inside_world = population(select_rows(population.col(11) == 0), Eigen::all); // inside main world
+	Eigen::ArrayXXd travelling_pop = population(select_rows(population.col(12) == 0), Eigen::all); // travelling individuals
+	Eigen::ArrayXXd at_destination = population(select_rows(population.col(12) == 1), Eigen::all); // arrived individuals
+	Eigen::ArrayXXd pop_hospitalized = population(select_rows(population.col(10) == 1), Eigen::all); // hospitalized individuals
+	Eigen::ArrayXXd pop_infected = population(select_rows(population.col(6) == 1), Eigen::all); // infected individuals
 	tc.tic(); // reset clock
 	//======================================================================================//
 	// check destinations if active
@@ -151,14 +151,14 @@ void simulation::tstep()
 	//out of bounds
 	//define bounds arrays, excluding those who are marked as having a custom destination
 	if (inside_world.rows() > 0) {
-		Eigen::ArrayXXf _xbounds(inside_world.rows(), 2), _ybounds(inside_world.rows(), 2);
+		Eigen::ArrayXXd _xbounds(inside_world.rows(), 2), _ybounds(inside_world.rows(), 2);
 		double buffer = 0.0;
 
-		_xbounds << Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.xbounds[0] + buffer),
-					Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.xbounds[1] - buffer);
+		_xbounds << Eigen::ArrayXd::Ones(inside_world.rows(), 1) * (Config.xbounds[0] + buffer),
+					Eigen::ArrayXd::Ones(inside_world.rows(), 1) * (Config.xbounds[1] - buffer);
 
-		_ybounds << Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.ybounds[0] + buffer),
-					Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.ybounds[1] - buffer);
+		_ybounds << Eigen::ArrayXd::Ones(inside_world.rows(), 1) * (Config.ybounds[0] + buffer),
+					Eigen::ArrayXd::Ones(inside_world.rows(), 1) * (Config.ybounds[1] - buffer);
 
 		population(select_rows(population.col(11) == 0), Eigen::all) = update_wall_forces(population(select_rows(population.col(11) == 0), Eigen::all),
 																				  _xbounds, _ybounds);
@@ -238,14 +238,17 @@ void simulation::tstep()
 	//report stuff to console
 	if ((Config.verbose) && ((frame % Config.report_freq) == 0)) {
 		cout << frame;
-		cout << ": healthy: " << pop_tracker.susceptible.back();
-		cout << ": infected: " << pop_tracker.infectious.back();
-		cout << ": recovered: " << pop_tracker.recovered.back();
+		cout << ": S: " << pop_tracker.susceptible.back();
+		cout << ": I: " << pop_tracker.infectious.back();
+		cout << ": R: " << pop_tracker.recovered.back();
 		cout << ": in treatment: " << pop_hospitalized.rows();
-		cout << ": fatalities: " << pop_tracker.fatalities.back();
+		cout << ": F: " << pop_tracker.fatalities.back();
 		cout << ": of total: " << Config.pop_size;
+		if (Config.track_position) {
+			cout << ": D: " << pop_tracker.distance_travelled.back()*100;
+		}
 		if (Config.track_GC) {
-			cout << ": ground covered: " << pop_tracker.mean_perentage_covered.back()*100;
+			cout << ": GC: " << pop_tracker.mean_perentage_covered.back()*100;
 		}
 		cout << " time: " << tc.toc() << " ms";
 		cout << endl;
@@ -286,16 +289,16 @@ void simulation::callback()
 		}
 		else if (Config.patient_Z_loc == "central") {
 
-			Eigen::ArrayXXf center = Eigen::ArrayXXf::Zero(Config.pop_size, 2);
+			Eigen::ArrayXXd center = Eigen::ArrayXXd::Zero(Config.pop_size, 2);
 
 			center.col(0) = (Config.xbounds[0] + Config.xbounds[1]) / 2;
 			center.col(1) = (Config.ybounds[0] + Config.ybounds[1]) / 2;
 
-			Eigen::ArrayXXf to_center = (center - population(Eigen::all, { 1,2 }));
-			Eigen::ArrayXf dist = to_center.rowwise().norm().array();
+			Eigen::ArrayXXd to_center = (center - population(Eigen::all, { 1,2 }));
+			Eigen::ArrayXd dist = to_center.rowwise().norm().array();
 
 			// infect nearest individual to center
-			ArrayXXf::Index minRow;
+			ArrayXXd::Index minRow;
 			dist.minCoeff(&minRow);
 
 			population(minRow, 6) = 1;
@@ -363,11 +366,11 @@ void simulation::run()
 
 		cond << (population.col(6) == 1), (population.col(6) == 4);
 
-		Eigen::ArrayXXf pop_susceptible = population(select_rows(population.col(6) == 0), Eigen::all); // healthy individuals
-		Eigen::ArrayXXf pop_recovered = population(select_rows(population.col(6) == 2), Eigen::all); // recovered individuals
-		Eigen::ArrayXXf pop_fatality = population(select_rows(population.col(6) == 3), Eigen::all); // dead individuals
-		Eigen::ArrayXXf pop_asymptomatic = population(select_rows(population.col(6) == 4), Eigen::all); // asymptomatic individuals
-		Eigen::ArrayXXf pop_infectious = population(select_rows_any(cond), Eigen::all); // infectious individuals
+		Eigen::ArrayXXd pop_susceptible = population(select_rows(population.col(6) == 0), Eigen::all); // healthy individuals
+		Eigen::ArrayXXd pop_recovered = population(select_rows(population.col(6) == 2), Eigen::all); // recovered individuals
+		Eigen::ArrayXXd pop_fatality = population(select_rows(population.col(6) == 3), Eigen::all); // dead individuals
+		Eigen::ArrayXXd pop_asymptomatic = population(select_rows(population.col(6) == 4), Eigen::all); // asymptomatic individuals
+		Eigen::ArrayXXd pop_infectious = population(select_rows_any(cond), Eigen::all); // infectious individuals
 
 
 		cout << "\n\n" << "-----stopping-----" << endl;

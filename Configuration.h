@@ -245,7 +245,7 @@ public:
 	// random generator
 	bool constant_seed; // whether user specifies a constant seed file or not
 
-	Eigen::ArrayXf lockdown_vector;
+	Eigen::ArrayXd lockdown_vector;
 
 	/*-----------------------------------------------------------*/
 	/*          Throw exception if config key not found          */

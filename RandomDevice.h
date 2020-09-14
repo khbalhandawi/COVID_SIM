@@ -29,9 +29,9 @@ private:
 public:
 	unsigned long rand_seed;
 	default_random_engine engine;
-	uniform_real_distribution<float> distribution_ur;
+	uniform_real_distribution<double> distribution_ur;
 	uniform_int_distribution<int> distribution_ui;
-	normal_distribution<float> distribution_norm;
+	normal_distribution<double> distribution_norm;
 	/*-----------------------------------------------------------*/
 	/*                 Random device Constructor                 */
 	/*-----------------------------------------------------------*/
@@ -55,22 +55,22 @@ public:
 	/*-----------------------------------------------------------*/
 	/*      Random uniform distribution for a population         */
 	/*-----------------------------------------------------------*/
-	Eigen::ArrayXXf uniform_dist(double low, double high, int size_x, int size_y);
+	Eigen::ArrayXXd uniform_dist(double low, double high, int size_x, int size_y);
 
 	/*-----------------------------------------------------------*/
 	/*      Normal uniform distribution for a population         */
 	/*-----------------------------------------------------------*/
-	Eigen::ArrayXXf normal_dist(double low, double high, int size_x, int size_y);
+	Eigen::ArrayXXd normal_dist(double low, double high, int size_x, int size_y);
 
 	/*-----------------------------------------------------------*/
 	/*      Randomly select population members (probability)     */
 	/*-----------------------------------------------------------*/
-	Eigen::ArrayXf Random_choice_prob(int pop_size, double percentage_pop);
+	Eigen::ArrayXd Random_choice_prob(int pop_size, double percentage_pop);
 
 	/*-----------------------------------------------------------*/
 	/*       Randomly select population members (shuffle)        */
 	/*-----------------------------------------------------------*/
-	Eigen::VectorXi Random_choice(Eigen::ArrayXf input, int n_choices);
+	Eigen::VectorXi Random_choice(Eigen::ArrayXd input, int n_choices);
 
 	/*-----------------------------------------------------------*/
 	/*                Randomly generate a number                 */

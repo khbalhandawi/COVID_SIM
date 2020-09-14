@@ -45,7 +45,7 @@
 /*-----------------------------------------------------------*/
 /*                       Constructor                         */
 /*-----------------------------------------------------------*/
-Population_trackers::Population_trackers(Configuration Config_init, Eigen::ArrayXXf grid_coords_init, Eigen::ArrayXXf ground_covered_init)
+Population_trackers::Population_trackers(Configuration Config_init, Eigen::ArrayXXd grid_coords_init, Eigen::ArrayXXd ground_covered_init)
 {
 	susceptible = { };
 	infectious = { };
@@ -53,11 +53,11 @@ Population_trackers::Population_trackers(Configuration Config_init, Eigen::Array
 	fatalities = { };
 	Config = Config_init;
 	distance_travelled = { };
-	total_distance = Eigen::ArrayXf::Zero(Config_init.pop_size, 1); // distance travelled by individuals
+	total_distance = Eigen::ArrayXd::Zero(Config_init.pop_size, 1); // distance travelled by individuals
 	mean_perentage_covered = { };
 	grid_coords = grid_coords_init;
 	ground_covered = ground_covered_init;
-	perentage_covered = Eigen::ArrayXf::Zero(Config_init.pop_size, 1); // portion of world covered by individuals
+	perentage_covered = Eigen::ArrayXd::Zero(Config_init.pop_size, 1); // portion of world covered by individuals
 	// PLACEHOLDER - whether recovered individual can be reinfected
 	reinfect = false;
 }
@@ -65,7 +65,7 @@ Population_trackers::Population_trackers(Configuration Config_init, Eigen::Array
 /*-----------------------------------------------------------*/
 /*                      Update counts                        */
 /*-----------------------------------------------------------*/
-void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
+void Population_trackers::update_counts(Eigen::ArrayXXd population, int frame)
 {
 
 	/*docstring
@@ -80,15 +80,15 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 	recovered.push_back(n_recovered);
 	fatalities.push_back(n_fatalities);
 
-	Eigen::ArrayXXf ground_covered_zero = Eigen::ArrayXXf::Zero(pop_size, int(pow((Config.n_gridpoints - 1), 2)) );
+	Eigen::ArrayXXd ground_covered_zero = Eigen::ArrayXXd::Zero(pop_size, int(pow((Config.n_gridpoints - 1), 2)) );
 
 	// Total distance travelled
 	if (Config.track_position) {
-		Eigen::ArrayXXf speed_vector = population(select_rows(population.col(11) == 0), { 3,4 }); // speed of individuals within world
-		Eigen::ArrayXf distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
+		Eigen::ArrayXXd speed_vector = population(select_rows(population.col(11) == 0), { 3,4 }); // speed of individuals within world
+		Eigen::ArrayXd distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
 
-		total_distance(select_rows(population.col(11) == 0), all) += distance_individuals; // cumilative distance travelled
-		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumilative distance
+		total_distance(select_rows(population.col(11) == 0), all) += distance_individuals; // cumulative distance travelled
+		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumulative distance
 	}
 	else {
 		distance_travelled.push_back(0.0); // mean cumulative distance
@@ -100,30 +100,30 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 
 			// Track ground covered
 			int n_inside_world = int((population.col(11) == 0).count());
-			Eigen::ArrayXXf position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
-			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
+			Eigen::ArrayXXd position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
+			Eigen::ArrayXXd GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
 
 			// 1D
-			Eigen::ArrayXf pos_vector_x = position_vector.col(0);
-			Eigen::ArrayXf pos_vector_y = position_vector.col(1);
+			Eigen::ArrayXd pos_vector_x = position_vector.col(0);
+			Eigen::ArrayXd pos_vector_y = position_vector.col(1);
 
-			Eigen::ArrayXXf g1 = grid_coords.col(0).replicate(1, n_inside_world);
-			Eigen::ArrayXXf g2 = grid_coords.col(1).replicate(1, n_inside_world);
-			Eigen::ArrayXXf g3 = grid_coords.col(2).replicate(1, n_inside_world);
-			Eigen::ArrayXXf g4 = grid_coords.col(3).replicate(1, n_inside_world);
+			Eigen::ArrayXXd g1 = grid_coords.col(0).replicate(1, n_inside_world);
+			Eigen::ArrayXXd g2 = grid_coords.col(1).replicate(1, n_inside_world);
+			Eigen::ArrayXXd g3 = grid_coords.col(2).replicate(1, n_inside_world);
+			Eigen::ArrayXXd g4 = grid_coords.col(3).replicate(1, n_inside_world);
 
-			Eigen::ArrayXXf l_x = -1 * (g1.rowwise() - pos_vector_x.transpose()).transpose();
-			Eigen::ArrayXXf l_y = -1 * (g2.rowwise() - pos_vector_y.transpose()).transpose();
-			Eigen::ArrayXXf u_x = (g3.rowwise() - pos_vector_x.transpose()).transpose();
-			Eigen::ArrayXXf u_y = (g4.rowwise() - pos_vector_y.transpose()).transpose();
+			Eigen::ArrayXXd l_x = -1 * (g1.rowwise() - pos_vector_x.transpose()).transpose();
+			Eigen::ArrayXXd l_y = -1 * (g2.rowwise() - pos_vector_y.transpose()).transpose();
+			Eigen::ArrayXXd u_x = (g3.rowwise() - pos_vector_x.transpose()).transpose();
+			Eigen::ArrayXXd u_y = (g4.rowwise() - pos_vector_y.transpose()).transpose();
 
 			ArrayXXb conds = (l_x > 0) && (u_x > 0) && (l_y > 0) && (u_y > 0);
 
-			GC_matrix += conds.cast<float>();
+			GC_matrix += conds.cast<double>();
 			ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
 
 			// count number of non-zeros rowwise
-			perentage_covered = (ground_covered != 0).rowwise().count().cast<float>() / grid_coords.rows();
+			perentage_covered = (ground_covered != 0).rowwise().count().cast<double>() / grid_coords.rows();
 			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
 		}
 	}
@@ -151,7 +151,7 @@ Population_trackers::~Population_trackers()
 /*-----------------------------------------------------------*/
 /*                  initialize population                    */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_rand, int mean_age, int max_age,
+Eigen::ArrayXXd initialize_population(Configuration Config, RandomDevice *my_rand, int mean_age, int max_age,
 	vector<double> xbounds, vector<double> ybounds)
 {
 	/*initialized the population for the simulation
@@ -197,17 +197,17 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 	*/
 
 	// initialize population matrix
-	Eigen::ArrayXXf population = Eigen::ArrayXXf::Zero(Config.pop_size, 19);
+	Eigen::ArrayXXd population = Eigen::ArrayXXd::Zero(Config.pop_size, 19);
 	// initalize unique IDs
-	population.col(0) = Eigen::ArrayXf::LinSpaced(Config.pop_size, 0, Config.pop_size - 1);
+	population.col(0) = Eigen::ArrayXd::LinSpaced(Config.pop_size, 0, Config.pop_size - 1);
 
 	// initialize random coordinates
 	population.block(0,1,Config.pop_size,2) = my_rand->uniform_dist(xbounds[0] + 0.05, xbounds[1] - 0.05, Config.pop_size, 2);
 
 	// initialize random speeds - 0.25 to 0.25
-	Eigen::ArrayXXf vect_un = my_rand->uniform_dist(-1, 1, Config.pop_size, 2);
+	Eigen::ArrayXXd vect_un = my_rand->uniform_dist(-1, 1, Config.pop_size, 2);
 
-	Eigen::ArrayXXf speed_vector = vect_un.array().colwise() / vect_un.rowwise().norm();
+	Eigen::ArrayXXd speed_vector = vect_un.array().colwise() / vect_un.rowwise().norm();
 	population(Eigen::all, { 3,4 }) = Config.max_speed * speed_vector;
 
 	// initalize ages
@@ -231,7 +231,7 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 /*-----------------------------------------------------------*/
 /*                 initialize destinations                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinations)
+Eigen::ArrayXXd initialize_destination_matrix(int pop_size, int total_destinations)
 {
 	/*intializes the destination matrix
 
@@ -248,7 +248,7 @@ Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinatio
 	one if for example people can go to work, supermarket, home, etc.
 	*/
 
-	Eigen::ArrayXXf destinations = Eigen::ArrayXXf::Zero(pop_size, total_destinations * 2);
+	Eigen::ArrayXXd destinations = Eigen::ArrayXXd::Zero(pop_size, total_destinations * 2);
 
 	return destinations;
 }
@@ -257,7 +257,7 @@ Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinatio
 /*-----------------------------------------------------------*/
 /*                initialize ground covered                  */
 /*-----------------------------------------------------------*/
-tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> initialize_ground_covered_matrix(int pop_size, int n_gridpoints, vector<double> xbounds,
+tuple<Eigen::ArrayXXd, Eigen::ArrayXXd> initialize_ground_covered_matrix(int pop_size, int n_gridpoints, vector<double> xbounds,
 	vector<double> ybounds)
 {
 	/*intializes the destination matrix
@@ -280,19 +280,19 @@ tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> initialize_ground_covered_matrix(int pop
 	lower and upper bounds of y axis
 	*/
 
-	Eigen::ArrayXf x = Eigen::ArrayXf::LinSpaced(n_gridpoints, xbounds[0], xbounds[1]);
-	Eigen::ArrayXf y = Eigen::ArrayXf::LinSpaced(n_gridpoints, ybounds[0], ybounds[1]);
+	Eigen::ArrayXd x = Eigen::ArrayXd::LinSpaced(n_gridpoints, xbounds[0], xbounds[1]);
+	Eigen::ArrayXd y = Eigen::ArrayXd::LinSpaced(n_gridpoints, ybounds[0], ybounds[1]);
 
 	// create list of grid points and their bounding boxes
-	Eigen::ArrayXf grid_coords_xlb = x(seq(0, last - 1)).replicate(n_gridpoints - 1, 1);
-	Eigen::ArrayXf grid_coords_ylb = repeat(y(seq(0, last - 1)), n_gridpoints - 1);
-	Eigen::ArrayXf grid_coords_xub = x(seq(1, last)).replicate(n_gridpoints - 1, 1);
-	Eigen::ArrayXf grid_coords_yub = repeat(y(seq(1, last)), n_gridpoints - 1);
+	Eigen::ArrayXd grid_coords_xlb = x(seq(0, last - 1)).replicate(n_gridpoints - 1, 1);
+	Eigen::ArrayXd grid_coords_ylb = repeat(y(seq(0, last - 1)), n_gridpoints - 1);
+	Eigen::ArrayXd grid_coords_xub = x(seq(1, last)).replicate(n_gridpoints - 1, 1);
+	Eigen::ArrayXd grid_coords_yub = repeat(y(seq(1, last)), n_gridpoints - 1);
 
-	Eigen::ArrayXXf grid_coords(grid_coords_xlb.rows(), grid_coords_xlb.cols()*4);
+	Eigen::ArrayXXd grid_coords(grid_coords_xlb.rows(), grid_coords_xlb.cols()*4);
 	grid_coords << grid_coords_xlb, grid_coords_ylb, grid_coords_xub, grid_coords_yub;
 
-	Eigen::ArrayXXf ground_covered = Eigen::ArrayXXf::Zero(pop_size, pow((n_gridpoints - 1),2) );
+	Eigen::ArrayXXd ground_covered = Eigen::ArrayXXd::Zero(pop_size, pow((n_gridpoints - 1),2) );
 
 	//return grid_coords, ground_covered
 	return { grid_coords, ground_covered };
@@ -301,7 +301,7 @@ tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> initialize_ground_covered_matrix(int pop
 /*-----------------------------------------------------------*/
 /*                   destination bounds                      */
 /*-----------------------------------------------------------*/
-tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> set_destination_bounds(Eigen::ArrayXXf population, Eigen::ArrayXXf destinations, double xmin, double ymin,
+tuple<Eigen::ArrayXXd, Eigen::ArrayXXd> set_destination_bounds(Eigen::ArrayXXd population, Eigen::ArrayXXd destinations, double xmin, double ymin,
 	double xmax, double ymax, RandomDevice *my_rand, int dest_no, bool teleport)
 {
 	/*teleports all persons within limits
@@ -361,7 +361,7 @@ tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> set_destination_bounds(Eigen::ArrayXXf p
 /*-----------------------------------------------------------*/
 /*                   save population data                    */
 /*-----------------------------------------------------------*/
-void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker)
+void save_data(Eigen::ArrayXXd population, Population_trackers pop_tracker)
 {
 	/*dumps simulation data to disk
 
@@ -404,7 +404,7 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker)
 /*-----------------------------------------------------------*/
 /*         save population data at current time step         */
 /*-----------------------------------------------------------*/
-void save_population(Eigen::ArrayXXf population, int tstep, string folder)
+void save_population(Eigen::ArrayXXd population, int tstep, string folder)
 {
 	/*dumps population data at given timestep to disk
 

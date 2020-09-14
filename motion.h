@@ -8,27 +8,27 @@ using namespace std;
 /*-----------------------------------------------------------*/
 /*                      Update positions                     */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_positions(Eigen::ArrayXXf population, double dt = 0.01);
+Eigen::ArrayXXd update_positions(Eigen::ArrayXXd population, double dt = 0.01);
 
 /*-----------------------------------------------------------*/
 /*                      Update velocities                    */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed = 0.3, double dt = 0.01);
+Eigen::ArrayXXd update_velocities(Eigen::ArrayXXd population, double max_speed = 0.3, double dt = 0.01);
 
 /*-----------------------------------------------------------*/
 /*                      Update wall forces                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf xbounds, Eigen::ArrayXXf ybounds, double wall_buffer = 0.01, double bounce_buffer = 0.005);
+Eigen::ArrayXXd update_wall_forces(Eigen::ArrayXXd population, Eigen::ArrayXXd xbounds, Eigen::ArrayXXd ybounds, double wall_buffer = 0.01, double bounce_buffer = 0.005);
 
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double social_distance_factor);
+Eigen::ArrayXXd update_repulsive_forces(Eigen::ArrayXXd population, double social_distance_factor);
 
 /*-----------------------------------------------------------*/
 /*                    Update gravity forces                  */
 /*-----------------------------------------------------------*/
-tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population, double time, double last_step_change, RandomDevice *my_rand, double wander_step_size = 0.01,
+tuple<Eigen::ArrayXXd, double> update_gravity_forces(Eigen::ArrayXXd population, double time, double last_step_change, RandomDevice *my_rand, double wander_step_size = 0.01,
 	double gravity_strength = 0.1, double wander_step_duration = 0.01);
 
 /*-----------------------------------------------------------*/

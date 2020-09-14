@@ -32,17 +32,17 @@ public:
 	/*-----------------------------------------------------------*/
 	/*                  Update figure time step                  */
 	/*-----------------------------------------------------------*/
-	void draw_tstep(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame);
+	void draw_tstep(Configuration Config, Eigen::ArrayXXd population, Population_trackers pop_tracker, int frame);
 
 	/*-----------------------------------------------------------*/
 	/*       Update figure time step (scatter plot only)         */
 	/*-----------------------------------------------------------*/
-	void draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame);
+	void draw_tstep_scatter(Configuration Config, Eigen::ArrayXXd population, Population_trackers pop_tracker, int frame);
 
 	/*-----------------------------------------------------------*/
 	/*            Update figure time step (SIR only)             */
 	/*-----------------------------------------------------------*/
-	void draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame);
+	void draw_SIRonly(Configuration Config, Eigen::ArrayXXd population, Population_trackers pop_tracker, int frame);
 
 	/*-----------------------------------------------------------*/
 	/*                     Draw a rectangle                      */
