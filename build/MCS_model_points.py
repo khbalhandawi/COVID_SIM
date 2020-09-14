@@ -1,5 +1,3 @@
-from simulation import Simulation
-from utils import check_folder
 import numpy as np
 import scipy.stats as st
 import statsmodels as sm
@@ -10,6 +8,8 @@ import matplotlib as mpl
 from matplotlib import rcParams
 import pickle
 import matplotlib.patches as patches
+import subprocess
+from subprocess import PIPE,STDOUT
 
 #==============================================================================#
 # SCALING BY A RANGE
@@ -27,41 +27,82 @@ def scaling(x,l,u,operation):
     
     return x_out
 
-def parallel_sampling(sim_object,n_samples,log_file):
+#==============================================================================#
+# Execute system commands and return output to console
+def system_command(command):
+
+    #CREATE_NO_WINDOW = 0x08000000 # Create no console window flag
+
+    p = subprocess.Popen(command,shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+                         ) # disable windows errors
+
+    for line in iter(p.stdout.readline, b''):
+        line = line.decode('utf-8')
+        print(line.rstrip()) # print line by line
+        # rstrip() to remove \n separator
+
+    output, error = p.communicate()
+    if p.returncode != 0: # crash the program
+        raise Exception("cpp failed %d %s %s" % (p.returncode, output, error))
+
+#==============================================================================#
+# C++ COMMAND
+def cpp_application( i, design_variables, parameters, output_file_n, debug = False ):
+    design_variables_str = ' '.join(map(str,design_variables)) # print variables as space delimited string
+    parameters_str = ' '.join(map(str,parameters)) # print parameters as space delimited string
+    command = "cpp_corona_simulation %i %s %s %s" %(i, design_variables_str, parameters_str, output_file_n)
+    
+    print(command)
+    if not debug:
+        system_command(command)
+
+#==============================================================================#
+# Function to parallelize
+def processInput(procnum, design_variables, parameters, output_file_base):
+
+    output_file_n = '%s_%i.log' %(output_file_base, procnum)
+    cpp_application(procnum,design_variables,parameters,output_file_n)
+    #--------------------------------------------------------------------------#
+    # Get results
+    output_file_path = "data/" + output_file_n
+
+    with open(output_file_path, 'r') as fh:
+        for line in fh:
+            pass
+        last = line
+
+    values = last.split(',')
+    [ _, _, _, _, _, infected, fatalities, mean_distance, mean_GC, _ ] = values
+
+    return [int(infected), int(fatalities), float(mean_GC), float(mean_distance)]
+
+#==============================================================================#
+# Parallel sampling of blackbox
+def parallel_sampling(design_variables,parameters,output_file_base,n_samples):
     from joblib import Parallel, delayed
     import multiprocessing
-        
-    # what are your inputs, and what operation do you want to 
-    # perform on each input. For example...
-    inputs = range(n_samples) 
-
-    resultsfile=open(log_file,'w')
-    resultsfile.write('index'+','+'SD_factor'+','+'threshold'+','+'essential_workers'+','+'testing_capacity'+','
-                    +'n_infected'+','+'n_fatalaties'+','+'mean_GC'+','+'mean_distance'+','+'n_steps'+'\n')
-    resultsfile.close()
-
-    def processInput(i,sim,log_file):
-        sim.initialize_simulation()
-        #run, hold CTRL+C in terminal to end scenario early
-        sim.run()
-                
-        infected = max(sim.pop_tracker.infectious)
-        fatalities = sim.pop_tracker.fatalities[-1]
-        mean_distance = (sim.pop_tracker.distance_travelled[-1] / sim.frame) * 100
-        mean_GC = (sim.pop_tracker.mean_perentage_covered[-1] / sim.frame) * 100000
-
-        resultsfile=open(log_file,'a+')
-        resultsfile.write(str(i)+','+str(sim.Config.social_distance_factor / 0.0001)+','+str(sim.Config.social_distance_threshold_on)+','
-                        +str(sim.Config.social_distance_violation)+','+str(sim.Config.number_of_tests)+','
-                        +str(infected)+','+str(fatalities)+','+str(mean_GC)+','+str(mean_distance)+','+str(sim.frame)+'\n')
-        resultsfile.close()
-
-
-        return [infected, fatalities, mean_GC, mean_distance]
+    from multiprocessing import Process, Pool
+    import subprocess
     
-    num_cores = multiprocessing.cpu_count() - 4
-        
-    results = Parallel(n_jobs=num_cores)(delayed(processInput)(i,sim,log_file) for i in inputs)
+    num_threads = multiprocessing.cpu_count() - 4
+
+    # qout = multiprocessing.Queue()
+    # processes = [multiprocessing.Process(target=processInput, args=(i, design_variables, parameters, output_file_base, qout)) for i in range(n_samples)]
+
+    args = []
+    for i in range(n_samples):
+        args += [(i,design_variables,parameters,output_file_base)]
+
+    with Pool(num_threads) as pool:
+        results = pool.starmap(processInput, args)
+
+    # for p in processes:
+    #     p.start()
+
+    # for p in processes:
+    #     p.join()
+
+    # results = [qout.get() for p in processes]
 
     infected_i = []; fatalities_i = []; GC_i = []; distance_i = []
     for result in results:
@@ -73,39 +114,23 @@ def parallel_sampling(sim_object,n_samples,log_file):
 
     return infected_i, fatalities_i, GC_i, distance_i
 
-def serial_sampling(sim_object,n_samples,log_file):
+#==============================================================================#
+# Serial sampling of blackbox
+def serial_sampling(design_variables, parameters, output_file_base, n_samples):
 
     infected_i = []; fatalities_i = []; GC_i = []; distance_i = []
 
-    resultsfile=open(log_file,'w')
-    resultsfile.write('index'+','+'SD_factor'+','+'threshold'+','+'essential_workers'+','+'testing_capacity'+','
-                    +'n_infected'+','+'n_fatalaties'+','+'mean_GC'+','+'mean_distance'+','+'n_steps'+'\n')
-    resultsfile.close()
-
     for i in range(n_samples):  
-        
-        sim_object.initialize_simulation()
-        #run, hold CTRL+C in terminal to end scenario early
-        sim_object.run()
-                
-        infected = max(sim_object.pop_tracker.infectious)
-        fatalities = sim.pop_tracker.fatalities[-1]
-        mean_distance = (sim.pop_tracker.distance_travelled[-1] / sim.frame) * 100
-        mean_GC = (sim.pop_tracker.mean_perentage_covered[-1] / sim.frame) * 100000
-        
+        [infected, fatalities, mean_GC, mean_distance] = processInput(i, design_variables, parameters, output_file_base)
+
         infected_i += [infected]
         fatalities_i += [fatalities]
         GC_i += [mean_GC]
         distance_i += [mean_distance]
 
-        resultsfile=open(log_file,'a+')
-        resultsfile.write(str(i)+','+str(sim.Config.social_distance_factor / 0.0001)+','+str(sim.Config.social_distance_threshold_on)+','
-                        +str(sim.Config.social_distance_violation)+','+str(sim.Config.number_of_tests)+','
-                        +str(infected)+','+str(fatalities)+','+str(mean_GC)+','+str(mean_distance)+','+str(sim.frame)+'\n')
-        resultsfile.close()
-
     return infected_i, fatalities_i, GC_i, distance_i
 
+#==============================================================================#
 # Create models from data
 def best_fit_distribution(data, bins=200, ax=None):
     """Model data by finding best fit distribution to data"""
@@ -191,6 +216,8 @@ def best_fit_distribution(data, bins=200, ax=None):
     
     return (best_distribution.name, best_params, name_d[:6])
 
+#==============================================================================#
+# Generate pdf functions
 def make_pdf(dist, params, size=10000):
     """Generate distributions's Probability Distribution Function """
 
@@ -210,6 +237,8 @@ def make_pdf(dist, params, size=10000):
 
     return pdf
 
+#==============================================================================#
+# Plot pdf function
 def plot_distribution(data, fun_name, label_name, n_bins, run, 
                       discrete = False, min_bin_width = 0, 
                       fig_swept = None, run_label = 'PDF', color = u'b',
@@ -331,82 +360,16 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     
     return dataXLim, dataYLim, mean_data, std_data
 
+#==============================================================================#
+# %% Main execution
 if __name__ == '__main__':
 
-    #===================================================================#
-    # R5 opts
-    #
-    # # Model variables
-    # bounds = np.array([[   16    , 101   ], # number of essential workers
-    #                    [   0.05  , 0.3   ], # Social distancing factor
-    #                    [   10    , 51    ]]) # Testing capacity
-    #
-    # # Points to plot
-    # opt_1 = np.array([0.50, 0.50, 0.50])
-    # opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
-
-    # opt_2 = np.array([0.84676, 0.0094455, 0.15378])
-    # opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
-
-    # opt_3 = np.array([1.000000000000000, 0.250000000000000, 0.250000000000000])
-    # opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
-
-    # opt_4 = np.array([0.340000000000000, 0.740000000000000, 0.730000000000000])
-    # opt_4_unscaled = scaling(opt_4, bounds[:3,0], bounds[:3,1], 2)
-
-    # print('point #1: E = %f, S = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
-    # print('point #2: E = %f, S = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
-    # print('point #3: E = %f, S = %f, T = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]))
-    # print('point #4: E = %f, S = %f, T = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]))
-    
-    # points = np.vstack((opt_1_unscaled,opt_2_unscaled,opt_3_unscaled,opt_4_unscaled))
-
-    # labels = ['Nominal values $\mathbf{x} = [%.2g ~ %.2g ~ %.2g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
-    #           '$\mathtt{StoMADS-PB}$ unconstrained problem: $\mathbf{x} = [%.2g ~ %.2g ~ %.2g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]),
-    #           '$\mathtt{StoMADS-PB}$ constrained problem: $\mathbf{x} = [%.2g ~ %.2g ~ %.2g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]),
-    #           'Trail point: $\mathbf{x} = [%.2g ~ %.2g ~ %.2g]^{\mathrm{T}}$' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]),
-    # fit_cond = True # Do not fit data
-    # run = 0 # starting point
-    #===================================================================#
-    # R6 opts
-
-    # # Model variables
-    # bounds = np.array([[   16    , 101   ], # number of essential workers
-    #                    [   0.05  , 0.3   ], # Social distancing factor
-    #                    [   10    , 51    ]]) # Testing capacity
-
-    # # Points to plot
-    # opt_1 = np.array([0.50, 0.50, 0.50])
-    # opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
-
-    # opt_2 = np.array([0.98884, 0.0089353, 0.95933])
-    # opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
-
-    # opt_3 = np.array([ 0.98388735454864395535, 0.00016188624431734411, 0.95337104798333527356])
-    # opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
-
-    # opt_4 = np.array([0.8125, 0.019531, 0.21875])
-    # opt_4_unscaled = scaling(opt_4, bounds[:3,0], bounds[:3,1], 2)
-
-    # print('point #1: E = %f, S = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
-    # print('point #2: E = %f, S = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
-    # print('point #3: E = %f, S = %f, T = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]))
-    # print('point #4: E = %f, S = %f, T = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]))
-    
-    # points = np.vstack((opt_1_unscaled,opt_2_unscaled,opt_3_unscaled,opt_4_unscaled))
-
-    # labels = ['Nominal values $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
-    #           '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 1: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]),
-    #           '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]),
-    #           '$\mathtt{StoMADS-PB}$ unconstrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2])]
-    # fit_cond = True # Do not fit data
-    # run = 0 # starting point
     #===================================================================#
     # R7 opts
     
     # Model variables
     bounds = np.array([[   16    , 101   ], # number of essential workers
-                       [   0.001 , 0.1   ], # Social distancing factor
+                       [   0.0001 , 0.1   ], # Social distancing factor
                        [   10    , 51    ]]) # Testing capacity
 
     # Points to plot
@@ -430,58 +393,6 @@ if __name__ == '__main__':
               '$\mathtt{StoMADS-PB}$ unconstrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2])]
     fit_cond = True # Do not fit data
     run = 0 # starting point
-    # #=====================================================================#
-    #initialize
-    sim = Simulation()
-
-    #set number of simulation steps
-    sim.Config.simulation_steps = 2000
-    sim.Config.pop_size = 1000
-    sim.Config.n_gridpoints = 33
-    sim.Config.track_position = True
-    sim.Config.track_GC = True
-    sim.Config.update_every_n_frame = 5
-    sim.Config.endif_no_infections = False
-    sim.Config.SD_act_onset = True
-    sim.Config.patient_Z_loc = 'central'
-
-    area_scaling = 1 / sim.Config.pop_size / 600
-    distance_scaling = 1 / np.sqrt(sim.Config.pop_size / 600)
-    force_scaling = distance_scaling ** 4
-    count_scaling = sim.Config.pop_size / 600
-
-    #set visuals
-    # sim.Config.plot_style = 'dark' #can also be dark
-    # sim.Config.plot_text_style = 'LaTeX' #can also be LaTeX
-    # sim.Config.visualise = True
-    # sim.Config.visualise_every_n_frame = 1
-    # sim.Config.plot_last_tstep = True
-    # sim.Config.verbose = False
-    # sim.Config.save_plot = True
-
-    sim.Config.plot_style = 'default' #can also be dark
-    sim.Config.plot_text_style = 'default' #can also be LaTeX
-    sim.Config.visualise = False
-    sim.Config.visualise_every_n_frame = 1
-    sim.Config.plot_last_tstep = False
-    sim.Config.verbose = False
-    sim.Config.save_plot = False
-    sim.Config.save_data = False
-
-    #set infection parameters
-    sim.Config.infection_chance = 0.1
-    sim.Config.infection_range = 0.03 * distance_scaling
-    sim.Config.mortality_chance = 0.09 #global baseline chance of dying from the disease
-    sim.Config.incubation_period = 5
-
-    #set movement parameters
-    sim.Config.speed = 0.15 * distance_scaling
-    sim.Config.max_speed = 0.3 * distance_scaling
-    sim.Config.dt = 0.01
-
-    sim.Config.wander_step_size = 0.01 * distance_scaling
-    sim.Config.gravity_strength = 0
-    sim.Config.wander_step_duration = sim.Config.dt * 10
 
     #===================================================================#
     # n_samples = 1000
@@ -489,15 +400,15 @@ if __name__ == '__main__':
     # min_bin_width_i = 15 # for discrete distributions
     # min_bin_width_f = 5 # for discrete distributions
 
-    n_samples = 200
+    n_samples = 500
     n_bins = 30 # for continuous distributions
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
 
-    new_run = False
+    new_run = True
 
     n_violators_sweep = np.arange(16, 101, 21)
-    SD_factors = np.linspace(0.05,0.3,5) * force_scaling
+    SD_factors = np.linspace(0.0001,0.1,5)
     test_capacities = np.arange(10, 51, 10)
 
     same_axis = True
@@ -509,7 +420,7 @@ if __name__ == '__main__':
     else:
         fig_infections = fig_fatalities = fig_dist = fig_GC = None
 
-    auto_limits = False
+    auto_limits = True
     if auto_limits:
         dataXLim_i = dataYLim_i = None
         dataXLim_f = dataYLim_f = None
@@ -565,24 +476,13 @@ if __name__ == '__main__':
 
             #=====================================================================#
             # Design variables
-            sim.Config.social_distance_factor = 0.0001 * SD * force_scaling
-            sim.Config.thresh_type = 'hospitalized'
-            sim.Config.social_distance_threshold_off = 0 # number of people
-            sim.Config.social_distance_threshold_on = 0 # number of people 
-            sim.Config.testing_threshold_on = 15 # number of people 
-            sim.Config.social_distance_violation = n_violators # number of people
-
-            sim.Config.healthcare_capacity = healthcare_capacity
-            sim.Config.wander_factor_dest = 0.1
-            sim.Config.set_self_isolation(number_of_tests = test_capacity, self_isolate_proportion = 1.0,
-                                          isolation_bounds = [-0.26, 0.02, 0.0, 0.28],
-                                          traveling_infects=False)
+            design_variables = [n_violators, SD, test_capacity]
+            parameters = [healthcare_capacity]
 
             #=====================================================================#
-            check_folder('data/')
-            log_file = 'data/MCS_data_r%i.log' %run
-            # [infected_i,fatalities_i,GC_i,distance_i] = parallel_sampling(sim,n_samples,log_file)
-            [infected_i,fatalities_i,GC_i,distance_i] = serial_sampling(sim,n_samples,log_file)
+            output_file_base = 'MCS_data_r%i' %run
+            [infected_i,fatalities_i,GC_i,distance_i] = parallel_sampling(design_variables,parameters,output_file_base,n_samples)
+            # [infected_i,fatalities_i,GC_i,distance_i] = serial_sampling(design_variables,parameters,output_file_base,n_samples)
 
             with open('data/MCS_data_r%i.pkl' %run,'wb') as fid:
                 pickle.dump(infected_i,fid)

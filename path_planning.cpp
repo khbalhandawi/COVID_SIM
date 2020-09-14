@@ -107,7 +107,7 @@ void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, 
 	destinations : ndarray
 	the array containing all destinations information
 	*/
-
+	float epsilon = 1e-15;
 	// how many destinations are active
 	Eigen::ArrayXf dests = population(select_rows(population.col(11) != 0), { 11 });
 	vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
@@ -120,8 +120,8 @@ void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, 
 		Eigen::ArrayXXf to_destination = destinations(Eigen::all, { (d - 1) * 2, ((d - 1) * 2) + 1 }) - population(Eigen::all, { 1,2 });
 		Eigen::ArrayXf dist = to_destination.rowwise().norm().array();
 
-		Eigen::ArrayXf head_x = to_destination.col(0) / dist;
-		Eigen::ArrayXf head_y = to_destination.col(1) / dist;
+		Eigen::ArrayXf head_x = to_destination.col(0) / (dist + epsilon);
+		Eigen::ArrayXf head_y = to_destination.col(1) / (dist + epsilon);
 
 		// reinsert headings into population of those not at destination yet
 		// set speed to 0.5

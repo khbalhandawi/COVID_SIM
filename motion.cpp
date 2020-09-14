@@ -91,13 +91,14 @@ Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed, 
 	Time increment used for incrementing velocity due to forces
 	*/
 
+	float epsilon = 1e-15;
 	// Apply force
 	population.col(3) += population.col(15) * dt;
 	population.col(4) += population.col(16) * dt;
 
 	// Limit speed
 	Eigen::ArrayXf speed = population(Eigen::all, { 3,4 }).rowwise().norm(); // current distance travelled
-	population(select_rows(speed > max_speed), { 3,4 }).colwise() *= max_speed / speed(select_rows(speed > max_speed));
+	population(select_rows(speed > max_speed), { 3,4 }).colwise() *= max_speed / ( speed(select_rows(speed > max_speed)) + epsilon );
 
 	// Limit force
 	population(Eigen::all, { 15,16 }) = 0.0;
@@ -286,6 +287,7 @@ tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population,
 	length of time perturbation is present
 	*/
 
+	float epsilon = 1e-15;
 	int pop_size = population.rows();
 
 	// Gravity
@@ -293,7 +295,7 @@ tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population,
 		if ((time - last_step_change) > wander_step_duration)
 		{
 			Eigen::ArrayXXf vect_un = my_rand->uniform_dist(-1, 1, pop_size, 2);
-			Eigen::ArrayXXf vect = vect_un.colwise() / vect_un.rowwise().norm().array();
+			Eigen::ArrayXXf vect = vect_un.colwise() / ( vect_un.rowwise().norm().array() + epsilon );
 
 			Eigen::ArrayXXf gravity_well = population(Eigen::all, { 1,2 }) + wander_step_size * vect;
 			last_step_change = time;
@@ -301,8 +303,8 @@ tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population,
 			Eigen::ArrayXXf to_well = (gravity_well - population(Eigen::all, { 1,2 }));
 			Eigen::ArrayXf dist = to_well.rowwise().norm().array();
 
-			population(select_rows(dist != 0), { 15 }) += gravity_strength * to_well(select_rows(dist != 0), { 0 }) / (dist(select_rows(dist != 0)).pow(3));
-			population(select_rows(dist != 0), { 16 }) += gravity_strength * to_well(select_rows(dist != 0), { 1 }) / (dist(select_rows(dist != 0)).pow(3));
+			population(select_rows(dist != 0), { 15 }) += gravity_strength * to_well(select_rows(dist != 0), { 0 }) / (dist(select_rows(dist != 0)).pow(3) + epsilon);
+			population(select_rows(dist != 0), { 16 }) += gravity_strength * to_well(select_rows(dist != 0), { 1 }) / (dist(select_rows(dist != 0)).pow(3) + epsilon);
 		}
 
 	}

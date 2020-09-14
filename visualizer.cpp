@@ -424,12 +424,16 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 		" recovered: " + to_string(recovered.rows()) +
 		" fatalities: " + to_string(fatalities.rows());
 
-	if (!Config.self_isolate) {
-		plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string);
-	}
-	else if (Config.self_isolate) {
-		plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string);
-	}
+
+	map<string, string> keywords_text;
+	keywords_text["fontsize"] = "7";
+	plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+	// if (!Config.self_isolate) {
+	// 	plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+	// }
+	// else if (Config.self_isolate) {
+	// 	plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+	// }
 
 	plt::draw();
 	plt::pause(0.001);
@@ -439,10 +443,10 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 		string bg_color = "w";
 		string save_path = Config.plot_path + "/" + to_string(frame) + ".png";
 		map<string, string> keywords;
-		keywords["dpi"] = "300";
+		// keywords["dpi"] = "300";
 		keywords["facecolor"] = bg_color;
 
-		plt::save(save_path);
+		plt::save(save_path, keywords);
 
 	}
 
