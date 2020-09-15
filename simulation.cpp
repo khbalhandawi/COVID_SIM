@@ -254,7 +254,6 @@ void simulation::tstep()
 		cout << endl;
 	}
 
-
 	//save popdata if required
 	if ((Config.save_pop) && ((frame % Config.save_pop_freq) == 0)) {
 		save_population(population, frame, Config.save_pop_folder);
@@ -334,7 +333,15 @@ void simulation::run()
 
 	while (i < Config.simulation_steps) {
 
-		tstep();
+		try
+		{
+			tstep(); // code that could cause exception
+		}
+		catch (const exception &exc)
+		{
+			// catch anything thrown within try block that derives from std::exception
+			cerr << exc.what();
+		}
 
 		// check whether to end if no infectious persons remain.
 		// check if frame is above some threshold to prevent early breaking when simulation

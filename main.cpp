@@ -302,8 +302,8 @@ int main(int argc, char* argv[])
 
 		// seed random generator
 		/* using nano-seconds instead of seconds */
-		unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
-
+		// unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
+		unsigned long seed = run;
 		simulation sim(Config, seed);
 
 		check_folder("data");

@@ -26,6 +26,7 @@ def system_command(command):
 
     output, error = p.communicate()
     if p.returncode != 0: # crash the program
+        print("Exception during run: %s" %command)
         raise Exception("cpp failed %d %s %s" % (p.returncode, output, error))
 
 #==============================================================================#
