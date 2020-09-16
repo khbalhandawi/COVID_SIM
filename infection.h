@@ -41,4 +41,4 @@ void compute_mortality(int age, double &mortality_chance, int risk_age = 50,
 /*-----------------------------------------------------------*/
 /*              healthcare population infection              */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor = 0.2);
+void healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor = 0.2);

@@ -447,23 +447,23 @@ void compute_mortality(int age, double &mortality_chance, int risk_age,
 
 	if ((age > risk_age) && (age < critical_age)) {
 		// if age in range
-		if (risk_increase == "linear")
+		if (risk_increase == "linear") {
 			// find linear risk
 			step_increase = (critical_mortality_chance) / ((double(critical_age) - double(risk_age)) + 1);
 			mortality_chance = critical_mortality_chance - ((double(critical_age) - double(age)) * step_increase);
-	}
-	else if (risk_increase == "quadratic") {
-		// define exponential function between risk_age and critical_age
-		int pw = 15;
-		double A = exp(log(mortality_chance / critical_mortality_chance) / double(pw));
-		double a = ((double(risk_age) - 1) - double(critical_age) * A) / (A - 1);
-		double b = pow((mortality_chance / ((double(risk_age) - 1) + a)),pw);
-
-		// define linespace
-		Eigen::ArrayXf x = Eigen::ArrayXf::LinSpaced(critical_age, 0, critical_age);
-		// find values
-		Eigen::ArrayXf risk_values = (x + a).pow(pw) * b;
-		mortality_chance = risk_values[age - 1];
+		}
+		else if (risk_increase == "quadratic") {
+			// define exponential function between risk_age and critical_age
+			int pw = 15;
+			double A = exp(log(mortality_chance / critical_mortality_chance) / double(pw));
+			double a = ((double(risk_age) - 1) - double(critical_age) * A) / (A - 1);
+			double b = pow((mortality_chance / ((double(risk_age) - 1) + a)), pw);
+			// define linespace
+			Eigen::ArrayXf x = Eigen::ArrayXf::LinSpaced(critical_age, 0, critical_age);
+			// find values
+			Eigen::ArrayXf risk_values = (x + a).pow(pw) * b;
+			mortality_chance = risk_values[age - 1];
+		}
 	}
 	// if (age <= risk_age) simply return the base mortality chance
 	else if (age >= critical_age) {
@@ -476,7 +476,7 @@ void compute_mortality(int age, double &mortality_chance, int risk_age,
 /*-----------------------------------------------------------*/
 /*              healthcare population infection              */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor)
+void healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor)
 {
 	/*corrects infection to healthcare population.
 

@@ -260,7 +260,7 @@ vector<double> to_std_vector(Eigen::MatrixXd a)
 /*-----------------------------------------------------------*/
 /*                     Slice a std::vector                   */
 /*-----------------------------------------------------------*/
-vector<int> slice(vector<int> const &v, int m, int n)
+vector<int> slice_u(vector<int> const &v, int m, int n)
 {
 	auto first = v.cbegin() + m;
 	auto last = v.cbegin() + n;

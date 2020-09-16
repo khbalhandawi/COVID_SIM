@@ -155,7 +155,7 @@ Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices)
 
 	vector<int> indices = sequence(0, input.rows(), 1);
 	shuffle(indices.begin(), indices.end(), engine);
-	indices = slice(indices, 0, n_choices);
+	indices = slice_u(indices, 0, n_choices);
 
 	//cout << "in_rows" << input.rows() << endl;
 

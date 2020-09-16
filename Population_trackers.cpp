@@ -99,7 +99,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 		if (frame % Config.update_every_n_frame == 0) {
 
 			// Track ground covered
-			int n_inside_world = int((population.col(11) == 0).count());
+			int n_inside_world = (population.col(11) == 0).count();
 			Eigen::ArrayXXf position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
 			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
 

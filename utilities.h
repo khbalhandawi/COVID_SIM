@@ -76,7 +76,7 @@ vector<double> to_std_vector(Eigen::MatrixXd a);
 /*-----------------------------------------------------------*/
 /*                     Slice a std::vector                   */
 /*-----------------------------------------------------------*/
-vector<int> slice(vector<int> const &v, int m, int n);
+vector<int> slice_u(vector<int> const &v, int m, int n);
 
 /*-----------------------------------------------------------*/
 /*               Unique elements of std::vector              */
