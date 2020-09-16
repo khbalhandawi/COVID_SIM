@@ -6,6 +6,7 @@
 *.ipdb
 *.pdb
 *.dat
+*.log
 x64/
 build/data
 build/population

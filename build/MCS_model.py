@@ -347,7 +347,7 @@ if __name__ == '__main__':
     new_run = True
 
     n_violators_sweep = np.arange(16, 101, 21)
-    SD_factors = np.linspace(0.0001,0.1,5)
+    SD_factors = np.linspace(0.0001,0.2,5)
     test_capacities = np.arange(10, 51, 10)
 
     same_axis = True

@@ -29,7 +29,10 @@ vector<double> processInput(int i,simulation *sim, ofstream *file)
 	int infected, fatalities, SD_thresh, E, T, f;
 	double mean_distance, mean_GC, SD;
 
-	SD = sim->Config.social_distance_factor / 0.0001;
+	double distance_scaling = 1.0 / sqrt(double(sim->Config.pop_size) / 600.0);
+	double force_scaling = pow(distance_scaling,2);
+
+	SD = sim->Config.social_distance_factor / (1e-6 * force_scaling);
 	SD_thresh = sim->Config.social_distance_threshold_on;
 	E = sim->Config.social_distance_violation;
 	T = sim->Config.number_of_tests;

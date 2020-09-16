@@ -83,7 +83,7 @@ void find_nearby(Eigen::ArrayXXf population, vector<double> infection_zone, Eige
 	}
 	else if (kind == "infected") {
 		if (traveling_infects) {
-			ArrayXXb cond(population.rows(), 5);
+			ArrayXXb cond(infected_previous_step.rows(), 5);
 
 			cond << (infection_zone[0] < infected_previous_step.col(1)),
 					(infected_previous_step.col(1) < infection_zone[2]),
@@ -94,7 +94,7 @@ void find_nearby(Eigen::ArrayXXf population, vector<double> infection_zone, Eige
 			infected_number = infected_previous_step(select_rows(cond), { 6 }).rows();
 		}
 		else {
-			ArrayXXb cond(population.rows(), 6);
+			ArrayXXb cond(infected_previous_step.rows(), 6);
 
 			cond << (infection_zone[0] < infected_previous_step.col(1)),
 					(infected_previous_step.col(1) < infection_zone[2]),
@@ -178,7 +178,7 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	Eigen::ArrayXf patient, person;
 	vector<double> infection_zone;
 	Eigen::ArrayXf indices;
-	int infected_number;
+	int infected_number = 0;
 
 	// if less than half are infected, slice based on infected (to speed up computation)
 	if ( infected_previous_step.rows() < (floor(Config.pop_size / 2)) ) {
