@@ -457,7 +457,7 @@ void compute_mortality(int age, double &mortality_chance, int risk_age,
 			int pw = 15;
 			double A = exp(log(mortality_chance / critical_mortality_chance) / double(pw));
 			double a = ((double(risk_age) - 1) - double(critical_age) * A) / (A - 1);
-			double b = pow((mortality_chance / ((double(risk_age) - 1) + a)), pw);
+			double b = mortality_chance / pow(((double(risk_age) - 1) + a), pw);
 			// define linespace
 			Eigen::ArrayXf x = Eigen::ArrayXf::LinSpaced(critical_age, 0, critical_age);
 			// find values

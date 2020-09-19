@@ -388,24 +388,24 @@ if __name__ == '__main__':
     # Resume MCS
     # run = 3
     # n_violators_sweep = n_violators_sweep[run:]
-    # run = 2
-    # SD_factors = SD_factors[run:]
+    run = 3
+    SD_factors = SD_factors[run:]
 
     # design parameters
     healthcare_capacity = 150
 
     # for n_violators in n_violators_sweep:
-    # for test_capacity in test_capacities:
     for SD in SD_factors:
+    # for test_capacity in test_capacities:
 
         # legend_label = 'Number of essential workers ($E$) = %i people' %(n_violators)
-        # legend_label = 'Testing capacity ($T$) = %i people' %(test_capacity)
         legend_label = 'Social distancing factor ($S$)= %f' %(SD)
+        # legend_label = 'Testing capacity ($T$) = %i people' %(test_capacity)
 
         if new_run:
             #=====================================================================#
             # Essential workers sweep
-            # SD = 0.05 # force amplitude
+            # SD = 0.1 # force amplitude
             # test_capacity = 0 # number of people
 
             # design_variables = [n_violators, SD, test_capacity]
@@ -420,7 +420,7 @@ if __name__ == '__main__':
             #=====================================================================#
             # Testing sweep
             # n_violators = 0 # number of people
-            # SD = 0.175 # force amplitude
+            # SD = 0.1 # force amplitude
 
             # design_variables = [n_violators, SD, test_capacity]
             # parameters = [healthcare_capacity]
