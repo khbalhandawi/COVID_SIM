@@ -125,6 +125,20 @@ void load_config(Configuration *config, const char *config_file)
 	mapper["social_distance_threshold_off"] = &Configuration::social_distance_threshold_off_in;
 	mapper["social_distance_threshold_on"] = &Configuration::social_distance_threshold_on_in;
 	mapper["trace_path"] = &Configuration::trace_path_in;
+	mapper["write_bb_output"] = &Configuration::write_bb_output_in;
+	mapper["social_distance_factor"] = &Configuration::social_distance_factor_in;
+	mapper["social_distance_violation"] = &Configuration::social_distance_violation_in;
+	mapper["healthcare_capacity"] = &Configuration::healthcare_capacity_in;
+	mapper["number_of_tests"] = &Configuration::number_of_tests_in;
+	mapper["self_isolate"] = &Configuration::self_isolate_in;
+	mapper["wander_factor_dest"] = &Configuration::wander_factor_dest_in;
+	mapper["isolation_bounds"] = &Configuration::isolation_bounds_in;
+	mapper["self_isolate_proportion"] = &Configuration::self_isolate_proportion_in;
+	mapper["xbounds"] = &Configuration::xbounds_in;
+	mapper["ybounds"] = &Configuration::ybounds_in;
+	mapper["x_plot"] = &Configuration::x_plot_in;
+	mapper["y_plot"] = &Configuration::y_plot_in;
+	mapper["traveling_infects"] = &Configuration::traveling_infects_in;
 
 	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
 	string line, value, value_str;
@@ -137,6 +151,7 @@ void load_config(Configuration *config, const char *config_file)
 		while (getline(is_line, value, '=')) {
 			key_value_pair.push_back(value.c_str());
 		}
+		cout << key_value_pair[0] << " " << key_value_pair[1] << endl;
 		config->*(mapper[key_value_pair[0]])=key_value_pair[1];
 	}
 }
@@ -160,84 +175,32 @@ int main(int argc, char* argv[])
 	}
 
 	if (debug) {
+		
+		// Display input arguments
+		cout << "\n" << "================= starting =================" << endl;
+
+		/*-----------------------------------------------------------*/
+		/*            Simulation configuration variables             */
+		/*-----------------------------------------------------------*/
 		// initialize
 		Configuration Config;
 
-		// set number of simulation steps
-		Config.simulation_steps = 3000;
-		Config.pop_size = 1000;
-		Config.n_gridpoints = 10;
-		Config.track_position = false;
-		Config.track_GC = true;
-		Config.update_every_n_frame = 1;
-		Config.endif_no_infections = false;
-		Config.SD_act_onset = true;
-		Config.patient_Z_loc = "central";
+		const char config_file[] = "configuration_debug.ini";
 
-		double area_scaling = 1.0 / double(Config.pop_size) / 600.0;
-		double distance_scaling = 1.0 / sqrt(double(Config.pop_size) / 600.0);
-		double force_scaling = pow(distance_scaling,2);
-		double count_scaling = double(Config.pop_size) / 600.0;
-
-		// set visuals
-		Config.plot_style = "default"; // can also be dark
-		Config.plot_text_style = "default"; // can also be LaTeX
-		Config.visualise = false;
-		Config.add_cross = true; // plot a cross
-		Config.visualise_every_n_frame = 1;
-		Config.n_plots = 1; // only scatter plot
-		Config.plot_last_tstep = true;
-		Config.verbose = true;
-		Config.report_freq = 50; // report results every 50 frames
-		Config.save_plot = false;
-		Config.save_data = false;
-		// Config.marker_size = (2700 - Config.pop_size) / 140;
-		Config.marker_size = 5;
-
-		// set infection parameters
-		Config.infection_chance = 0.3;
-		Config.infection_range = 0.03 * distance_scaling;
-		Config.mortality_chance = 0.09; // global baseline chance of dying from the disease
-		Config.incubation_period = 5;
-
-		// set movement parameters
-		Config.speed = 0.15 * distance_scaling;
-		Config.max_speed = 0.3 * distance_scaling;
-		Config.dt = 0.01;
-
-		Config.wander_step_size = 0.01 * distance_scaling;
-		Config.gravity_strength = 0;
-		Config.wander_step_duration = Config.dt * 10;
-
-		// run 0 (Business as usual)
-		//Config.social_distance_factor = 0.0001 * 0.0 * force_scaling;
-
-		// run 1 (social distancing)
-		//Config.social_distance_factor = 0.0001 * 0.3 * force_scaling;
-
-		// run 2 (social distancing with violators)
-		//Config.social_distance_factor = 0.0001 * 0.3 * force_scaling;
-		//Config.social_distance_violation = 20;
-
-		// run 3 (self-isolation scenario)
-		Config.healthcare_capacity = 150;
-		Config.wander_factor_dest = 0.1;
-		Config.set_self_isolation(100, 1.0, { -0.26, 0.02, 0.0, 0.28 }, false);
-
-		// run 4 (self - isolation scenario with social distancing)
-		Config.social_distance_factor = 0.0001 * 0.1 * force_scaling;
-		Config.social_distance_threshold_on = 15; // number of people
-		Config.testing_threshold_on = 15; // number of people
+		load_config(&Config, config_file);
+		Config.set_from_file();
+		/*-----------------------------------------------------------*/
+		/*                        Run blackbox                       */
+		/*-----------------------------------------------------------*/
 
 		// seed random generator
 		/* using nano-seconds instead of seconds */
 		unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
 
 		simulation sim(Config, seed);
-		//sim.population_init();
-		//sim.initialize_simulation();
-		// run, hold CTRL + C in terminal to end scenario early
 		sim.run();
+
+
 	} 
 	else if (!debug) {
 
@@ -275,7 +238,7 @@ int main(int argc, char* argv[])
 		// initialize
 		Configuration Config;
 
-		const char config_file[] = "Configuration.ini";
+		const char config_file[] = "configuration.ini";
 
 		load_config(&Config, config_file);
 		Config.set_from_file();
@@ -342,11 +305,13 @@ int main(int argc, char* argv[])
 		double obj_2 = fatalities;
 		double c1 = infected - healthcare_capacity;
 
-		ofstream output_file_opt(full_filename);
-		output_file_opt.precision(10); // number of decimal places to output
-		output_file_opt << obj_1 << " " << obj_2 << " " << c1 << endl;
-		output_file_opt.close();
-		cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+		if (Config.write_bb_output) {
+			ofstream output_file_opt(full_filename);
+			output_file_opt.precision(10); // number of decimal places to output
+			output_file_opt << obj_1 << " " << obj_2 << " " << c1 << endl;
+			output_file_opt.close();
+			cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+		}
 
 	}
 

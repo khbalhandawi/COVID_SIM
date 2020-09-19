@@ -27,7 +27,7 @@ public:
 	string save_pop_freq_in; // population data will be saved every "n" timesteps.Default: 10
 	string save_pop_folder_in; // folder to write population timestep data to
 	string endif_no_infections_in; // whether to stop simulation if no infections remain
-
+	string write_bb_output_in; // report results to black box output file for optimization
 	// scenario flags
 	string traveling_infects_in;
 	string self_isolate_in;
@@ -142,7 +142,7 @@ public:
 	int save_pop_freq; // population data will be saved every "n" timesteps.Default: 10
 	string save_pop_folder; // folder to write population timestep data to
 	bool endif_no_infections; // whether to stop simulation if no infections remain
-
+	bool write_bb_output; // report results to black box output file for optimization
 	// scenario flags
 	bool traveling_infects;
 	bool self_isolate;

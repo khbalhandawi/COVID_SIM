@@ -1,0 +1,5 @@
+cpp_corona_simulation 1 100 0.175 25 50
+cpp_corona_simulation 0 0 0.05005 0 150 MCS_data_r0_0.log
+cpp_corona_simulation 0 0 0.025075 0 150 MCS_data_r0_0.log
+drmemory.exe -- cpp_corona_simulation 1 100 0.175 25 50
+python simulation.py -- 1 100 0.175 25 50

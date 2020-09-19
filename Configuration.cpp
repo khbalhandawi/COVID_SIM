@@ -55,7 +55,7 @@ Configuration::Configuration()
 	save_pop_freq = 10; save_pop_freq_in = "10"; // population data will be saved every "n" timesteps.Default: 10
 	save_pop_folder = "population"; save_pop_folder_in = "population"; // folder to write population timestep data to
 	endif_no_infections = true; endif_no_infections_in = "true"; // whether to stop simulation if no infections remain
-
+	write_bb_output = true; write_bb_output_in = "true"; // report results to black box output file for optimization
 	// scenario flags
 	traveling_infects = false; traveling_infects_in = "false";
 	self_isolate = false; self_isolate_in = "false";
@@ -271,7 +271,7 @@ void Configuration::set_reduced_interaction(double speed_in)
 }
 
 /*-----------------------------------------------------------*/
-/*            Split delimlited string into vector            */
+/*            Split delimited string into vector            */
 /*-----------------------------------------------------------*/
 vector<double> Configuration::split_string(string line) 
 {
@@ -317,7 +317,7 @@ void Configuration::set_from_file()
 	save_pop_freq = stoi(save_pop_freq_in); // population data will be saved every "n" timesteps.Default: 10
 	save_pop_folder = save_pop_folder_in; // folder to write population timestep data to
 	endif_no_infections = endif_no_infections_in == "true"; // whether to stop simulation if no infections remain
-
+	write_bb_output = write_bb_output_in == "true"; // report results to black box output file for optimization
 	// scenario flags
 	traveling_infects = traveling_infects_in == "true";
 	self_isolate = self_isolate_in == "true";
@@ -325,6 +325,7 @@ void Configuration::set_from_file()
 	lockdown_compliance = stod(lockdown_compliance_in); // fraction of the population that will obey the lockdown
 
 	// world variables, defines where population can and cannot roam
+	cout << xbounds_in << endl;
 	xbounds = split_string(xbounds_in);
 	ybounds = split_string(ybounds_in);
 	n_gridpoints = stoi(n_gridpoints_in); //  resolution of 2D grid for tracking population position
@@ -370,7 +371,7 @@ void Configuration::set_from_file()
 	// the proportion of the population that practices social distancing, simulated
 	// by them standing still
 	proportion_distancing = stoi(proportion_distancing_in);
-	social_distance_factor = stod(social_distance_factor_in);
+	social_distance_factor = 1e-6 * stod(social_distance_factor_in) * force_scaling;
 	speed = stod(speed_in) * distance_scaling; // average speed of population
 	max_speed = stod(max_speed_in) * distance_scaling; // average speed of population
 	dt = stod(dt_in); // average speed of population
@@ -380,10 +381,10 @@ void Configuration::set_from_file()
 	wander_step_duration = stod(wander_step_duration_in);
 
 	thresh_type = thresh_type_in;
-	testing_threshold_on = stoi(testing_threshold_on_in); //  number of infected
-	social_distance_threshold_on = stoi(social_distance_threshold_on_in); //  number of hospitalized
-	social_distance_threshold_off = stoi(social_distance_threshold_off_in); //  number of remaining infected people
-	social_distance_violation = stoi(social_distance_violation_in); //  number of people
+	testing_threshold_on = stoi(testing_threshold_on_in); // number of infected
+	social_distance_threshold_on = stoi(social_distance_threshold_on_in); // number of hospitalized
+	social_distance_threshold_off = stoi(social_distance_threshold_off_in); // number of remaining infected people
+	social_distance_violation = stoi(social_distance_violation_in); // number of people
 	SD_act_onset = SD_act_onset_in == "true";
 
 	// when people have an active destination, the wander range defines the area
