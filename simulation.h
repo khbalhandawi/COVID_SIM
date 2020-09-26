@@ -20,7 +20,7 @@ public:
 	// initialize times
 	int frame;
 	double time;
-	int last_step_change;
+	double last_step_change;
 	bool above_act_thresh;
 	bool above_deact_thresh;
 	bool above_test_thresh;

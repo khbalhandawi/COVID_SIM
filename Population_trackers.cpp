@@ -257,7 +257,7 @@ Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinatio
 /*-----------------------------------------------------------*/
 /*                initialize ground covered                  */
 /*-----------------------------------------------------------*/
-tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> initialize_ground_covered_matrix(int pop_size, int n_gridpoints, vector<double> xbounds,
+void initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::ArrayXXf &ground_covered, int pop_size, int n_gridpoints, vector<double> xbounds,
 	vector<double> ybounds)
 {
 	/*intializes the destination matrix
@@ -289,19 +289,18 @@ tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> initialize_ground_covered_matrix(int pop
 	Eigen::ArrayXf grid_coords_xub = x(seq(1, last)).replicate(n_gridpoints - 1, 1);
 	Eigen::ArrayXf grid_coords_yub = repeat(y(seq(1, last)), n_gridpoints - 1);
 
-	Eigen::ArrayXXf grid_coords(grid_coords_xlb.rows(), grid_coords_xlb.cols()*4);
+	grid_coords.resize(grid_coords_xlb.rows(), grid_coords_xlb.cols()*4);
 	grid_coords << grid_coords_xlb, grid_coords_ylb, grid_coords_xub, grid_coords_yub;
 
-	Eigen::ArrayXXf ground_covered = Eigen::ArrayXXf::Zero(pop_size, pow((n_gridpoints - 1),2) );
+	ground_covered = Eigen::ArrayXXf::Zero(pop_size, pow((n_gridpoints - 1),2) );
 
-	//return grid_coords, ground_covered
-	return { grid_coords, ground_covered };
+	// return { grid_coords, ground_covered };
 }
 
 /*-----------------------------------------------------------*/
 /*                   destination bounds                      */
 /*-----------------------------------------------------------*/
-tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> set_destination_bounds(Eigen::ArrayXXf population, Eigen::ArrayXXf destinations, double xmin, double ymin,
+void set_destination_bounds(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, double xmin, double ymin,
 	double xmax, double ymax, RandomDevice *my_rand, int dest_no, bool teleport)
 {
 	/*teleports all persons within limits
@@ -355,7 +354,6 @@ tuple<Eigen::ArrayXXf, Eigen::ArrayXXf> set_destination_bounds(Eigen::ArrayXXf p
 	population.col(11) = dest_no; //set destination active
 	population.col(12) = 1; // set destination reached
 
-	return {population, destinations};
 }
 
 /*-----------------------------------------------------------*/

@@ -43,7 +43,7 @@ void simulation::initialize_simulation()
 	// initialize times
 	frame = 0;
 	time = 0;
-	last_step_change = 0;
+	last_step_change = 0.0;
 	above_act_thresh = false;
 	above_deact_thresh = false;
 	above_test_thresh = false;
@@ -55,7 +55,7 @@ void simulation::initialize_simulation()
 	destinations = initialize_destination_matrix(Config.pop_size, 1);
 
 	// initialize grid for tracking population positions
-	tie(grid_coords, ground_covered) = initialize_ground_covered_matrix(Config.pop_size, Config.n_gridpoints, Config.xbounds, Config.ybounds);
+	initialize_ground_covered_matrix(grid_coords, ground_covered, Config.pop_size, Config.n_gridpoints, Config.xbounds, Config.ybounds);
 	pop_tracker.grid_coords = grid_coords;
 	pop_tracker.ground_covered = ground_covered;
 }
@@ -92,9 +92,9 @@ void simulation::tstep()
 	//======================================================================================//
 	//gravity wells
 	if (Config.gravity_strength > 0.001) {
-		tie(population, last_step_change) = update_gravity_forces(population,
-			time, last_step_change, &my_rand, Config.wander_step_size,
-			Config.gravity_strength, Config.wander_step_duration);
+		update_gravity_forces(population, time, last_step_change, &my_rand, 
+			Config.wander_step_size, Config.gravity_strength, 
+			Config.wander_step_duration);
 	}
 	//======================================================================================//
 	//activate social distancing above a certain infection threshold
@@ -135,10 +135,7 @@ void simulation::tstep()
 	//activate social distancing only for compliant individuals
 	if ((Config.social_distance_factor > 0) && (act_social_distancing)) {
 
-		ArrayXXb cond(Config.pop_size, 2);
-		cond << (population.col(17) == 0), (population.col(11) == 0);
-		population(select_rows(cond), Eigen::all) = update_repulsive_forces(population(select_rows(cond), Eigen::all), 
-																			Config.social_distance_factor);
+		update_repulsive_forces(population, Config.social_distance_factor);
 
 		if (population.col(15).isNaN().any()) {
 			cout << "Infinite repulsive forces!" << endl;
@@ -161,7 +158,7 @@ void simulation::tstep()
 					Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.ybounds[1] - buffer);
 
 		population(select_rows(population.col(11) == 0), Eigen::all) = update_wall_forces(population(select_rows(population.col(11) == 0), Eigen::all),
-																				  _xbounds, _ybounds);
+																				  		  _xbounds, _ybounds);
 
 		if (population.col(15).isNaN().any()) {
 			cout << "Infinite wall forces!" << endl;
@@ -180,18 +177,15 @@ void simulation::tstep()
 
 	//======================================================================================//
 	//update velocities
-	ArrayXXb cond(Config.pop_size, 2);
-	cond << (population.col(11) == 0), (population.col(12) == 1);
 
-	population(select_rows_any(cond), Eigen::all) = update_velocities(population(select_rows_any(cond), Eigen::all),
-																	  Config.max_speed, Config.dt);
+	update_velocities(population, Config.max_speed, Config.dt);
 
 	//for dead ones : set velocity and social distancing to 0 for dead ones
 	population(select_rows(population.col(6) == 3), { 3,4 }) = 0;
 	population(select_rows(population.col(6) == 3), { 17 }) = 1;
 
 	//update positions
-	population = update_positions(population, Config.dt);
+	update_positions(population, Config.dt);
 
 	//======================================================================================//
 	//find new infections

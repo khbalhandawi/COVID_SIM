@@ -44,7 +44,7 @@
  /*-----------------------------------------------------------*/
  /*                      Update positions                     */
  /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_positions(Eigen::ArrayXXf population, double dt)
+void update_positions(Eigen::ArrayXXf &population, double dt)
 {
 	/*update positions of all people
 
@@ -65,14 +65,12 @@ Eigen::ArrayXXf update_positions(Eigen::ArrayXXf population, double dt)
 	population.col(1) += population.col(3) * dt;
 	// y
 	population.col(2) += population.col(4) * dt;
-
-	return population;
 }
 
 /*-----------------------------------------------------------*/
 /*                      Update velocities                    */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed, double dt)
+void update_velocities(Eigen::ArrayXXf &population_all, double max_speed, double dt)
 {
 	/*update positions of all people
 
@@ -91,6 +89,11 @@ Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed, 
 	Time increment used for incrementing velocity due to forces
 	*/
 
+	// update selectively
+	ArrayXXb cond(population_all.rows(), 2);
+	cond << (population_all.col(11) == 0), (population_all.col(12) == 1);
+	Eigen::ArrayXXf population = population_all(select_rows_any(cond), Eigen::all);
+	
 	float epsilon = 1e-15;
 	// Apply force
 	population.col(3) += population.col(15) * dt;
@@ -103,7 +106,9 @@ Eigen::ArrayXXf update_velocities(Eigen::ArrayXXf population, double max_speed, 
 	// Limit force
 	population(Eigen::all, { 15,16 }) = 0.0;
 
-	return population;
+	// Update velocities
+	population_all(select_rows_any(cond), Eigen::all) = population;
+
 }
 
 /*-----------------------------------------------------------*/
@@ -212,14 +217,14 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 
 	population(Eigen::all, { 15,16 }) += wall_force;
 
-	// Update forces
 	return population;
+
 }
 
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double social_distance_factor)
+void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor)
 {
 	/*calculated repulsive forces between individuals
 
@@ -234,6 +239,11 @@ Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double socia
 	Amplitude of repulsive force used to enforce social distancing
 	*/
 
+	// update selectively
+	ArrayXXb cond(population_all.rows(), 2);
+	cond << (population_all.col(17) == 0), (population_all.col(11) == 0);
+	Eigen::ArrayXXf population = population_all(select_rows(cond), Eigen::all);
+
 	int pop_size = population.rows();
 
 	float epsilon = 1e-15; // to avoid division by zero errors
@@ -243,26 +253,21 @@ Eigen::ArrayXXf update_repulsive_forces(Eigen::ArrayXXf population, double socia
 	Eigen::ArrayXXf to_point_x = pairwise_diff(population.col(1));
 	Eigen::ArrayXXf to_point_y = pairwise_diff(population.col(2));
 
-	//Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / dist.pow(2.5)).rowwise().sum();
-	//Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / dist.pow(2.5)).rowwise().sum();
-
 	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / ((dist * dist * dist) + epsilon)).rowwise().sum();
 	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / ((dist * dist * dist) + epsilon)).rowwise().sum();
-
-	// (repulsion_force_x).isNaN().select(0,repulsion_force_x);
-	// (repulsion_force_y).isNaN().select(0,repulsion_force_y);
 
 	population.col(15) += repulsion_force_x;
 	population.col(16) += repulsion_force_y;
 
 	// Update forces
-	return population;
+	population_all(select_rows(cond), Eigen::all) = population;
+
 }
 
 /*-----------------------------------------------------------*/
 /*                    Update gravity forces                  */
 /*-----------------------------------------------------------*/
-tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population, double time, double last_step_change, RandomDevice *my_rand, double wander_step_size,
+void update_gravity_forces(Eigen::ArrayXXf &population, double time, double &last_step_change, RandomDevice *my_rand, double wander_step_size,
 	double gravity_strength, double wander_step_duration)
 {
 	/*updates random perturbation in forces near individuals to cause random motion
@@ -309,8 +314,6 @@ tuple<Eigen::ArrayXXf, double> update_gravity_forces(Eigen::ArrayXXf population,
 
 	}
 
-
-	return {population, last_step_change};
 }
 
 /*-----------------------------------------------------------*/
