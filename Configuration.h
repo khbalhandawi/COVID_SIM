@@ -24,6 +24,7 @@ public:
 	string tstep_in; // current simulation timestep
 	string save_data_in; // whether to dump data at end of simulation
 	string save_pop_in; // whether to save population matrix every "save_pop_freq" timesteps
+	string save_ground_covered_in; // whether to save ground covered matrix every "save_pop_freq" timesteps
 	string save_pop_freq_in; // population data will be saved every "n" timesteps.Default: 10
 	string save_pop_folder_in; // folder to write population timestep data to
 	string endif_no_infections_in; // whether to stop simulation if no infections remain
@@ -139,6 +140,7 @@ public:
 	int tstep; // current simulation timestep
 	bool save_data; // whether to dump data at end of simulation
 	bool save_pop; // whether to save population matrix every "save_pop_freq" timesteps
+	bool save_ground_covered; // whether to save ground covered matrix every "save_pop_freq" timesteps
 	int save_pop_freq; // population data will be saved every "n" timesteps.Default: 10
 	string save_pop_folder; // folder to write population timestep data to
 	bool endif_no_infections; // whether to stop simulation if no infections remain

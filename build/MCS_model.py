@@ -344,7 +344,7 @@ if __name__ == '__main__':
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
 
-    new_run = True
+    new_run = False
 
     n_violators_sweep = np.arange(16, 101, 21)
     SD_factors = np.linspace(0.0001,0.2,5)
@@ -387,36 +387,36 @@ if __name__ == '__main__':
 
     # Resume MCS
     # run = 3
-    # n_violators_sweep = n_violators_sweep[run:]
-    run = 3
-    SD_factors = SD_factors[run:]
+    # # n_violators_sweep = n_violators_sweep[run:]
+    # run = 3
+    # SD_factors = SD_factors[run:]
 
     # design parameters
     healthcare_capacity = 150
 
-    # for n_violators in n_violators_sweep:
-    for SD in SD_factors:
+    for n_violators in n_violators_sweep:
+    # for SD in SD_factors:
     # for test_capacity in test_capacities:
 
-        # legend_label = 'Number of essential workers ($E$) = %i people' %(n_violators)
-        legend_label = 'Social distancing factor ($S$)= %f' %(SD)
+        legend_label = 'Number of essential workers ($E$) = %i people' %(n_violators)
+        # legend_label = 'Social distancing factor ($S$)= %f' %(SD)
         # legend_label = 'Testing capacity ($T$) = %i people' %(test_capacity)
 
         if new_run:
             #=====================================================================#
             # Essential workers sweep
-            # SD = 0.1 # force amplitude
-            # test_capacity = 0 # number of people
-
-            # design_variables = [n_violators, SD, test_capacity]
-            # parameters = [healthcare_capacity]
-            #=====================================================================#
-            # SD sweep
-            n_violators = 0 # number of people
+            SD = 0.1 # force amplitude
             test_capacity = 0 # number of people
 
             design_variables = [n_violators, SD, test_capacity]
             parameters = [healthcare_capacity]
+            #=====================================================================#
+            # SD sweep
+            # n_violators = 0 # number of people
+            # test_capacity = 0 # number of people
+
+            # design_variables = [n_violators, SD, test_capacity]
+            # parameters = [healthcare_capacity]
             #=====================================================================#
             # Testing sweep
             # n_violators = 0 # number of people
@@ -441,7 +441,6 @@ if __name__ == '__main__':
                 fatalities_i = pickle.load(fid)
                 GC_i = pickle.load(fid)
                 distance_i = pickle.load(fid)
-                distance_i = [i for i in distance_i if i <= 0.15] # eliminate outliers
 
         label_name = u'Maximum number of infected ($I(\mathbf{x})$)'
         fun_name = 'infections'

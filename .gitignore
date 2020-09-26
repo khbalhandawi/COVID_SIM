@@ -14,3 +14,4 @@ build/render
 build/cpp_corona_simulation.exe
 .vs/
 Debug/
+*.pyc

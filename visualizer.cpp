@@ -54,18 +54,20 @@ visualizer::visualizer()
 void visualizer::build_fig(Configuration Config, vector<int> fig_size)
 {
 	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
+	plt::filterwarnings("ignore"); // filter and suppress all warnings
+
 	if (!Config.self_isolate) {
-		plt::figure_size(1000, 500);
-		plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		plt::figure_size(12, 5);
+		vector<double> width_ratios = {5,5};
+		plt::add_gridspec(2, 1, width_ratios);
 	}
 	else if (Config.self_isolate) {
-		plt::figure_size(1200, 500);
-		plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		plt::figure_size(12, 5);
+		vector<double> width_ratios = {7,5};
+		plt::add_gridspec(2, 1, width_ratios);
 	}
 
-	plt::subplot(1, 2, 1);
+	plt::add_subplot(0, 0, 1);
 	// plt.title('infection simulation')
 	plt::xlim(Config.xbounds[0], Config.xbounds[1]);
 	plt::ylim(Config.ybounds[0], Config.ybounds[1]);
@@ -86,18 +88,18 @@ void visualizer::build_fig(Configuration Config, vector<int> fig_size)
 	plt::axis("off");
 
 	// SIR graph
-	plt::subplot(1, 2, 2);
+	plt::add_subplot(0, 0, 2);
 	plt::ylim(0, Config.pop_size);
 
 	plt::xlabel("Simulation Steps");
 	plt::ylabel("Number of people");
 
-	map<string, string> keywords_legend;
-	keywords_legend["loc"] = "upper center";
-	keywords_legend["ncol"] = "5";
-	keywords_legend["fontsize"] = "10";
+	// map<string, string> keywords_legend;
+	// keywords_legend["loc"] = "upper center";
+	// keywords_legend["ncol"] = "5";
+	// keywords_legend["fontsize"] = "10";
 
-	plt::legend();
+	// plt::legend();
 
 	if (Config.save_plot) {
 		check_folder(Config.plot_path); // create save directory
@@ -112,14 +114,14 @@ void visualizer::build_fig_scatter(Configuration Config, vector<int> fig_size)
 {
 	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
 	if (!Config.self_isolate) {
-		plt::figure_size(500, 500);
+		plt::figure_size(5, 5);
 		// plt.title('infection simulation')
 		plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
 		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 
 	}
 	else if (Config.self_isolate) {
-		plt::figure_size(700, 500);
+		plt::figure_size(7, 5);
 		plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
 		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 	}
@@ -151,7 +153,7 @@ void visualizer::build_fig_scatter(Configuration Config, vector<int> fig_size)
 void visualizer::build_fig_SIR(Configuration Config, vector<int> fig_size)
 {
 	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
-	plt::figure_size(700, 500);
+	plt::figure_size(7, 5);
 
 	plt::ylim(0, Config.pop_size + 100);
 
@@ -170,11 +172,11 @@ void visualizer::build_fig_SIR(Configuration Config, vector<int> fig_size)
 void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame)
 {
 	//construct plot and visualise
-
 	// get color palettes
 	vector<string> palette = Config.get_palette();
 	// Clear first subplot
 	plt::subplot(1, 2, 1);
+	// plt::set_axis(1);
 	plt::cla();
 
 	/*--------------------------------------------------*/
@@ -198,7 +200,7 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 
 	if (Config.self_isolate) {
 		build_hospital(Config.isolation_bounds[0], Config.isolation_bounds[2],
-					   Config.isolation_bounds[1], Config.isolation_bounds[3], bound_color, false);
+					   Config.isolation_bounds[1], Config.isolation_bounds[3], bound_color, Config.add_cross);
 	}
 
 	plt::axis("off");
@@ -239,11 +241,13 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 		" recovered: " + to_string(recovered.rows()) +
 		" fatalities: " + to_string(fatalities.rows());
 
-	if (!Config.self_isolate) {
-		plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string);
-	}
-	else if (Config.self_isolate) {
-		plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string);
+	map<string, string> keywords_text;
+	keywords_text["fontsize"] = "7";
+
+	if (Config.self_isolate) {
+		plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+	} else {
+		plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
 	}
 
 	plt::draw();
@@ -251,6 +255,7 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 	/*--------------------------------------------------*/
 	// plot sir diagram
 	plt::subplot(1, 2, 2);
+	// plt::set_axis(2);
 
 	if (Config.treatment_dependent_risk) {
 		vector<int> infected_arr = pop_tracker.infectious;
@@ -326,10 +331,9 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 		string bg_color = "w";
 		string save_path = Config.plot_path + "/" + to_string(frame) + ".png";
 		map<string, string> keywords;
-		keywords["dpi"] = "300";
 		keywords["facecolor"] = bg_color;
 
-		plt::save(save_path);
+		plt::savefig(save_path, keywords);
 
 	}
 }
@@ -443,10 +447,9 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 		string bg_color = "w";
 		string save_path = Config.plot_path + "/" + to_string(frame) + ".png";
 		map<string, string> keywords;
-		// keywords["dpi"] = "300";
 		keywords["facecolor"] = bg_color;
 
-		plt::save(save_path, keywords);
+		plt::savefig(save_path, keywords);
 
 	}
 

@@ -97,6 +97,8 @@
         "valarray": "cpp",
         "variant": "cpp",
         "xlocbuf": "cpp",
-        "xlocmes": "cpp"
-    }
+        "xlocmes": "cpp",
+        "core": "cpp"
+    },
+    "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe"
 }

@@ -82,3 +82,13 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker);
 /*         save population data at current time step         */
 /*-----------------------------------------------------------*/
 void save_population(Eigen::ArrayXXf population, int tstep = 0, string folder = "data_tstep");
+
+/*-----------------------------------------------------------*/
+/*    save population ground covered at current time step    */
+/*-----------------------------------------------------------*/
+void save_ground_covered(Eigen::ArrayXXf ground_covered, int tstep = 0, string folder = "data_tstep");
+
+/*-----------------------------------------------------------*/
+/*                   save grid coordinates                   */
+/*-----------------------------------------------------------*/
+void save_grid_coords(Eigen::ArrayXXf grid_coords, string folder = "data_tstep");

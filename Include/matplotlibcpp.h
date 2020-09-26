@@ -46,7 +46,8 @@ namespace detail {
 static std::string s_backend;
 
 struct _interpreter {
-    PyObject* s_python_function_arrow;
+    PyObject *s_python_function_warnings;
+    PyObject *s_python_function_arrow;
     PyObject *s_python_function_show;
     PyObject *s_python_function_close;
     PyObject *s_python_function_draw;
@@ -56,7 +57,7 @@ struct _interpreter {
     PyObject *s_python_function_fignum_exists;
     PyObject *s_python_function_plot;
     PyObject *s_python_function_quiver;
-    PyObject* s_python_function_contour;
+    PyObject *s_python_function_contour;
     PyObject *s_python_function_semilogx;
     PyObject *s_python_function_semilogy;
     PyObject *s_python_function_loglog;
@@ -80,12 +81,13 @@ struct _interpreter {
     PyObject *s_python_function_xlabel;
     PyObject *s_python_function_ylabel;
     PyObject *s_python_function_gca;
+    PyObject *s_python_function_sca;
     PyObject *s_python_function_xticks;
     PyObject *s_python_function_yticks;
-    PyObject* s_python_function_margins;
+    PyObject *s_python_function_margins;
     PyObject *s_python_function_tick_params;
     PyObject *s_python_function_grid;
-    PyObject* s_python_function_cla;
+    PyObject *s_python_function_cla;
     PyObject *s_python_function_clf;
     PyObject *s_python_function_errorbar;
     PyObject *s_python_function_annotate;
@@ -99,7 +101,10 @@ struct _interpreter {
     PyObject *s_python_function_bar;
     PyObject *s_python_function_colorbar;
     PyObject *s_python_function_subplots_adjust;
-
+    PyObject *s_python_object_fig;
+    PyObject *s_python_object_gs;
+    PyObject *s_python_object_ax1;
+    PyObject *s_python_object_ax2;
 
     /* For now, _interpreter is implemented as a singleton since its currently not possible to have
        multiple independent embedded python interpreters without patching the python source code
@@ -162,7 +167,8 @@ private:
         PyObject* pyplotname = PyString_FromString("matplotlib.pyplot");
         PyObject* cmname  = PyString_FromString("matplotlib.cm");
         PyObject* pylabname  = PyString_FromString("pylab");
-        if (!pyplotname || !pylabname || !matplotlibname || !cmname) {
+        PyObject* pywarnname  = PyString_FromString("warnings");
+        if (!pyplotname || !pylabname || !matplotlibname || !cmname || !pywarnname) {
             throw std::runtime_error("couldnt create string");
         }
 
@@ -191,6 +197,11 @@ private:
         Py_DECREF(pylabname);
         if (!pylabmod) { throw std::runtime_error("Error loading module pylab!"); }
 
+        PyObject* pyWarnings = PyImport_Import(pywarnname);
+        Py_DECREF(pywarnname);
+        if (!pywarnname) { throw std::runtime_error("Error loading module warnings!"); }
+
+        s_python_function_warnings = safe_import(pyWarnings,"filterwarnings");
         s_python_function_arrow = safe_import(pymod, "arrow");
         s_python_function_show = safe_import(pymod, "show");
         s_python_function_close = safe_import(pymod, "close");
@@ -220,6 +231,7 @@ private:
         s_python_function_xlabel = safe_import(pymod, "xlabel");
         s_python_function_ylabel = safe_import(pymod, "ylabel");
         s_python_function_gca = safe_import(pymod, "gca");
+        s_python_function_sca = safe_import(pymod, "sca");
         s_python_function_xticks = safe_import(pymod, "xticks");
         s_python_function_yticks = safe_import(pymod, "yticks");
         s_python_function_margins = safe_import(pymod, "margins");
@@ -241,6 +253,7 @@ private:
         s_python_function_bar = safe_import(pymod,"bar");
         s_python_function_colorbar = PyObject_GetAttrString(pymod, "colorbar");
         s_python_function_subplots_adjust = safe_import(pymod,"subplots_adjust");
+
 #ifndef WITHOUT_NUMPY
         s_python_function_imshow = safe_import(pymod, "imshow");
 #endif
@@ -386,6 +399,16 @@ inline PyObject * get_array(const std::vector<std::string>& strings)
   return list;
 }
 
+// sometimes, for labels and such, we need string arrays
+inline PyObject * get_array_double(const std::vector<double>& values)
+{
+  PyObject* list = PyList_New(values.size());
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    PyList_SetItem(list, i, PyFloat_FromDouble(values[i]));
+  }
+  return list;
+}
+
 // not all matplotlib need 2d arrays, some prefer lists of lists
 template<typename Numeric>
 PyObject* get_listlist(const std::vector<std::vector<Numeric>>& ll)
@@ -398,6 +421,30 @@ PyObject* get_listlist(const std::vector<std::vector<Numeric>>& ll)
 }
 
 } // namespace detail
+
+/// Suppress python warnings..
+/// 
+/// See: https://docs.python.org/3/library/warnings.html
+inline void filterwarnings(const std::string &filterstr, const std::map<std::string, std::string> &keywords = {})
+{
+    detail::_interpreter::get();
+    
+    PyObject* pyfilterstr = PyString_FromString(filterstr.c_str());
+    PyObject* args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, pyfilterstr);
+
+    PyObject* kwargs = PyDict_New();
+    for (auto it = keywords.begin(); it != keywords.end(); ++it) {
+        PyDict_SetItemString(kwargs, it->first.c_str(), PyUnicode_FromString(it->second.c_str()));
+    }
+
+    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_warnings, args, kwargs);
+    if(!res) throw std::runtime_error("Call to filterwarnings() failed.");
+
+    Py_DECREF(args);
+    Py_DECREF(kwargs);
+    Py_DECREF(res);
+}
 
 /// Plot a line through the given x and y data points..
 /// 
@@ -1499,9 +1546,9 @@ inline long figure(long number = -1)
 {
     detail::_interpreter::get();
 
-    PyObject *res;
+    PyObject *fig;
     if (number == -1)
-        res = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, detail::_interpreter::get().s_python_empty_tuple);
+        fig = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, detail::_interpreter::get().s_python_empty_tuple);
     else {
         assert(number > 0);
 
@@ -1510,18 +1557,20 @@ inline long figure(long number = -1)
 
         PyObject *args = PyTuple_New(1);
         PyTuple_SetItem(args, 0, PyLong_FromLong(number));
-        res = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, args);
+        fig = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, args);
         Py_DECREF(args);
     }
 
-    if(!res) throw std::runtime_error("Call to figure() failed.");
+    if(!fig) throw std::runtime_error("Call to figure() failed.");
 
-    PyObject* num = PyObject_GetAttrString(res, "number");
+    PyObject* num = PyObject_GetAttrString(fig, "number");
     if (!num) throw std::runtime_error("Could not get number attribute of figure object");
     const long figureNumber = PyLong_AsLong(num);
 
     Py_DECREF(num);
-    Py_DECREF(res);
+    Py_DECREF(fig);
+
+    detail::_interpreter::get().s_python_object_fig = fig;
 
     return figureNumber;
 }
@@ -1546,22 +1595,22 @@ inline void figure_size(size_t w, size_t h)
 {
     detail::_interpreter::get();
 
-    const size_t dpi = 100;
     PyObject* size = PyTuple_New(2);
-    PyTuple_SetItem(size, 0, PyFloat_FromDouble((double)w / dpi));
-    PyTuple_SetItem(size, 1, PyFloat_FromDouble((double)h / dpi));
+    PyTuple_SetItem(size, 0, PyFloat_FromDouble((double)w));
+    PyTuple_SetItem(size, 1, PyFloat_FromDouble((double)h));
 
     PyObject* kwargs = PyDict_New();
     PyDict_SetItemString(kwargs, "figsize", size);
-    PyDict_SetItemString(kwargs, "dpi", PyLong_FromSize_t(dpi));
 
-    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_figure,
+    PyObject* fig = PyObject_Call(detail::_interpreter::get().s_python_function_figure,
             detail::_interpreter::get().s_python_empty_tuple, kwargs);
+
+    detail::_interpreter::get().s_python_object_fig = fig;
 
     Py_DECREF(kwargs);
 
-    if(!res) throw std::runtime_error("Call to figure_size() failed.");
-    Py_DECREF(res);
+    if(!fig) throw std::runtime_error("Call to figure_size() failed.");
+    Py_DECREF(fig);
 }
 
 inline void legend()
@@ -1870,6 +1919,98 @@ inline void subplot2grid(long nrows, long ncols, long rowid=0, long colid=0, lon
     Py_DECREF(res);
 }
 
+// define a gridspace object for subplots
+inline void add_gridspec(long ncols, long nrows, const std::vector<double> &width_ratios)
+{
+    detail::_interpreter::get();
+
+    // get spec object
+    PyObject *spec = PyObject_GetAttrString(detail::_interpreter::get().s_python_object_fig, "add_gridspec");
+    if (!spec) throw std::runtime_error("No spec");
+    Py_INCREF(spec);
+
+    // construct positional args
+    PyObject* args = PyTuple_New(2);
+    PyTuple_SetItem(args, 0, PyInt_FromLong(nrows));
+    PyTuple_SetItem(args, 1, PyInt_FromLong(ncols));
+
+    PyObject *kwargs = PyDict_New();
+    PyDict_SetItemString(kwargs, "width_ratios", detail::get_array_double(width_ratios));
+
+    PyObject* gs = PyObject_Call(spec, args, kwargs);
+    if(!gs) throw std::runtime_error("Call to add_gridspec() failed.");
+
+    detail::_interpreter::get().s_python_object_gs = gs;
+
+    Py_DECREF(spec);
+    Py_DECREF(args);
+    Py_DECREF(kwargs);
+    if (gs) Py_DECREF(gs);
+
+}
+
+// Add a subplot using a predefined gridspec
+inline void add_subplot(long row_id, long col_id, int axis_no = 0)
+{
+    detail::_interpreter::get();
+
+    // construct positional args
+    PyObject* args_spec = PyTuple_New(2);
+    PyTuple_SetItem(args_spec, 0, PyInt_FromLong(row_id));
+    PyTuple_SetItem(args_spec, 1, PyInt_FromLong(col_id));
+
+    PyObject *subplot_spec = PyObject_GetItem(detail::_interpreter::get().s_python_object_gs, args_spec);
+    if (!subplot_spec) throw std::runtime_error("No subplot_spec");
+    Py_INCREF(subplot_spec);
+
+    Py_DECREF(args_spec);
+
+    // get subplot object
+    PyObject *subplot = PyObject_GetAttrString(detail::_interpreter::get().s_python_object_fig, "add_subplot");
+    if (!subplot) throw std::runtime_error("No subplot");
+    Py_INCREF(subplot);
+
+    // construct positional args
+    PyObject* args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, subplot_spec);
+
+    PyObject* ax = PyObject_CallObject(subplot, args);
+    if(!ax) throw std::runtime_error("Call to add_subplot() failed.");
+
+    if(axis_no==1) {
+        detail::_interpreter::get().s_python_object_ax1 = ax;
+    }
+    else if(axis_no==2) {
+        detail::_interpreter::get().s_python_object_ax2 = ax;
+    }
+
+    Py_DECREF(subplot_spec);
+    Py_DECREF(subplot);
+    Py_DECREF(args);
+    Py_DECREF(ax);
+
+}
+
+/// Set the current axis to be used for plotting
+inline void set_axis(int axis_no)
+{
+    detail::_interpreter::get();
+
+    // construct positional args
+    PyObject* args = PyTuple_New(1);
+    if(axis_no==1) {
+        PyTuple_SetItem(args, 0, detail::_interpreter::get().s_python_object_ax1);
+    } else if(axis_no==2) {
+        PyTuple_SetItem(args, 0, detail::_interpreter::get().s_python_object_ax2);
+    }
+        
+    PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_sca, args);
+
+    Py_DECREF(args);
+    if(res) Py_DECREF(res);
+
+}
+
 inline void title(const std::string &titlestr, const std::map<std::string, std::string> &keywords = {})
 {
     detail::_interpreter::get();
@@ -2057,7 +2198,7 @@ inline void set_zlabel(const std::string &str, const std::map<std::string, std::
       detail::_interpreter::get().s_python_empty_tuple);
     if (!ax) throw std::runtime_error("Call to gca() failed.");
     Py_INCREF(ax);
-
+    
     PyObject *zlabel = PyObject_GetAttrString(ax, "set_zlabel");
     if (!zlabel) throw std::runtime_error("Attribute set_zlabel not found.");
     Py_INCREF(zlabel);
@@ -2189,6 +2330,37 @@ inline void save(const std::string& filename, const std::map<std::string, std::s
     }
 
     PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_save, args, kwargs);
+    if(!res) throw std::runtime_error("Call to save() failed.");
+
+    Py_DECREF(args);
+    Py_DECREF(kwargs);
+    Py_DECREF(res);
+
+}
+
+inline void savefig(const std::string& filename, const std::map<std::string, std::string> &keywords = {}, const size_t dpi = 300)
+{
+    detail::_interpreter::get();
+
+    // get spec object
+    PyObject *savefig_obj = PyObject_GetAttrString(detail::_interpreter::get().s_python_object_fig, "savefig");
+    if (!savefig_obj) throw std::runtime_error("No savefig_obj");
+    Py_INCREF(savefig_obj);
+
+    PyObject* pyfilename = PyString_FromString(filename.c_str());
+
+    PyObject* args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, pyfilename);
+
+    // construct keyword args
+    PyObject* kwargs = PyDict_New();
+    for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it)
+    {
+        PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
+    }
+    PyDict_SetItemString(kwargs, "dpi", PyLong_FromSize_t(dpi));
+
+    PyObject* res = PyObject_Call(savefig_obj, args, kwargs);
     if(!res) throw std::runtime_error("Call to save() failed.");
 
     Py_DECREF(args);

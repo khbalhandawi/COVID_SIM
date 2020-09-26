@@ -139,6 +139,9 @@ void load_config(Configuration *config, const char *config_file)
 	mapper["x_plot"] = &Configuration::x_plot_in;
 	mapper["y_plot"] = &Configuration::y_plot_in;
 	mapper["traveling_infects"] = &Configuration::traveling_infects_in;
+	mapper["save_pop"] = &Configuration::save_pop_in;
+	mapper["save_ground_covered"] = &Configuration::save_ground_covered_in;
+	mapper["save_pop_freq"] = &Configuration::save_pop_freq_in;
 
 	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
 	string line, value, value_str;
@@ -164,6 +167,9 @@ int main(int argc, char* argv[])
 	bool debug;
 	double SD;
 	int run, n_violators, test_capacity, healthcare_capacity;
+
+	char env[] = "PYTHONWARNINGS=ignore";
+	_putenv(env);
 
 	// Check if this is an external system call
     if (argc > 2) {

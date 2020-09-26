@@ -258,6 +258,12 @@ void simulation::tstep()
 	if ((Config.save_pop) && ((frame % Config.save_pop_freq) == 0)) {
 		save_population(population, frame, Config.save_pop_folder);
 	}
+
+	//save ground_covered if required
+	if ((Config.save_ground_covered) && ((frame % Config.save_pop_freq) == 0)) {
+		save_ground_covered(pop_tracker.ground_covered(0,Eigen::all), frame, Config.save_pop_folder);
+	}
+
 	//run callback
 	callback();
 
@@ -325,6 +331,11 @@ void simulation::run()
 			vis.build_fig(Config);
 		}
 
+	}
+
+	//save grid_coords if required
+	if (Config.save_ground_covered) {
+		save_grid_coords(pop_tracker.grid_coords, Config.save_pop_folder);
 	}
 
 	int i = 0;

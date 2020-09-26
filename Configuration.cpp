@@ -52,6 +52,7 @@ Configuration::Configuration()
 	tstep = 0; tstep_in = "0"; // current simulation timestep
 	save_data = false; save_data_in = "false"; // whether to dump data at end of simulation
 	save_pop = false; save_pop_in = "false"; // whether to save population matrix every "save_pop_freq" timesteps
+	save_ground_covered = false; save_ground_covered_in = "false"; // whether to save ground covered matrix every "save_pop_freq" timesteps
 	save_pop_freq = 10; save_pop_freq_in = "10"; // population data will be saved every "n" timesteps.Default: 10
 	save_pop_folder = "population"; save_pop_folder_in = "population"; // folder to write population timestep data to
 	endif_no_infections = true; endif_no_infections_in = "true"; // whether to stop simulation if no infections remain
@@ -240,19 +241,19 @@ void Configuration::set_lockdown(RandomDevice *my_rand, double lockdown_percenta
 /*                  set self isolation ratio                 */
 /*-----------------------------------------------------------*/
 void Configuration::set_self_isolation(int number_of_tests_in, double self_isolate_proportion_in,
-	vector<double> isolation_bounds_in, bool traveling_infects_in) 
+	vector<double> isolation_bounds_set, bool traveling_infects_in) 
 {
 	/*sets self-isolation scenario to active*/
 
 	self_isolate = true;
-	isolation_bounds = isolation_bounds_in;
+	isolation_bounds = isolation_bounds_set;
 	self_isolate_proportion = self_isolate_proportion_in;
 	number_of_tests = number_of_tests_in;
 	//set roaming bounds to outside isolated area
 	xbounds = { 0.02, 0.98 };
 	ybounds = { 0.02, 0.98 };
 	//update plot bounds everything is shown
-	x_plot = { isolation_bounds_in[0] - 0.02, 1 };
+	x_plot = { isolation_bounds_set[0] - 0.02, 1 };
 	y_plot = { 0, 1 };
 	//update whether traveling agents also infect
 	traveling_infects = traveling_infects_in;
@@ -314,6 +315,7 @@ void Configuration::set_from_file()
 	tstep = stoi(tstep_in); // current simulation timestep
 	save_data = save_data_in == "true"; // whether to dump data at end of simulation
 	save_pop = save_pop_in == "true"; // whether to save population matrix every "save_pop_freq" timesteps
+	save_ground_covered = save_ground_covered_in == "true";  // whether to save ground covered matrix every "save_pop_freq" timesteps
 	save_pop_freq = stoi(save_pop_freq_in); // population data will be saved every "n" timesteps.Default: 10
 	save_pop_folder = save_pop_folder_in; // folder to write population timestep data to
 	endif_no_infections = endif_no_infections_in == "true"; // whether to stop simulation if no infections remain
@@ -325,7 +327,6 @@ void Configuration::set_from_file()
 	lockdown_compliance = stod(lockdown_compliance_in); // fraction of the population that will obey the lockdown
 
 	// world variables, defines where population can and cannot roam
-	cout << xbounds_in << endl;
 	xbounds = split_string(xbounds_in);
 	ybounds = split_string(ybounds_in);
 	n_gridpoints = stoi(n_gridpoints_in); //  resolution of 2D grid for tracking population position
@@ -412,6 +413,7 @@ void Configuration::set_from_file()
 	self_isolate_proportion = stod(self_isolate_proportion_in);
 	isolation_bounds = split_string(isolation_bounds_in);
 	number_of_tests = stoi(number_of_tests_in);
+	if (self_isolate) {x_plot[0] = isolation_bounds[0] - 0.02;}
 
 	// lockdown variables
 	lockdown_percentage = stod(lockdown_percentage_in);

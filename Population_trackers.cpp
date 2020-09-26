@@ -409,8 +409,7 @@ void save_population(Eigen::ArrayXXf population, int tstep, string folder)
 	/*dumps population data at given timestep to disk
 
 	Function that dumps the simulation data to specific files on the disk.
-	Saves final state of the population matrix, the array of infected over time,
-	and the array of fatalities over time
+	Saves final state of the population matrix
 
 	Keyword arguments
 	---------------- -
@@ -422,4 +421,46 @@ void save_population(Eigen::ArrayXXf population, int tstep, string folder)
 	*/
 	check_folder(folder);
 	IOFile::writeTofile(population.cast<double>(), folder + "\\population_" + to_string(tstep) + ".bin");
+}
+
+/*-----------------------------------------------------------*/
+/*    save population ground covered at current time step    */
+/*-----------------------------------------------------------*/
+void save_ground_covered(Eigen::ArrayXXf ground_covered, int tstep, string folder)
+{
+	/*dumps population data at given timestep to disk
+
+	Function that dumps the population tracking data to specific files on the disk.
+	Saves final state of the ground_covered matrix
+
+	Keyword arguments
+	---------------- -
+	ground_covered : ndarray
+	the array containing all the population information
+
+	tstep : int
+	the timestep that will be saved
+	*/
+	check_folder(folder);
+	IOFile::writeTofile(ground_covered.cast<double>(), folder + "\\ground_covered_" + to_string(tstep) + ".bin");
+}
+
+/*-----------------------------------------------------------*/
+/*                   save grid coordinates                   */
+/*-----------------------------------------------------------*/
+void save_grid_coords(Eigen::ArrayXXf grid_coords, string folder)
+{
+	/*dumps population data at given timestep to disk
+
+	Function that dumps the tracking grid coordinates to specific files on the disk.
+	Saves the grid_coords matrix
+
+	Keyword arguments
+	---------------- -
+	grid_coords : ndarray
+	the array containing all the population information
+
+	*/
+	check_folder(folder);
+	IOFile::writeTofile(grid_coords.cast<double>(), folder + "\\grid_coords" + ".bin");
 }
