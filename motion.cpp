@@ -224,7 +224,7 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
-void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor)
+void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor, Eigen::ArrayXXf &dist_all, bool compute_dist_all)
 {
 	/*calculated repulsive forces between individuals
 
@@ -242,12 +242,23 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 	// update selectively
 	ArrayXXb cond(population_all.rows(), 2);
 	cond << (population_all.col(17) == 0), (population_all.col(11) == 0);
-	Eigen::ArrayXXf population = population_all(select_rows(cond), Eigen::all);
+	vector<int> rows_cond = select_rows(cond);
+
+	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);
+	Eigen::ArrayXXf dist;
+
+	if (compute_dist_all) {
+		// complete pairwise distance for entire population
+		dist_all = pairwise_dist(population_all(Eigen::all, { 1,2 }));
+		dist = dist_all(rows_cond, rows_cond);
+	} else {
+		 // complete pairwise distance for non-essential inside world population
+		dist = pairwise_dist(population_all(rows_cond, { 1,2 }));
+	}
 
 	int pop_size = population.rows();
 
 	float epsilon = 1e-15; // to avoid division by zero errors
-	Eigen::ArrayXXf dist = pairwise_dist(population(Eigen::all, { 1,2 }));
 	// dist += Eigen::MatrixXf::Identity(pop_size, pop_size).array();
 
 	Eigen::ArrayXXf to_point_x = pairwise_diff(population.col(1));
@@ -260,7 +271,7 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 	population.col(16) += repulsion_force_y;
 
 	// Update forces
-	population_all(select_rows(cond), Eigen::all) = population;
+	population_all(rows_cond, Eigen::all) = population;
 
 }
 

@@ -133,6 +133,7 @@ Configuration::Configuration()
 
 	// infection variables
 	infection_range = 0.01; infection_range_in = "0.01"; // range surrounding sick patient that infections can take place
+	infection_shape = "radial"; infection_shape_in = "radial"; // shape of infection zone surrounding sick patient that infections can take place
 	infection_chance = 0.03; infection_chance_in = "0.03"; // chance that an infection spreads to nearby healthy people each tick
 	recovery_duration = { 200, 500 }; recovery_duration_in = "200, 500"; // how many ticks it may take to recover from the illness
 	mortality_chance = 0.02; mortality_chance_in = "0.02"; // global baseline chance of dying from the disease
@@ -396,6 +397,7 @@ void Configuration::set_from_file()
 
 	// infection variables
 	infection_range = stod(infection_range_in) * distance_scaling; // range surrounding sick patient that infections can take place
+	infection_shape = infection_shape_in; // shape of infection zone surrounding sick patient that infections can take place
 	infection_chance =stod(infection_chance_in);   // chance that an infection spreads to nearby healthy people each tick
 	recovery_duration = { 200, 500 }; // how many ticks it may take to recover from the illness
 	mortality_chance = stod(mortality_chance_in); // global baseline chance of dying from the disease

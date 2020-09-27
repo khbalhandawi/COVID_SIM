@@ -142,6 +142,7 @@ void load_config(Configuration *config, const char *config_file)
 	mapper["save_pop"] = &Configuration::save_pop_in;
 	mapper["save_ground_covered"] = &Configuration::save_ground_covered_in;
 	mapper["save_pop_freq"] = &Configuration::save_pop_freq_in;
+	mapper["infection_shape"] = &Configuration::infection_shape_in;
 
 	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
 	string line, value, value_str;

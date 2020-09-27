@@ -16,16 +16,23 @@ using namespace std;
 /*-----------------------------------------------------------*/
 /*                     Finds nearby IDs                      */
 /*-----------------------------------------------------------*/
-void find_nearby(Eigen::ArrayXXf population, vector<double> infection_zone, Eigen::ArrayXf &indices, int &infected_number,
-	bool traveling_infects = false, string kind = "healthy", Eigen::ArrayXXf infected_previous_step = {});
+void find_nearby(Eigen::ArrayXXf population, Eigen::ArrayXf person_center, double infection_range, 
+	Eigen::ArrayXf &indices, int &infected_number, bool traveling_infects = false, string kind = "healthy", 
+	string shape = "radial", Eigen::ArrayXXf infected_previous_step = {});
 
 /*-----------------------------------------------------------*/
-/*                    Find new infections                    */
+/*                      Test and isolate                     */
+/*-----------------------------------------------------------*/
+void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, RandomDevice *my_rand, 
+	 Eigen::ArrayXXf &destinations, vector<double> location_bounds = {}, int location_no = 1);
+
+/*-----------------------------------------------------------*/
+/*           Find new infections (within radius)             */
 /*-----------------------------------------------------------*/
 void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, Configuration Config, int frame,
 	RandomDevice *my_rand, bool send_to_location = false, vector<double> location_bounds = {}, 
-	int location_no = 1, double location_odds = 1.0, bool test_flag = false);
-
+	int location_no = 1, double location_odds = 1.0, bool test_flag = false, Eigen::ArrayXXf dist = {});
+	
 /*-----------------------------------------------------------*/
 /*                     Recover or die                        */
 /*-----------------------------------------------------------*/

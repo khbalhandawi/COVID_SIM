@@ -135,7 +135,7 @@ void simulation::tstep()
 	//activate social distancing only for compliant individuals
 	if ((Config.social_distance_factor > 0) && (act_social_distancing)) {
 
-		update_repulsive_forces(population, Config.social_distance_factor);
+		update_repulsive_forces(population, Config.social_distance_factor, dist);
 
 		if (population.col(15).isNaN().any()) {
 			cout << "Infinite repulsive forces!" << endl;
@@ -203,7 +203,7 @@ void simulation::tstep()
 
 	// Find infections and send to hospital if applicable
 	infect(population, destinations, Config, frame, &my_rand, Config.self_isolate,
-			Config.isolation_bounds, 1, Config.self_isolate_proportion, act_testing);
+		   Config.isolation_bounds, 1, Config.self_isolate_proportion, act_testing);
 
 	// recover and die
 	recover_or_die(population, frame, Config, &my_rand);

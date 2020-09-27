@@ -26,6 +26,8 @@ public:
 	bool above_test_thresh;
 	// initialize default population
 	Eigen::ArrayXXf population;
+	// initialize pairwise distance matrix
+	Eigen::ArrayXXf dist;
 	// initalise destinations vector
 	Eigen::ArrayXXf destinations;
 	// initalise grid for tracking population positions

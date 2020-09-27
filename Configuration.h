@@ -107,6 +107,7 @@ public:
 
 	// infection variables
 	string infection_range_in; // range surrounding sick patient that infections can take place
+	string infection_shape_in; // shape of infection zone surrounding sick patient that infections can take place
 	string infection_chance_in;   // chance that an infection spreads to nearby healthy people each tick
 	string recovery_duration_in; // how many ticks it may take to recover from the illness
 	string mortality_chance_in; // global baseline chance of dying from the disease
@@ -223,6 +224,7 @@ public:
 
 	// infection variables
 	double infection_range; // range surrounding sick patient that infections can take place
+	string infection_shape; // shape of infection zone surrounding sick patient that infections can take place
 	double infection_chance;   // chance that an infection spreads to nearby healthy people each tick
 	vector<int> recovery_duration; // how many ticks it may take to recover from the illness
 	double mortality_chance; // global baseline chance of dying from the disease

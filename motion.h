@@ -23,7 +23,7 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
-void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor);
+void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor, Eigen::ArrayXXf &dist_all, bool compute_dist_all = false);
 
 /*-----------------------------------------------------------*/
 /*                    Update gravity forces                  */
