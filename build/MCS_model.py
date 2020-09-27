@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import scipy.stats as st
 import statsmodels as sm
@@ -7,8 +8,25 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib import rcParams
 import pickle
+import matplotlib.patches as patches
 import subprocess
 from subprocess import PIPE,STDOUT
+
+#==============================================================================#
+# Scaling by a range
+def scaling(x,l,u,operation):
+    # scaling() scales or unscales the vector x according to the bounds
+    # specified by u and l. The flag type indicates whether to scale (1) or
+    # unscale (2) x. Vectors must all have the same dimension.
+    
+    if operation == 1:
+        # scale
+        x_out=(x-l)/(u-l)
+    elif operation == 2:
+        # unscale
+        x_out = l + x*(u-l)
+    
+    return x_out
 
 #==============================================================================#
 # Execute system commands and return output to console
@@ -68,7 +86,7 @@ def parallel_sampling(design_variables,parameters,output_file_base,n_samples):
     from multiprocessing import Process, Pool
     import subprocess
     
-    num_threads = multiprocessing.cpu_count() - 4
+    num_threads = multiprocessing.cpu_count() - 2
 
     # qout = multiprocessing.Queue()
     # processes = [multiprocessing.Process(target=processInput, args=(i, design_variables, parameters, output_file_base, qout)) for i in range(n_samples)]
@@ -226,10 +244,16 @@ def make_pdf(dist, params, size=10000):
 def plot_distribution(data, fun_name, label_name, n_bins, run, 
                       discrete = False, min_bin_width = 0, 
                       fig_swept = None, run_label = 'PDF', color = u'b',
-                      dataXLim = None, dataYLim = None):
+                      dataXLim = None, dataYLim = None, constraint = None,
+                      fit_distribution = True, handles = [], labels = []):
 
-    mean_data = np.mean(data)
-    std_data = np.std(data)
+    if constraint is not None:
+        data_cstr = [d - constraint for d in data]
+        mean_data = np.mean(data_cstr)
+        std_data = np.std(data_cstr)
+    else:
+        mean_data = np.mean(data)
+        std_data = np.std(data)
 
     # Plot raw data
     fig0 = plt.figure(figsize=(6,5))
@@ -281,17 +305,24 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     else:
         data_bins = n_bins
 
-    best_fit_name, best_fit_params, best_10_fits = best_fit_distribution(data, data_bins, ax)
+    # Fit and plot distribution
+    if fit_distribution:
 
-    best_dist = getattr(st, best_fit_name)
-    print('Best fit: %s' %(best_fit_name.upper()) )
-    # Make PDF with best params 
-    pdf = make_pdf(best_dist, best_fit_params)
-    pdf.plot(lw=2, color = color, label=run_label, legend=True, ax=ax2)
+        best_fit_name, best_fit_params, best_10_fits = best_fit_distribution(data, data_bins, ax)
 
-    param_names = (best_dist.shapes + ', loc, scale').split(', ') if best_dist.shapes else ['loc', 'scale']
-    param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, best_fit_params)])
-    dist_str = '{}({})'.format(best_fit_name, param_str)
+        best_dist = getattr(st, best_fit_name)
+        print('Best fit: %s' %(best_fit_name.upper()) )
+        # Make PDF with best params 
+        pdf = make_pdf(best_dist, best_fit_params)
+        pdf.plot(lw=2, color = color, label=run_label, legend=True, ax=ax2)
+
+        param_names = (best_dist.shapes + ', loc, scale').split(', ') if best_dist.shapes else ['loc', 'scale']
+        param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, best_fit_params)])
+        dist_str = '{}({})'.format(best_fit_name, param_str)
+
+        handles = []; labels = []
+    else:
+        lgd = ax2.legend(handles, labels, fontsize = 9.0)
 
     if discrete:
         # discrete bin numbers
@@ -299,6 +330,10 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     else:
         ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
     
+    # plot constraint limits
+    if constraint is not None:
+        ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='k')
+
     # Save plot limits
     if dataYLim is None and dataXLim is None:
         dataYLim = ax2.get_ylim()
@@ -344,11 +379,21 @@ if __name__ == '__main__':
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
 
-    new_run = False
+    new_run = True
 
-    n_violators_sweep = np.arange(16, 101, 21)
-    SD_factors = np.linspace(0.0001,0.2,5)
-    test_capacities = np.arange(10, 51, 10)
+    # Model variables
+    bounds = np.array([[16      , 151 ],  # Essential workers
+                       [0.0001  , 0.2 ],  # SD_factor
+                       [10      , 101  ]]) # testing capacity)
+
+    fit_cond = True # Do not fit data
+    run = 0 # starting point
+
+    #===================================================================#
+    # DOE levels
+    n_var = 0; n_samples = 1000; n_steps = 5
+    var_DOE = np.linspace(0.0,1.0,n_steps)
+    var_DOE = scaling(var_DOE,bounds[n_var,0],bounds[n_var,1],2)
 
     same_axis = True
     if same_axis:
@@ -385,46 +430,71 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'serif'
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
 
-    # Resume MCS
-    # run = 3
-    # # n_violators_sweep = n_violators_sweep[run:]
-    # run = 3
-    # SD_factors = SD_factors[run:]
+    #===================================================================#
+    # Initialize
+    handles_lgd = []; labels_lgd = [] # initialize legend
+
+    if new_run:
+        # New MCS
+        run = 0
+        # Resume MCS
+        # run = 3
+        # points = points[run:]
+        # labels = labels[run:]
+
+        # terminate MCS
+        # run = 3
+        # run_end = 3 + 1
+        # points = points[run:run_end]
+        # labels = labels[run:run_end]
+
+        #============== INITIALIZE WORKING DIRECTORY ===================#
+        current_path = os.getcwd()
+        job_dir = os.path.join(current_path,'data')
+        for f in os.listdir(job_dir):
+            dirname = os.path.join(job_dir, f)
+            if dirname.endswith(".log"):
+                os.remove(dirname)
 
     # design parameters
     healthcare_capacity = 150
 
-    for n_violators in n_violators_sweep:
-    # for SD in SD_factors:
-    # for test_capacity in test_capacities:
+    for var in var_DOE:
 
-        legend_label = 'Number of essential workers ($E$) = %i people' %(n_violators)
-        # legend_label = 'Social distancing factor ($S$)= %f' %(SD)
-        # legend_label = 'Testing capacity ($T$) = %i people' %(test_capacity)
+        legend_labels = ['Number of essential workers ($E$) = %i people' %(var),
+                         'Social distancing factor ($S$)= %f' %(var),
+                         'Testing capacity ($T$) = %i people' %(var)]
+
+        legend_label = legend_labels[n_var] 
 
         if new_run:
-            #=====================================================================#
-            # Essential workers sweep
-            SD = 0.1 # force amplitude
-            test_capacity = 0 # number of people
+            if n_var == 0:
+                #=====================================================================#
+                # Essential workers sweep
+                SD = 0.1 # force amplitude
+                test_capacity = 0 # number of people
 
-            design_variables = [n_violators, SD, test_capacity]
-            parameters = [healthcare_capacity]
-            #=====================================================================#
-            # SD sweep
-            # n_violators = 0 # number of people
-            # test_capacity = 0 # number of people
+                design_variables = [int(var), SD, test_capacity]
+                parameters = [healthcare_capacity]
 
-            # design_variables = [n_violators, SD, test_capacity]
-            # parameters = [healthcare_capacity]
-            #=====================================================================#
-            # Testing sweep
-            # n_violators = 0 # number of people
-            # SD = 0.1 # force amplitude
+            elif n_var == 1:
+                #=====================================================================#
+                # SD sweep
+                n_violators = 0 # number of people
+                test_capacity = 0 # number of people
 
-            # design_variables = [n_violators, SD, test_capacity]
-            # parameters = [healthcare_capacity]
-            #=====================================================================#
+                design_variables = [n_violators, var, test_capacity]
+                parameters = [healthcare_capacity]
+
+            elif n_var == 2:
+                #=====================================================================#
+                # Testing sweep
+                n_violators = 0 # number of people
+                SD = 0.1 # force amplitude
+
+                design_variables = [n_violators, SD, int(var)]
+                parameters = [healthcare_capacity]
+                #=====================================================================#
 
             output_file_base = 'MCS_data_r%i' %run
             [infected_i,fatalities_i,GC_i,distance_i] = parallel_sampling(design_variables,parameters,output_file_base,n_samples)
@@ -442,46 +512,59 @@ if __name__ == '__main__':
                 GC_i = pickle.load(fid)
                 distance_i = pickle.load(fid)
 
+        # Legend entries
+        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor=colors[run], facecolor=colors[run], fill='None' ,alpha=0.5)
+        handles_lgd += [a]
+        labels_lgd += [legend_label]
+
+         # Infected plot
         label_name = u'Maximum number of infected ($I(\mathbf{x})$)'
         fun_name = 'infections'
         data = infected_i
 
         dataXLim_i_out, dataYLim_i_out, mean_i, std_i = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = True, min_bin_width = min_bin_width_i, fig_swept = fig_infections, 
-            run_label = legend_label, color = colors[run], dataXLim = dataXLim_i, dataYLim = dataYLim_i)
+            run_label = legend_label, color = colors[run], dataXLim = dataXLim_i, dataYLim = dataYLim_i,
+            constraint = healthcare_capacity, fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_i_runs += [mean_i]
         std_i_runs += [std_i]
 
+        # Fatalities plot
         label_name = u'Number of fatalities ($F(\mathbf{x})$)'
         fun_name = 'fatalities'
         data = fatalities_i
 
         dataXLim_f_out, dataYLim_f_out, mean_f, std_f = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = True, min_bin_width = min_bin_width_f, fig_swept = fig_fatalities, 
-            run_label = legend_label, color = colors[run], dataXLim = dataXLim_f, dataYLim = dataYLim_f)
+            run_label = legend_label, color = colors[run], dataXLim = dataXLim_f, dataYLim = dataYLim_f,
+            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_f_runs += [mean_f]
         std_f_runs += [std_f]
 
+        # Distance plot
         label_name = u'Average cumulative distance travelled ($D(\mathbf{x})$)'
         fun_name = 'distance'
         data = distance_i
 
         dataXLim_d_out, dataYLim_d_out, mean_d, std_d = plot_distribution(data, fun_name, label_name, n_bins, run, 
             fig_swept = fig_dist, run_label = legend_label, color = colors[run], 
-            dataXLim = dataXLim_d, dataYLim = dataYLim_d)
+            dataXLim = dataXLim_d, dataYLim = dataYLim_d,
+            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
         
         mean_d_runs += [mean_d]
         std_d_runs += [std_d]
 
+        # Ground covered plot
         label_name = u'Percentage of world explored ($D(\mathbf{x})$)'
         fun_name = 'ground covered'
         data = GC_i
 
         dataXLim_GC_out, dataYLim_GC_out, mean_gc, std_gc = plot_distribution(data, fun_name, label_name, n_bins, run, 
             fig_swept = fig_GC, run_label = legend_label, color = colors[run], 
-            dataXLim = dataXLim_GC, dataYLim = dataYLim_GC)
+            dataXLim = dataXLim_GC, dataYLim = dataYLim_GC,
+            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_gc_runs += [mean_gc]
         std_gc_runs += [std_gc]

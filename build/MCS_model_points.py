@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import scipy.stats as st
 import statsmodels as sm
@@ -446,6 +447,8 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'serif'
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
 
+    #===================================================================#
+    # Initialize
     handles_lgd = []; labels_lgd = [] # initialize legend
 
     if new_run:
@@ -461,6 +464,14 @@ if __name__ == '__main__':
         # run_end = 3 + 1
         # points = points[run:run_end]
         # labels = labels[run:run_end]
+        
+        #============== INITIALIZE WORKING DIRECTORY ===================#
+        current_path = os.getcwd()
+        job_dir = os.path.join(current_path,'data')
+        for f in os.listdir(job_dir):
+            dirname = os.path.join(job_dir, f)
+            if dirname.endswith(".log"):
+                os.remove(dirname)
 
     for point,legend_label in zip(points,labels):
 

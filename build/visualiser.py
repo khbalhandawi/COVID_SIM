@@ -358,10 +358,10 @@ def draw_tstep_scatter(Config, population, pop_tracker, frame,
             bg_color = "#121111"
 
         try:
-            fig.savefig('%s/%i.png' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
+            fig.savefig('%s/%i.pdf' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
         except:
             check_folder(Config.plot_path)
-            fig.savefig('%s/%i.png' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
+            fig.savefig('%s/%i.pdf' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
 
 def draw_SIRonly(Config, population, pop_tracker, frame,
                fig, spec, ax1):
