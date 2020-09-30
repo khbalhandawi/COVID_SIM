@@ -30,6 +30,11 @@ public:
 	void build_fig_SIR(Configuration Config, vector<int> fig_size = { 5,10 });
 
 	/*-----------------------------------------------------------*/
+	/*                 Build time series figure                  */
+	/*-----------------------------------------------------------*/
+	void build_fig_time_series(Configuration Config, vector<int> fig_size = { 5,10 }, string ylabel = "time series");
+
+	/*-----------------------------------------------------------*/
 	/*                  Update figure time step                  */
 	/*-----------------------------------------------------------*/
 	void draw_tstep(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame);
@@ -43,6 +48,11 @@ public:
 	/*            Update figure time step (SIR only)             */
 	/*-----------------------------------------------------------*/
 	void draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame);
+
+	/*-----------------------------------------------------------*/
+	/*          Update figure time step (time series)            */
+	/*-----------------------------------------------------------*/
+	void draw_time_series(Configuration Config, vector<double> y_data, string label, int frame, int skip = 1);
 
 	/*-----------------------------------------------------------*/
 	/*                     Draw a rectangle                      */

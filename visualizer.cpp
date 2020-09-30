@@ -167,6 +167,23 @@ void visualizer::build_fig_SIR(Configuration Config, vector<int> fig_size)
 }
 
 /*-----------------------------------------------------------*/
+/*                  Build time series figure                 */
+/*-----------------------------------------------------------*/
+void visualizer::build_fig_time_series(Configuration Config, vector<int> fig_size, string ylabel)
+{
+	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
+	plt::figure_size(7, 5);
+
+	plt::xlabel("Simulation Steps");
+	plt::ylabel(ylabel);
+
+	if (Config.save_plot) {
+		check_folder(Config.plot_path); // create save directory
+		cout << Config.plot_path << endl;
+	}
+}
+
+/*-----------------------------------------------------------*/
 /*                  Update figure time step                  */
 /*-----------------------------------------------------------*/
 void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Population_trackers pop_tracker, int frame)
@@ -531,6 +548,41 @@ void visualizer::draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, 
 
 		string bg_color = "w";
 		string save_path = Config.plot_path + "\\" + "Final_SIR" + ".pdf";
+		map<string, string> keywords;
+		//keywords["dpi"] = "300";
+		keywords["facecolor"] = bg_color;
+
+		plt::save(save_path);
+
+	}
+}
+
+/*-----------------------------------------------------------*/
+/*          Update figure time step (time series)            */
+/*-----------------------------------------------------------*/
+void visualizer::draw_time_series(Configuration Config, vector<double> y_data, string label, int frame, int skip)
+{
+	// construct plot and visualise
+
+	// get color palettes
+	vector<string> palette = Config.get_palette();
+
+	// filled plot
+	map<string, string> keywords;
+	keywords["linewidth"] = "1.5";
+	vector<int> x = sequence(0, (frame + 1), skip);
+	vector<double> x_data(x.begin(), x.end());
+
+	keywords["color"] = palette[0];
+	plt::plot(x_data, y_data, keywords); // susceptible
+
+	plt::draw();
+	plt::pause(0.001);
+
+	if (Config.save_plot) {
+
+		string bg_color = "w";
+		string save_path = Config.plot_path + "\\" + "time_series_" + label + ".pdf";
 		map<string, string> keywords;
 		//keywords["dpi"] = "300";
 		keywords["facecolor"] = bg_color;

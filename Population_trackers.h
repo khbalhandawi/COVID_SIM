@@ -28,6 +28,7 @@ public:
 	vector<double> distance_travelled;
 	Eigen::ArrayXf total_distance; // distance travelled by individuals
 	vector<double> mean_perentage_covered;
+	vector<double> mean_R0; // mean basic reproductive number
 	Eigen::ArrayXXf grid_coords;
 	Eigen::ArrayXXf ground_covered;
 	Eigen::ArrayXf perentage_covered; // portion of world covered by individuals
@@ -76,7 +77,7 @@ void set_destination_bounds(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destin
 /*-----------------------------------------------------------*/
 /*                   save population data                    */
 /*-----------------------------------------------------------*/
-void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker);
+void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Configuration Config, int frame, string folder);
 
 /*-----------------------------------------------------------*/
 /*         save population data at current time step         */

@@ -273,8 +273,69 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	Eigen::ArrayXf indices;
 	int infected_number = 0;
 
-	// if less than half are infected, slice based on infected (to speed up computation)
-	if ( infected_previous_step.rows() < (floor(Config.pop_size / 2)) ) {
+	if (!Config.track_R0) {
+		// if less than half are infected, slice based on infected (to speed up computation)
+		if ( infected_previous_step.rows() < (floor(Config.pop_size / 2)) ) {
+			for (int i = 0; i < infected_previous_step.rows(); i++) {
+				patient = infected_previous_step.row(i);
+				// define infection zone for patient
+				person_center = patient( {1,2} ); // center of infection
+
+				// find healthy people surrounding infected patient
+				if ( (Config.traveling_infects) || (patient[11] == 0) ) {
+					find_nearby(population, person_center, Config.infection_range, indices, infected_number, false, "healthy", Config.infection_shape);
+				}
+
+				for (auto i : indices) {
+					// roll die to see if healthy person will be infected
+					if (my_rand->rand() < Config.infection_chance) {
+						population.block(i, 6, 1, 1) = 1;
+						population.block(i, 8, 1, 1) = frame;
+						new_infections.push_back(i);
+					}
+
+				}
+
+			}
+
+		}
+		else {
+			// if more than half are infected slice based in healthy people (to speed up computation)
+			for (int i = 0; i < healthy_previous_step.rows(); i++) {
+				person = healthy_previous_step.row(i);
+				// define infection range around healthy person
+				person_center = person( {1,2} ); // center of healthy person
+
+				// if person is not already infected, find if infected are nearby
+				if (person[6] == 0) {
+					// find infected nearby healthy person (infected_number = poplen)
+					if (Config.traveling_infects) {
+						find_nearby(population, person_center, Config.infection_range, 
+									indices, infected_number, true, "infected", Config.infection_shape);
+					}
+					else {
+						find_nearby(population, person_center, Config.infection_range, 
+									indices, infected_number, true, "infected", Config.infection_shape, 
+									infected_previous_step);
+					}
+
+					if (infected_number > 0) {
+						if (my_rand->rand() < Config.infection_chance * infected_number) {
+							// roll die to see if healthy person will be infected
+							population.block(person[0], 6, 1, 1) = 1;
+							population.block(person[0], 8, 1, 1) = frame;
+							new_infections.push_back(person[0]);
+
+						}
+					}
+
+				}
+
+			}
+		}
+
+	} else {
+		int n_infected_i; // number of people infected by patient
 		for (int i = 0; i < infected_previous_step.rows(); i++) {
 			patient = infected_previous_step.row(i);
 			// define infection zone for patient
@@ -284,55 +345,21 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 			if ( (Config.traveling_infects) || (patient[11] == 0) ) {
 				find_nearby(population, person_center, Config.infection_range, indices, infected_number, false, "healthy", Config.infection_shape);
 			}
-
-			for (auto i : indices) {
+			n_infected_i = 0;
+			for (auto i_h : indices) {
 				// roll die to see if healthy person will be infected
 				if (my_rand->rand() < Config.infection_chance) {
-					population.block(i, 6, 1, 1) = 1;
-					population.block(i, 8, 1, 1) = frame;
-					new_infections.push_back(i);
+					population.block(i_h, 6, 1, 1) = 1;
+					population.block(i_h, 8, 1, 1) = frame;
+					new_infections.push_back(i_h);
+					n_infected_i++;
 				}
 
 			}
-
-		}
-
-	}
-	else {
-		// if more than half are infected slice based in healthy people (to speed up computation)
-		for (int i = 0; i < healthy_previous_step.rows(); i++) {
-			person = healthy_previous_step.row(i);
-			// define infection range around healthy person
-			person_center = person( {1,2} ); // center of healthy person
-
-			// if person is not already infected, find if infected are nearby
-			if (person[6] == 0) {
-				// find infected nearby healthy person (infected_number = poplen)
-				if (Config.traveling_infects) {
-					find_nearby(population, person_center, Config.infection_range, 
-								indices, infected_number, true, "infected", Config.infection_shape);
-				}
-				else {
-					find_nearby(population, person_center, Config.infection_range, 
-								indices, infected_number, true, "infected", Config.infection_shape, 
-								infected_previous_step);
-				}
-
-				if (infected_number > 0) {
-					if (my_rand->rand() < Config.infection_chance * infected_number) {
-						// roll die to see if healthy person will be infected
-						population.block(person[0], 6, 1, 1) = 1;
-						population.block(person[0], 8, 1, 1) = frame;
-						new_infections.push_back(person[0]);
-
-					}
-				}
-
-			}
-
+			population.block(patient(0), 20, 1, 1) += n_infected_i; // update number of infected per patient
 		}
 	}
-
+	
 	// Find infected people (loop method)
 	// vector<int> new_infections;
 	// Eigen::ArrayXf indices;
@@ -474,12 +501,14 @@ void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config
 			// die
 			infected_people(select_rows(infected_people.col(0) == idx)[0], 6) = 3;
 			infected_people(select_rows(infected_people.col(0) == idx)[0], 10) = 0;
+			infected_people(select_rows(infected_people.col(0) == idx)[0], 19) = frame; // time at which died
 			fatalities.push_back(select_rows(infected_people.col(0) == idx)[0]);
 		}
 		else {
 			// recover(become immune)
 			infected_people(select_rows(infected_people.col(0) == idx)[0], 6) = 2;
 			infected_people(select_rows(infected_people.col(0) == idx)[0], 10) = 0;
+			infected_people(select_rows(infected_people.col(0) == idx)[0], 19) = frame; // time at which recovered
 			recovered.push_back(select_rows(infected_people.col(0) == idx)[0]);
 		}
 

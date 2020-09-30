@@ -69,8 +69,8 @@ def build_fig(Config, figsize=(10,5)):
     #ax2.set_xlim(0, simulation_steps)
     ax2.set_ylim(0, Config.pop_size)
 
-    ax2.set_xlabel('Simulation Steps', fontsize = 14)
-    ax2.set_ylabel('Number sof people', fontsize = 14)
+    ax2.set_xlabel('Time (days)', fontsize = 14)
+    ax2.set_ylabel('Population size', fontsize = 14)
 
     #get color palettes
     palette = Config.get_palette()
@@ -165,15 +165,11 @@ def build_fig_SIRonly(Config, figsize=(5,4)):
     spec = fig.add_gridspec(ncols=1, nrows=1)
 
     ax1 = fig.add_subplot(spec[0,0])
-    ax1.set_title('number of infected')
     #ax2.set_xlim(0, simulation_steps)
     ax1.set_ylim(0, Config.pop_size + 100)
 
-    ax1.set_xlabel('Simulation Steps')
-    ax1.set_ylabel('Number of people')
-
-    ax1.set_xlabel('Simulation Steps', fontsize = 14)
-    ax1.set_ylabel('Number of people', fontsize = 14)
+    ax1.set_xlabel('Time (days)', fontsize = 14)
+    ax1.set_ylabel('Population size', fontsize = 14)
 
     #get color palettes
     palette = Config.get_palette()
@@ -191,6 +187,23 @@ def build_fig_SIRonly(Config, figsize=(5,4)):
     #if 
 
     return fig, spec, ax1
+
+def build_fig_time_series(Config, label, figsize=(5,4)):
+    set_style(Config)
+    fig = plt.figure(figsize=(5,4))
+    spec = fig.add_gridspec(ncols=1, nrows=1)
+
+    ax1 = fig.add_subplot(spec[0,0])
+
+    ax1.set_xlabel('Time (days)', fontsize = 14)
+    ax1.set_ylabel(label, fontsize = 14)
+    
+    # handles, labels = [[a1,a2,a3,a4,a5], ['healthcare capacity','infectious','susceptible','recovered','fatalities']]
+    # fig.legend(handles, labels, loc='upper center', ncol=5, fontsize = 10)
+
+    #if 
+
+    return fig, ax1
 
 def draw_tstep(Config, population, pop_tracker, frame,
                fig, spec, ax1, ax2, tight_bbox = None):
@@ -245,11 +258,12 @@ def draw_tstep(Config, population, pop_tracker, frame,
                                                                                                     len(fatalities)),
                 fontsize=6)
 
+    x_data = np.arange(frame+1) / 10 # time vector for plot
     if Config.treatment_dependent_risk:
         infected_arr = np.asarray(pop_tracker.infectious)
         indices = np.argwhere(infected_arr >= Config.healthcare_capacity)
 
-        a1 = ax2.plot([Config.healthcare_capacity for x in range(len(pop_tracker.infectious))], 
+        a1 = ax2.plot(x_data, [Config.healthcare_capacity for x in range(len(pop_tracker.infectious))], 
                  'r:', label='healthcare capacity')
 
     if Config.plot_mode.lower() == 'default':
@@ -266,12 +280,12 @@ def draw_tstep(Config, population, pop_tracker, frame,
         # ax2.plot(S, color=palette[0], label='susceptible')
         # ax2.plot(Rr, color=palette[2], label='recovered')
         # ax2.plot(Rf, color=palette[3], label='fatalities')
-
+        
         # Filled plot
-        ax2.fill_between(np.arange(frame+1), [0.0]*(frame+1), I, color=palette[1]) #infectious
-        ax2.fill_between(np.arange(frame+1), I, S, color=palette[0]) #healthy
-        ax2.fill_between(np.arange(frame+1), S, Rr, color=palette[2]) #recovered
-        ax2.fill_between(np.arange(frame+1), Rr, Rf, color=palette[3]) #dead
+        ax2.fill_between(x_data, [0.0]*(frame+1), I, color=palette[1]) #infectious
+        ax2.fill_between(x_data, I, S, color=palette[0]) #healthy
+        ax2.fill_between(x_data, S, Rr, color=palette[2]) #recovered
+        ax2.fill_between(x_data, Rr, Rf, color=palette[3]) #dead
 
     else:
         raise ValueError('incorrect plot_style specified, use \'sir\' or \'default\'')
@@ -287,10 +301,10 @@ def draw_tstep(Config, population, pop_tracker, frame,
             bg_color = "#121111"
 
         try:
-            fig.savefig('%s/%i.png' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
+            fig.savefig('%s/%i.pdf' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
         except:
             check_folder(Config.plot_path)
-            fig.savefig('%s/%i.png' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
+            fig.savefig('%s/%i.pdf' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
 
 def draw_tstep_scatter(Config, population, pop_tracker, frame,
                        fig, ax1, tight_bbox = None):
@@ -330,7 +344,7 @@ def draw_tstep_scatter(Config, population, pop_tracker, frame,
         elif pop_tracker.ground_covered.ndim == 1:
             ground_covered = pop_tracker.ground_covered
 
-        for grid in grid_coords[ground_covered > 0]:
+        for grid in grid_coords[ground_covered == 1]:
             rect = patches.Rectangle(grid[:2], grid[2] - grid[0], grid[3] - grid[1], linewidth=1, edgecolor='r', facecolor='none', fill='None', hatch=None)
             # Add the patch to the Axes
             ax1.add_patch(rect)
@@ -363,10 +377,9 @@ def draw_tstep_scatter(Config, population, pop_tracker, frame,
             check_folder(Config.plot_path)
             fig.savefig('%s/%i.pdf' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
 
-def draw_SIRonly(Config, population, pop_tracker, frame,
-               fig, spec, ax1):
+def draw_SIRonly(Config, pop_tracker, fig, ax1):
 
-   #construct plot and visualise
+    #construct plot and visualise
 
     #set plot style
     set_style(Config)
@@ -378,28 +391,24 @@ def draw_SIRonly(Config, population, pop_tracker, frame,
     for artist in ax1.lines + ax1.collections + ax1.texts:
         artist.remove()
 
-    ax1.set_title('number of infected')
-    # ax1.text(0, Config.pop_size * 0.05, 
-    #             'https://github.com/paulvangentcom/python-corona-simulation',
-    #             fontsize=6, alpha=0.5)
-    #ax2.set_xlim(0, simulation_steps)
     ax1.set_ylim(0, Config.pop_size + 200)
 
+    x_data = np.arange(len(pop_tracker.infectious)) / 10 # time vector for plot
     if Config.treatment_dependent_risk:
         infected_arr = np.asarray(pop_tracker.infectious)
         indices = np.argwhere(infected_arr >= Config.healthcare_capacity)
 
-        ax1.plot([Config.healthcare_capacity for x in range(len(pop_tracker.infectious))], 
+        ax1.plot(x_data, [Config.healthcare_capacity for x in range(len(pop_tracker.infectious))], 
                  'r:', label='healthcare capacity')
 
     if Config.plot_mode.lower() == 'default':
-        ax1.plot(pop_tracker.infectious, color=palette[1])
-        ax1.plot(pop_tracker.fatalities, color=palette[3], label='fatalities')
+        ax1.plot(x_data, pop_tracker.infectious, color=palette[1])
+        ax1.plot(x_data, pop_tracker.fatalities, color=palette[3], label='fatalities')
     elif Config.plot_mode.lower() == 'sir':
-        ax1.plot(pop_tracker.infectious, color=palette[1], label='infectious')
-        ax1.plot(pop_tracker.fatalities, color=palette[3], label='fatalities')
-        ax1.plot(pop_tracker.susceptible, color=palette[0], label='susceptible')
-        ax1.plot(pop_tracker.recovered, color=palette[2], label='recovered')
+        ax1.plot(x_data, pop_tracker.infectious, color=palette[1], label='infectious')
+        ax1.plot(x_data, pop_tracker.fatalities, color=palette[3], label='fatalities')
+        ax1.plot(x_data, pop_tracker.susceptible, color=palette[0], label='susceptible')
+        ax1.plot(x_data, pop_tracker.recovered, color=palette[2], label='recovered')
     else:
         raise ValueError('incorrect plot_style specified, use \'sir\' or \'default\'')
 
@@ -416,7 +425,45 @@ def draw_SIRonly(Config, population, pop_tracker, frame,
             bg_color = "#121111"
 
         try:
-            fig.savefig('%s/Final_%i.pdf' %(Config.plot_path, frame), dpi=1000, facecolor=bg_color, bbox_inches='tight')
+            fig.savefig('%s/SIRF_plot.pdf' %(Config.plot_path), dpi=1000, facecolor=bg_color, bbox_inches='tight')
         except:
             check_folder(Config.plot_path)
-            fig.savefig('%s/Final_%i.pdf' %(Config.plot_path, frame), dpi=1000, facecolor=bg_color, bbox_inches='tight')
+            fig.savefig('%s/SIRF_plot.pdf' %(Config.plot_path), dpi=1000, facecolor=bg_color, bbox_inches='tight')
+
+def draw_time_series(Config, time, data, label, fig, ax1, line_label=None, threshold=None, threshold_label=None):
+
+    #construct plot and visualise
+
+    #set plot style
+    set_style(Config)
+
+    #get color palettes
+    palette = Config.get_palette()
+
+    # option 2, remove all lines and collections
+    for artist in ax1.lines + ax1.collections + ax1.texts:
+        artist.remove()
+
+    ax1.plot(time / 10, data, label=line_label)
+    
+    if (line_label is not None) and (threshold is not None) and (threshold_label is not None):
+        ax1.plot(time / 10, [threshold for x in range(len(data))], 
+                 'r:', label=threshold_label)
+
+    ax1.legend(loc = 'best', fontsize = 10)
+
+    plt.draw()
+    plt.pause(0.0001)
+
+    if Config.save_plot:
+        
+        if Config.plot_style == 'default':
+            bg_color = 'w'
+        elif Config.plot_style == 'dark':
+            bg_color = "#121111"
+
+        try:
+            fig.savefig('%s/%s_plot.pdf' %(Config.plot_path, label), dpi=100, facecolor=bg_color, bbox_inches='tight')
+        except:
+            check_folder(Config.plot_path)
+            fig.savefig('%s/%s_plot.pdf' %(Config.plot_path, label), dpi=100, facecolor=bg_color, bbox_inches='tight')

@@ -102,10 +102,10 @@ void simulation::tstep()
 	if (!(above_act_thresh) && (Config.social_distance_threshold_on > 0)) {
 		// If not previously above infection threshold activate when threshold reached
 		if (Config.thresh_type == "hospitalized") {
-			above_act_thresh = population(select_rows(population.col(11) == 1), { 11 }).sum() >= Config.social_distance_threshold_on;
+			above_act_thresh = population(select_rows(population.col(11) == 1), { 11 }).rows() >= Config.social_distance_threshold_on;
 		}
 		else if (Config.thresh_type == "infected") {
-			above_act_thresh = population(select_rows(population.col(6) == 1), { 11 }).sum() >= Config.social_distance_threshold_on;
+			above_act_thresh = population(select_rows(population.col(6) == 1), { 11 }).rows() >= Config.social_distance_threshold_on;
 		}
 			
 	}
@@ -118,14 +118,14 @@ void simulation::tstep()
 		// If previously went above infection threshold deactivate when threshold reached
 		ArrayXXb cond(Config.pop_size, 2);
 		cond << (population.col(6) == 1) , (population.col(11) == 0);
-		above_deact_thresh = population(select_rows(cond), Eigen::all).count() <= Config.social_distance_threshold_off;
+		above_deact_thresh = population(select_rows(cond), Eigen::all).rows() <= Config.social_distance_threshold_off;
 	}
 
 	bool act_social_distancing;
 
 	// activate social distancing at the onset of infection
 	if (!Config.SD_act_onset) {
-		act_social_distancing = ((above_act_thresh) && !(above_deact_thresh) && (pop_infected.count() > 0));
+		act_social_distancing = ((above_act_thresh) && !(above_deact_thresh) && (pop_infected.rows() > 0));
 	}
 	// activate social distancing from start of simulation
 	else if (Config.SD_act_onset) {
@@ -243,6 +243,9 @@ void simulation::tstep()
 		}
 		if (Config.track_GC) {
 			cout << ": GC: " << pop_tracker.mean_perentage_covered.back()*100;
+		}
+		if (Config.track_R0) {
+			cout << ": R0: " << pop_tracker.mean_R0.back();
 		}
 		cout << " time: " << tc.toc() << " ms";
 		cout << endl;
@@ -367,10 +370,25 @@ void simulation::run()
 	if (Config.plot_last_tstep) {
 		vis.build_fig_SIR(Config);
 		vis.draw_SIRonly(Config, population, pop_tracker, (frame - 1) );
+
+		if (Config.track_position) {
+			vis.build_fig_time_series(Config, { 5,10 }, "mean distance travelled");
+			vis.draw_time_series(Config, pop_tracker.distance_travelled, "D", (frame - 1) );
+		}
+
+		if (Config.track_GC) {
+			vis.build_fig_time_series(Config, { 5,10 }, "percentage of world explored");
+			vis.draw_time_series(Config, pop_tracker.mean_perentage_covered, "GC", (frame - 1), Config.update_every_n_frame );
+		}
+
+		if (Config.track_R0) {
+			vis.build_fig_time_series(Config, { 5,10 }, "R0");
+			vis.draw_time_series(Config, pop_tracker.mean_R0, "R0", (frame - 1), Config.update_R0_every_n_frame );
+		}
 	}
 
 	if (Config.save_data) {
-		save_data(population, pop_tracker);
+		save_data(population, pop_tracker, Config, (frame - 1), Config.save_pop_folder);
 	}
 
 	// report outcomes
@@ -393,7 +411,10 @@ void simulation::run()
 		cout << "total infectious: " << to_string(pop_infectious.rows()) << endl;
 		cout << "total unaffected: " << to_string(pop_susceptible.rows()) << endl;
 		if (Config.track_GC) {
-			cout << "Mean % explored: " << pop_tracker.mean_perentage_covered.back() << endl;
+			cout << "Mean % explored: " << pop_tracker.mean_perentage_covered.back()*100 << endl;
+		}
+		if (Config.track_R0) {
+			cout << "Max R0: " << *max_element(pop_tracker.mean_R0.begin(), pop_tracker.mean_R0.end()) << endl;
 		}
 	}
 

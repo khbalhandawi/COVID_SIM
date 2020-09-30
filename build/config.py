@@ -32,7 +32,9 @@ class Configuration():
         self.n_gridpoints = 10 # resolution of 2D grid for tracking population position
         self.track_position = True
         self.track_GC = False
+        self.track_R0 = False
         self.update_every_n_frame = 1
+        self.update_R0_every_n_frame = 1
 
         #visualisation variables
         self.visualise = True #whether to visualise the simulation 

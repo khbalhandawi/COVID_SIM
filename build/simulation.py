@@ -10,8 +10,9 @@ import time
 from utils import check_folder
 from config import Configuration, config_error
 from environment import build_hospital
-from visualiser import build_fig, build_fig_scatter, draw_tstep, draw_tstep_scatter, set_style, build_fig_SIRonly, draw_SIRonly
-from population import Population_trackers, load_population
+from visualiser import build_fig, build_fig_scatter, draw_tstep, draw_tstep_scatter, set_style,\
+    build_fig_SIRonly, draw_SIRonly, build_fig_time_series, draw_time_series
+from population import Population_trackers, load_population, load_matrix
 
 #set seed for reproducibility
 #np.random.seed(100)
@@ -80,7 +81,6 @@ class Simulation():
         self.frame += 1
         self.time += self.Config.dt
 
-
     def callback(self):
         '''placeholder function that can be overwritten.
 
@@ -120,8 +120,26 @@ class Simulation():
         
         if self.Config.plot_last_tstep:
             self.fig_sir, self.spec_sir, self.ax1_sir = build_fig_SIRonly(self.Config)
-            draw_SIRonly(self.Config, self.population, self.pop_tracker, self.frame, 
-                            self.fig_sir, self.spec_sir, self.ax1_sir)
+            draw_SIRonly(self.Config, self.pop_tracker, self.fig_sir, self.ax1_sir)
+                            
+            if self.Config.track_position:
+
+                data = load_matrix('dist_data', folder='population')
+                fig_D, ax1_D = build_fig_time_series(self.Config, label = "Mean distance $D$")
+                draw_time_series(self.Config, data[:,0], data[:,1], "D", fig_D, ax1_D )
+
+            if self.Config.track_GC:
+
+                data = load_matrix('mean_GC_data', folder='population')
+                fig_GC, ax1_GC = build_fig_time_series(self.Config, label = "Mobility ($\%$)")
+                draw_time_series(self.Config, data[:,0], data[:,1]*100, "GC", fig_GC, ax1_GC )
+            
+            if self.Config.track_R0:
+
+                data = load_matrix('mean_R0_data', folder='population')
+                fig_R0, ax1_R0 = build_fig_time_series(self.Config, label = "Basic reproductive number $R_0$")
+                draw_time_series(self.Config, data[:,0], data[:,1], "R0", fig_R0, ax1_R0, line_label = "$R_0$", threshold = 1, threshold_label='$R_0=1$' )
+            
 
         #report outcomes
         if self.Config.verbose:
@@ -150,16 +168,16 @@ if __name__ == '__main__':
     sim.Config.plot_style = 'default' #can also be dark
     sim.Config.plot_text_style = 'LaTeX' #can also be LaTeX
     sim.Config.visualise = True
-    sim.Config.visualise_every_n_frame = 1
+    sim.Config.visualise_every_n_frame = 500
     sim.Config.plot_last_tstep = True
     sim.Config.verbose = True
     sim.Config.report_freq = 50
     sim.Config.save_plot = True
     # sim.Config.marker_size = (2700 - sim.Config.pop_size) / 140
-    sim.Config.marker_size = 5
+    sim.Config.marker_size = 6
 
     # Trace path of a single individual on grid
-    sim.Config.trace_path = True
+    sim.Config.trace_path = False
     
     sim.initialize_simulation()
     #run, hold CTRL+C in terminal to end scenario early

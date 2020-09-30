@@ -382,16 +382,19 @@ if __name__ == '__main__':
     new_run = True
 
     # Model variables
+    # bounds = np.array([[16      , 101 ],  # Essential workers
+    #                    [0.0001  , 0.2 ],  # SD_factor
+    #                    [10      , 51  ]]) # testing capacity)
     bounds = np.array([[16      , 151 ],  # Essential workers
                        [0.0001  , 0.2 ],  # SD_factor
-                       [10      , 101  ]]) # testing capacity)
+                       [10      , 101 ]]) # testing capacity)
 
     fit_cond = True # Do not fit data
     run = 0 # starting point
 
     #===================================================================#
     # DOE levels
-    n_var = 0; n_samples = 1000; n_steps = 5
+    n_var = 2; n_samples = 1000; n_steps = 5
     var_DOE = np.linspace(0.0,1.0,n_steps)
     var_DOE = scaling(var_DOE,bounds[n_var,0],bounds[n_var,1],2)
 
@@ -437,16 +440,6 @@ if __name__ == '__main__':
     if new_run:
         # New MCS
         run = 0
-        # Resume MCS
-        # run = 3
-        # points = points[run:]
-        # labels = labels[run:]
-
-        # terminate MCS
-        # run = 3
-        # run_end = 3 + 1
-        # points = points[run:run_end]
-        # labels = labels[run:run_end]
 
         #============== INITIALIZE WORKING DIRECTORY ===================#
         current_path = os.getcwd()
@@ -456,13 +449,22 @@ if __name__ == '__main__':
             if dirname.endswith(".log"):
                 os.remove(dirname)
 
+    # Resume MCS
+    # run = 1
+    # var_DOE = var_DOE[run:]
+
+    # terminate MCS
+    # run = 3
+    # run_end = 3 + 1
+    # var_DOE = var_DOE[run:run_end]
+
     # design parameters
     healthcare_capacity = 150
 
     for var in var_DOE:
 
         legend_labels = ['Number of essential workers ($E$) = %i people' %(var),
-                         'Social distancing factor ($S$)= %f' %(var),
+                         'Social distancing factor ($S_D$)= %f' %(var),
                          'Testing capacity ($T$) = %i people' %(var)]
 
         legend_label = legend_labels[n_var] 
@@ -518,20 +520,20 @@ if __name__ == '__main__':
         labels_lgd += [legend_label]
 
          # Infected plot
-        label_name = u'Maximum number of infected ($I(\mathbf{x})$)'
+        label_name = u'Maximum number of infected $I(\mathbf{x})$'
         fun_name = 'infections'
         data = infected_i
 
         dataXLim_i_out, dataYLim_i_out, mean_i, std_i = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = True, min_bin_width = min_bin_width_i, fig_swept = fig_infections, 
             run_label = legend_label, color = colors[run], dataXLim = dataXLim_i, dataYLim = dataYLim_i,
-            constraint = healthcare_capacity, fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
+            constraint = None, fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_i_runs += [mean_i]
         std_i_runs += [std_i]
 
         # Fatalities plot
-        label_name = u'Number of fatalities ($F(\mathbf{x})$)'
+        label_name = u'Number of fatalities $F(\mathbf{x})$'
         fun_name = 'fatalities'
         data = fatalities_i
 
@@ -544,7 +546,7 @@ if __name__ == '__main__':
         std_f_runs += [std_f]
 
         # Distance plot
-        label_name = u'Average cumulative distance travelled ($D(\mathbf{x})$)'
+        label_name = u'Average distance travelled $D(\mathbf{x})$'
         fun_name = 'distance'
         data = distance_i
 
@@ -557,7 +559,7 @@ if __name__ == '__main__':
         std_d_runs += [std_d]
 
         # Ground covered plot
-        label_name = u'Percentage of world explored ($D(\mathbf{x})$)'
+        label_name = u'Mobility $D(\mathbf{x})$ ($\%$)'
         fun_name = 'ground covered'
         data = GC_i
 

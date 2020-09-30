@@ -69,7 +69,9 @@ Configuration::Configuration()
 	n_gridpoints = 10; n_gridpoints_in = "10"; //  resolution of 2D grid for tracking population position
 	track_position = true; track_position_in = "true";
 	track_GC = false; track_GC_in = "false";
+	track_R0 = false; track_R0_in = "false";
 	update_every_n_frame = 1; update_every_n_frame_in = "1";
+	update_R0_every_n_frame = 1; update_R0_every_n_frame_in = "1";
 
 	// visualisation variables
 	visualise = true; visualise_in = "true"; // whether to visualise the simulation
@@ -225,31 +227,31 @@ vector<string> Configuration::get_palette()
 /*-----------------------------------------------------------*/
 /*                        set lockdown                       */
 /*-----------------------------------------------------------*/
-void Configuration::set_lockdown(RandomDevice *my_rand, double lockdown_percentage_in, double lockdown_compliance_in) 
+void Configuration::set_lockdown(RandomDevice *my_rand, double lockdown_percentage_var, double lockdown_compliance_var) 
 {
 	/*sets lockdown to active*/
 	
 	//fraction of the population that will obey the lockdown
 	lockdown = true;
-	lockdown_percentage = lockdown_percentage_in;
+	lockdown_percentage = lockdown_percentage_var;
 
 	//lockdown vector is 1 for those not complying
-	lockdown_vector = my_rand->Random_choice_prob(pop_size, lockdown_compliance_in);
+	lockdown_vector = my_rand->Random_choice_prob(pop_size, lockdown_compliance_var);
 
 }
 
 /*-----------------------------------------------------------*/
 /*                  set self isolation ratio                 */
 /*-----------------------------------------------------------*/
-void Configuration::set_self_isolation(int number_of_tests_in, double self_isolate_proportion_in,
-	vector<double> isolation_bounds_set, bool traveling_infects_in) 
+void Configuration::set_self_isolation(int number_of_tests_var, double self_isolate_proportion_var,
+	vector<double> isolation_bounds_set, bool traveling_infects_var) 
 {
 	/*sets self-isolation scenario to active*/
 
 	self_isolate = true;
 	isolation_bounds = isolation_bounds_set;
-	self_isolate_proportion = self_isolate_proportion_in;
-	number_of_tests = number_of_tests_in;
+	self_isolate_proportion = self_isolate_proportion_var;
+	number_of_tests = number_of_tests_var; // careful not to confuse with objects ending in _in
 	//set roaming bounds to outside isolated area
 	xbounds = { 0.02, 0.98 };
 	ybounds = { 0.02, 0.98 };
@@ -257,18 +259,18 @@ void Configuration::set_self_isolation(int number_of_tests_in, double self_isola
 	x_plot = { isolation_bounds_set[0] - 0.02, 1 };
 	y_plot = { 0, 1 };
 	//update whether traveling agents also infect
-	traveling_infects = traveling_infects_in;
+	traveling_infects = traveling_infects_var;
 
 }
 
 /*-----------------------------------------------------------*/
 /*          set lower speed for reduced interaction          */
 /*-----------------------------------------------------------*/
-void Configuration::set_reduced_interaction(double speed_in) 
+void Configuration::set_reduced_interaction(double speed_var) 
 {
 	/*sets reduced interaction scenario to active*/
 
-	speed = speed_in;
+	speed = speed_var;
 
 }
 
@@ -333,7 +335,9 @@ void Configuration::set_from_file()
 	n_gridpoints = stoi(n_gridpoints_in); //  resolution of 2D grid for tracking population position
 	track_position = track_position_in == "true";
 	track_GC = track_GC_in == "true";
+	track_R0 = track_R0_in == "true";
 	update_every_n_frame = stoi(update_every_n_frame_in);
+	update_R0_every_n_frame = stoi(update_R0_every_n_frame_in);
 
 	// visualisation variables
 	visualise = visualise_in == "true"; // whether to visualise the simulation

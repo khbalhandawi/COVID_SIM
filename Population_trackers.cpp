@@ -55,6 +55,7 @@ Population_trackers::Population_trackers(Configuration Config_init, Eigen::Array
 	distance_travelled = { };
 	total_distance = Eigen::ArrayXf::Zero(Config_init.pop_size, 1); // distance travelled by individuals
 	mean_perentage_covered = { };
+	mean_R0 = { };
 	grid_coords = grid_coords_init;
 	ground_covered = ground_covered_init;
 	perentage_covered = Eigen::ArrayXf::Zero(Config_init.pop_size, 1); // portion of world covered by individuals
@@ -131,6 +132,33 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 		mean_perentage_covered.push_back(0.0); // mean ground covered
 	}
 
+	// Compute and track R0
+	if (Config.track_R0) {
+		if (frame % Config.update_R0_every_n_frame == 0) {
+			double mean_infection_time = (Config.recovery_duration[0] + Config.recovery_duration[1]) / 2; // how many ticks it may take to recover from the illness
+
+			vector<int> rows_IRF = select_rows(population.col(6) != 0);
+			// If there are non-healthy people present
+			if (rows_IRF.size() > 0) {
+				Eigen::ArrayXXf pop_IRF = population(rows_IRF, Eigen::all);
+				Eigen::ArrayXf prop = (frame - pop_IRF.col(8)) / (pop_IRF.col(19) != 0.0).select(mean_infection_time, frame - pop_IRF.col(19));
+				
+				vector<int> R0_rows = select_rows(prop >= 0.1);
+				// if prop values above threshold for computing R0
+				if (R0_rows.size() > 0) {
+					Eigen::ArrayXf R0_values = pop_IRF(R0_rows, {20} ) / prop(R0_rows);
+					mean_R0.push_back(R0_values.mean()); // basic reproductive number
+				} else {
+					mean_R0.push_back(0.0); // basic reproductive number
+				}
+			} else {
+				mean_R0.push_back(0.0); // basic reproductive number
+			}
+		}
+	} else {
+		mean_R0.push_back(0.0); // basic reproductive number
+	}
+
 	// Mark recovered individuals as susceptable if reinfection enables
 	if (reinfect) {
 		susceptible.push_back( pop_size - (infectious.back() + fatalities.back()) );
@@ -177,6 +205,8 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 	16 : total force y
 	17 : violator(0: compliant 1 : violator)
 	18 : flagged for testing(0: no 1 : yes)
+	19 : removed_since (frame the person got recovered or dead)
+	20 : number of people transimitted to
 
 	Keyword arguments
 	---------------- -
@@ -197,7 +227,7 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 	*/
 	float epsilon = 1e-15;
 	// initialize population matrix
-	Eigen::ArrayXXf population = Eigen::ArrayXXf::Zero(Config.pop_size, 19);
+	Eigen::ArrayXXf population = Eigen::ArrayXXf::Zero(Config.pop_size, 21);
 	// initalize unique IDs
 	population.col(0) = Eigen::ArrayXf::LinSpaced(Config.pop_size, 0, Config.pop_size - 1);
 
@@ -359,7 +389,7 @@ void set_destination_bounds(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destin
 /*-----------------------------------------------------------*/
 /*                   save population data                    */
 /*-----------------------------------------------------------*/
-void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker)
+void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Configuration Config, int frame, string folder)
 {
 	/*dumps simulation data to disk
 
@@ -379,23 +409,62 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker)
 	the array containing data of fatalities over time
 	*/
 
-	check_folder("data");
+	check_folder(folder);
 
+	vector<int> *s = &pop_tracker.susceptible;
 	vector<int> *i = &pop_tracker.infectious;
 	vector<int> *r = &pop_tracker.recovered;
 	vector<int> *f = &pop_tracker.fatalities;
-	vector<double> *d = &pop_tracker.distance_travelled;
+	vector<int> t = sequence(0, (frame + 1), 1);
 
+	vector<double> *d = &pop_tracker.distance_travelled;
+	vector<double> *GC = &pop_tracker.mean_perentage_covered;
+	vector<double> *R0 = &pop_tracker.mean_R0;
+
+	Eigen::Map<Eigen::MatrixXi> susceptible(s->data(), s->size(), 1);
 	Eigen::Map<Eigen::MatrixXi> infectious(i->data(), i->size(), 1);
 	Eigen::Map<Eigen::MatrixXi> recovered(r->data(), r->size(), 1);
 	Eigen::Map<Eigen::MatrixXi> fatalities(f->data(), f->size(), 1);
-	Eigen::Map<Eigen::MatrixXd> distance_travelled(d->data(), d->size(), 1);
+	Eigen::Map<Eigen::MatrixXi> time(t.data(), t.size(), 1);
 
-	IOFile::writeTofile(population.cast<double>(), "data/population.bin");
-	IOFile::writeTofile(infectious.cast<double>(), "data/infected.bin");
-	IOFile::writeTofile(recovered.cast<double>(), "data/recovered.bin");
-	IOFile::writeTofile(fatalities.cast<double>(), "data/fatalities.bin");
-	IOFile::writeTofile(distance_travelled, "data/mean_distance.bin");
+	Eigen::MatrixXi SIRF_data(s->size(),5);
+	SIRF_data << time, susceptible, infectious, recovered, fatalities;
+
+	IOFile::writeTofile(SIRF_data.cast<double>(), folder + "\\SIRF_data.bin");
+
+	if (Config.track_position) {
+		Eigen::Map<Eigen::MatrixXd> distance_travelled(d->data(), d->size(), 1);
+
+		vector<int> t = sequence(0, (frame + 1), 1);
+		Eigen::Map<Eigen::MatrixXi> time(t.data(), t.size(), 1);
+
+		Eigen::MatrixXd time_series(distance_travelled.rows(),2);
+		time_series << time.cast<double>(), distance_travelled;
+
+		IOFile::writeTofile(time_series, folder + "\\dist_data.bin");
+	}
+	if (Config.track_GC) {
+		Eigen::Map<Eigen::MatrixXd> mean_perentage_covered(GC->data(), GC->size(), 1);
+
+		vector<int> t = sequence(0, (frame + 1), Config.update_every_n_frame);
+		Eigen::Map<Eigen::MatrixXi> time(t.data(), t.size(), 1);
+
+		Eigen::MatrixXd time_series(mean_perentage_covered.rows(),2);
+		time_series << time.cast<double>(), mean_perentage_covered;
+
+		IOFile::writeTofile(time_series, folder + "\\mean_GC_data.bin");
+	}
+	if (Config.track_R0) {
+		Eigen::Map<Eigen::MatrixXd> mean_R0(R0->data(), R0->size(), 1);
+
+		vector<int> t = sequence(0, (frame + 1), Config.update_R0_every_n_frame);
+		Eigen::Map<Eigen::MatrixXi> time(t.data(), t.size(), 1);
+
+		Eigen::MatrixXd time_series(mean_R0.rows(),2);
+		time_series << time.cast<double>(), mean_R0;
+
+		IOFile::writeTofile(time_series, folder + "\\mean_R0_data.bin");
+	}
 
 }
 

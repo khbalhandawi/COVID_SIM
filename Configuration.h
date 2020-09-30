@@ -41,7 +41,9 @@ public:
 	string n_gridpoints_in; //  resolution of 2D grid for tracking population position
 	string track_position_in;
 	string track_GC_in;
+	string track_R0_in;
 	string update_every_n_frame_in;
+	string update_R0_every_n_frame_in;
 
 	// visualisation variables
 	string visualise_in; // whether to visualise the simulation
@@ -158,7 +160,9 @@ public:
 	int n_gridpoints; //  resolution of 2D grid for tracking population position
 	bool track_position;
 	bool track_GC;
+	bool track_R0;
 	int update_every_n_frame;
+	int update_R0_every_n_frame;
 
 	// visualisation variables
 	bool visualise; // whether to visualise the simulation
@@ -267,19 +271,19 @@ public:
 	/*-----------------------------------------------------------*/
 	/*                        set lockdown                       */
 	/*-----------------------------------------------------------*/
-	void set_lockdown(RandomDevice *my_rand, double lockdown_percentage = 0.1, double lockdown_compliance = 0.9);
+	void set_lockdown(RandomDevice *my_rand, double lockdown_percentage_var = 0.1, double lockdown_compliance_var = 0.9);
 	
 	/*-----------------------------------------------------------*/
 	/*                  set self isolation ratio                 */
 	/*-----------------------------------------------------------*/
-	void set_self_isolation(int number_of_tests, double self_isolate_proportion = 0.9,
-		vector<double> isolation_bounds = { -0.28, 0.02, -0.02, 0.28 },
-		bool traveling_infects = false);
+	void set_self_isolation(int number_of_tests_var, double self_isolate_proportion_var = 0.9,
+		vector<double> isolation_bounds_var = { -0.28, 0.02, -0.02, 0.28 },
+		bool traveling_infects_var = false);
 
 	/*-----------------------------------------------------------*/
 	/*          set lower speed for reduced interaction          */
 	/*-----------------------------------------------------------*/
-	void set_reduced_interaction(double speed = 0.001);
+	void set_reduced_interaction(double speed_var = 0.001);
 
 	/*-----------------------------------------------------------*/
 	/*            Split delimlited string into vector            */
