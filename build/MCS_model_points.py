@@ -370,29 +370,39 @@ if __name__ == '__main__':
     
     # Model variables
     bounds = np.array([[   16    , 101   ], # number of essential workers
-                       [   0.0001 , 0.1   ], # Social distancing factor
+                       [   0.0001, 0.15   ], # Social distancing factor
                        [   10    , 51    ]]) # Testing capacity
 
     # Points to plot
     opt_1 = np.array([0.50, 0.50, 0.50])
     opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
 
-    opt_2 = np.array([0.8125, 0.23047, 0.96875])
+    opt_2 = np.array([0.910569989, 0.800558656, 0.745847484])
     opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
 
-    opt_3 = np.array([0.87256, 0.00024412, 0.18245])
+    opt_3 = np.array([0.5546875, 0.8203125, 0.74609375])
     opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
+
+    opt_4 = np.array([0.49218546, 0.863279802, 0.710941315])
+    opt_4_unscaled = scaling(opt_4, bounds[:3,0], bounds[:3,1], 2)
+
+    opt_5 = np.array([0.52734375, 0.86328125, 0.6484375])
+    opt_5_unscaled = scaling(opt_5, bounds[:3,0], bounds[:3,1], 2)
 
     print('point #1: E = %f, S = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
     print('point #2: E = %f, S = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
     print('point #3: E = %f, S = %f, T = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]))
-    
-    points = np.vstack((opt_1_unscaled,opt_2_unscaled,opt_3_unscaled))
+    print('point #4: E = %f, S = %f, T = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]))
+    print('point #5: E = %f, S = %f, T = %f' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2]))
+
+    points = np.vstack((opt_1_unscaled,opt_2_unscaled,opt_3_unscaled,opt_4_unscaled,opt_5_unscaled))
 
     labels = ['Nominal values $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
               '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]),
-              '$\mathtt{StoMADS-PB}$ unconstrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2])]
-    fit_cond = True # Do not fit data
+              '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]),
+              '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]),
+              '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2])]
+    fit_cond = False # Do not fit data
     run = 0 # starting point
 
     #===================================================================#
@@ -406,7 +416,7 @@ if __name__ == '__main__':
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
 
-    new_run = True
+    new_run = False
 
     n_violators_sweep = np.arange(16, 101, 21)
     SD_factors = np.linspace(0.0001,0.1,5)
@@ -454,16 +464,6 @@ if __name__ == '__main__':
     if new_run:
         # New MCS
         run = 0
-        # Resume MCS
-        # run = 3
-        # points = points[run:]
-        # labels = labels[run:]
-
-        # terminate MCS
-        # run = 3
-        # run_end = 3 + 1
-        # points = points[run:run_end]
-        # labels = labels[run:run_end]
         
         #============== INITIALIZE WORKING DIRECTORY ===================#
         current_path = os.getcwd()
@@ -473,6 +473,17 @@ if __name__ == '__main__':
             if dirname.endswith(".log"):
                 os.remove(dirname)
 
+    # Resume MCS
+    # run = 4
+    # points = points[run:]
+    # labels = labels[run:]
+
+    # terminate MCS
+    # run = 3
+    # run_end = 3 + 1
+    # points = points[run:run_end]
+    # labels = labels[run:run_end]
+
     for point,legend_label in zip(points,labels):
 
         # Model variables
@@ -481,7 +492,7 @@ if __name__ == '__main__':
         test_capacity = int(point[2])
 
         # Model parameters
-        healthcare_capacity = 150
+        healthcare_capacity = 50
 
         if new_run:
 
@@ -506,8 +517,7 @@ if __name__ == '__main__':
                 fatalities_i = pickle.load(fid)
                 GC_i = pickle.load(fid)
                 distance_i = pickle.load(fid)
-                distance_i = [i for i in distance_i if i <= 0.15] # eliminate outliers
-
+                
         # Legend entries
         a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor=colors[run], facecolor=colors[run], fill='None' ,alpha=0.5)
         

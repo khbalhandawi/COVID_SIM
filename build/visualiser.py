@@ -136,17 +136,32 @@ def build_fig_scatter(Config, figsize=(5,5)):
     #get color palettes
     palette = Config.get_palette()
 
-    # Legend actors
-    # a1 = mlines.Line2D([], [], color=palette[1], marker='', markersize=5, linestyle=':')
-    # a2 = mlines.Line2D([], [], color=palette[1], marker='', markersize=5, linestyle='-')
-    # a3 = mlines.Line2D([], [], color=palette[3], marker='', markersize=5, linestyle='-')
-    # a4 = mlines.Line2D([], [], color=palette[0], marker='', markersize=5, linestyle='-')
-    # a5 = mlines.Line2D([], [], color=palette[2], marker='', markersize=5, linestyle='-')
-    # Legend actors type 2
-    a2 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[1], fill='None', hatch=None)
-    a3 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[0], fill='None', hatch=None)
-    a4 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[2], fill='None', hatch=None)
-    a5 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[3], fill='None', hatch=None)
+    if not Config.black_white: # for colored mode
+        
+        marker_type = ['.'] * 4
+        marker_sizes = [Config.marker_size] * 4
+        # Legend actors
+        # a1 = mlines.Line2D([], [], color=palette[1], marker='', markersize=5, linestyle=':')
+        # a2 = mlines.Line2D([], [], color=palette[1], marker='', markersize=5, linestyle='-')
+        # a3 = mlines.Line2D([], [], color=palette[3], marker='', markersize=5, linestyle='-')
+        # a4 = mlines.Line2D([], [], color=palette[0], marker='', markersize=5, linestyle='-')
+        # a5 = mlines.Line2D([], [], color=palette[2], marker='', markersize=5, linestyle='-')
+        # Legend actors type 2
+        a2 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[1], fill='None', hatch=None)
+        a3 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[0], fill='None', hatch=None)
+        a4 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[2], fill='None', hatch=None)
+        a5 = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='none', facecolor=palette[3], fill='None', hatch=None)
+    else:
+
+        marker_type = ['o','d','o','x']
+        marker_sizes = [3,5,3,5]
+        line_widths = [1,1,1,5]
+
+        # Legend actors type 3
+        a2 = mlines.Line2D([], [], color=palette[1], marker=marker_type[1], markersize=marker_sizes[1], linestyle='', linewidth=line_widths[1])
+        a3 = mlines.Line2D([], [], color=palette[0], marker=marker_type[0], markersize=marker_sizes[0], linestyle='', linewidth=line_widths[0])
+        a4 = mlines.Line2D([], [], color=palette[2], marker=marker_type[2], markersize=marker_sizes[2], linestyle='', linewidth=line_widths[2])
+        a5 = mlines.Line2D([], [], color=palette[3], marker=marker_type[3], markersize=marker_sizes[3], linestyle='', linewidth=line_widths[3])
 
     handles, labels = [[a2,a3,a4,a5], ['infectious','susceptible','recovered','fatalities']]
     fig.legend(handles, labels, loc='upper center', ncol=4, fontsize = 10)
@@ -161,7 +176,11 @@ def build_fig_scatter(Config, figsize=(5,5)):
 
 def build_fig_SIRonly(Config, figsize=(5,4)):
     set_style(Config)
-    fig = plt.figure(figsize=(5,4))
+    if Config.black_white:
+        fig = plt.figure(figsize=(5.5,4))
+    else:
+        fig = plt.figure(figsize=(5,4))
+
     spec = fig.add_gridspec(ncols=1, nrows=1)
 
     ax1 = fig.add_subplot(spec[0,0])
@@ -173,20 +192,21 @@ def build_fig_SIRonly(Config, figsize=(5,4)):
 
     #get color palettes
     palette = Config.get_palette()
-
-    # Legend actors
-    a1 = mlines.Line2D([], [], color=palette[1], marker='', markersize=5, linestyle=':')
-    a2 = mlines.Line2D([], [], color=palette[1], marker='', markersize=5, linestyle='-')
-    a3 = mlines.Line2D([], [], color=palette[0], marker='', markersize=5, linestyle='-')
-    a4 = mlines.Line2D([], [], color=palette[2], marker='', markersize=5, linestyle='-')
-    a5 = mlines.Line2D([], [], color=palette[3], marker='', markersize=5, linestyle='-')
     
-    # handles, labels = [[a1,a2,a3,a4,a5], ['healthcare capacity','infectious','susceptible','recovered','fatalities']]
-    # fig.legend(handles, labels, loc='upper center', ncol=5, fontsize = 10)
+    if Config.black_white: # create legend if black and white mode selected
+        # Legend actors
+        a1 = mlines.Line2D([], [], color=palette[2], marker='', linewidth=2, linestyle='-')
+        a2 = mlines.Line2D([], [], color=palette[0], marker='', linewidth=1, linestyle='-.')
+        a3 = mlines.Line2D([], [], color=palette[0], marker='', linewidth=1, linestyle='--')
+        a4 = mlines.Line2D([], [], color=palette[0], marker='', linewidth=1, linestyle='--', dashes=(5,2,20,2) )
+        a5 = mlines.Line2D([], [], color=palette[0], marker='', linewidth=1, linestyle=':')
 
-    #if 
-
-    return fig, spec, ax1
+        handles, labels = [[a1,a2,a3,a4,a5], ['healthcare capacity','susceptible','infectious','recovered','fatalities']]
+        leg = fig.legend(handles, labels, loc='upper center', ncol=3, fontsize = 10)
+        
+        return fig, spec, ax1, leg
+    else:
+        return fig, spec, ax1
 
 def build_fig_time_series(Config, label, figsize=(5,4)):
     set_style(Config)
@@ -316,6 +336,15 @@ def draw_tstep_scatter(Config, population, pop_tracker, frame,
     #get color palettes
     palette = Config.get_palette()
 
+    if Config.black_white:
+        marker_type = ['o','d','o','x']
+        marker_sizes = [3,5,3,25]
+        line_widths = [1,1,1,2]
+    else:
+        marker_type = ['.'] * 4
+        marker_sizes = [Config.marker_size] * 4
+        line_widths = [1,1,1,1]
+
     # option 2, remove all lines and collections
     for artist in ax1.lines + ax1.collections + ax1.texts:
         artist.remove()
@@ -325,16 +354,16 @@ def draw_tstep_scatter(Config, population, pop_tracker, frame,
         
     #plot population segments
     healthy = population[population[:,6] == 0][:,1:3]
-    ax1.scatter(healthy[:,0], healthy[:,1], color=palette[0], s = Config.marker_size, label='susceptible', zorder = 2)
+    ax1.scatter(healthy[:,0], healthy[:,1], color=palette[0], marker = marker_type[0], s = marker_sizes[0], linewidth = line_widths[0], label='susceptible', zorder = 2)
     
     infected = population[population[:,6] == 1][:,1:3]
-    ax1.scatter(infected[:,0], infected[:,1], color=palette[1], s = Config.marker_size, label='infectious', zorder = 2)
+    ax1.scatter(infected[:,0], infected[:,1], color=palette[1], marker = marker_type[1], s = marker_sizes[1], linewidth = line_widths[1], label='infectious', zorder = 2)
 
     immune = population[population[:,6] == 2][:,1:3]
-    ax1.scatter(immune[:,0], immune[:,1], color=palette[2], s = Config.marker_size, label='recovered', zorder = 2)
+    ax1.scatter(immune[:,0], immune[:,1], color=palette[2], marker = marker_type[2], s = marker_sizes[2], linewidth = line_widths[2], label='recovered', zorder = 2)
     
     fatalities = population[population[:,6] == 3][:,1:3]
-    ax1.scatter(fatalities[:,0], fatalities[:,1], color=palette[3], s = Config.marker_size, label='fatalities', zorder = 2)
+    ax1.scatter(fatalities[:,0], fatalities[:,1], color=palette[3], marker = marker_type[3], s = marker_sizes[3], linewidth = line_widths[3], label='fatalities', zorder = 2)
 
     # Trace path of random individual
     if Config.trace_path:
@@ -377,7 +406,7 @@ def draw_tstep_scatter(Config, population, pop_tracker, frame,
             check_folder(Config.plot_path)
             fig.savefig('%s/%i.pdf' %(Config.plot_path, frame), dpi=300, facecolor=bg_color, bbox_inches=tight_bbox)
 
-def draw_SIRonly(Config, pop_tracker, fig, ax1):
+def draw_SIRonly(Config, fig, ax1, leg=None, pop_tracker=None, data=None):
 
     #construct plot and visualise
 
@@ -393,27 +422,62 @@ def draw_SIRonly(Config, pop_tracker, fig, ax1):
 
     ax1.set_ylim(0, Config.pop_size + 200)
 
-    x_data = np.arange(len(pop_tracker.infectious)) / 10 # time vector for plot
+    if pop_tracker is not None:
+        S = pop_tracker.susceptible
+        I = pop_tracker.infectious
+        R = pop_tracker.recovered
+        F = pop_tracker.fatalities
+    elif data is not None:
+        S = data[:,1]
+        I = data[:,2]
+        R = data[:,3]
+        F = data[:,4]
+
+    x_data = np.arange(len(I)) / 10 # time vector for plot
     if Config.treatment_dependent_risk:
-        infected_arr = np.asarray(pop_tracker.infectious)
+        infected_arr = np.asarray(I)
         indices = np.argwhere(infected_arr >= Config.healthcare_capacity)
 
-        ax1.plot(x_data, [Config.healthcare_capacity for x in range(len(pop_tracker.infectious))], 
-                 'r:', label='healthcare capacity')
-
     if Config.plot_mode.lower() == 'default':
-        ax1.plot(x_data, pop_tracker.infectious, color=palette[1])
-        ax1.plot(x_data, pop_tracker.fatalities, color=palette[3], label='fatalities')
+        ax1.plot(x_data, I, color=palette[1])
+        ax1.plot(x_data, F, color=palette[3], label='fatalities')
+
     elif Config.plot_mode.lower() == 'sir':
-        ax1.plot(x_data, pop_tracker.infectious, color=palette[1], label='infectious')
-        ax1.plot(x_data, pop_tracker.fatalities, color=palette[3], label='fatalities')
-        ax1.plot(x_data, pop_tracker.susceptible, color=palette[0], label='susceptible')
-        ax1.plot(x_data, pop_tracker.recovered, color=palette[2], label='recovered')
+
+        if Config.black_white:
+            ax1.plot(x_data, S, color=palette[0], label='susceptible', linestyle='-.', linewidth=1)
+            ax1.plot(x_data, I, color=palette[0], label='infectious', linestyle='--', linewidth=1)
+            ax1.plot(x_data, R, color=palette[0], label='recovered', linestyle='--', dashes=(5,2,20,2), linewidth=1)
+            ax1.plot(x_data, F, color=palette[0], label='fatalities', linestyle=':', linewidth=1)
+
+            ax1.plot(x_data, [Config.healthcare_capacity for x in range(len(I))], 
+                     color=palette[2], label='healthcare capacity', linestyle='-', linewidth=2)
+
+        elif not Config.black_white:
+            ax1.plot(x_data, S, color=palette[0], label='susceptible')
+            ax1.plot(x_data, I, color=palette[1], label='infectious')
+            ax1.plot(x_data, R, color=palette[2], label='recovered')
+            ax1.plot(x_data, F, color=palette[3], label='fatalities')
+
+            ax1.plot(x_data, [Config.healthcare_capacity for x in range(len(I))], 
+                     color=palette[1], linestyle='--', label='healthcare capacity')
     else:
         raise ValueError('incorrect plot_style specified, use \'sir\' or \'default\'')
-
-    ax1.legend(loc = 'best', fontsize = 10)
     
+    if not Config.black_white:
+        ax1.legend(loc = 'best', fontsize = 10)
+    elif Config.black_white:
+        # # Get the bounding box of the original legend
+        # bb = leg.get_bbox_to_anchor().inverse_transformed(ax1.transAxes)
+
+        # # Change to location of the legend. 
+        # yOffset = 0.2
+        # xOffset = 0.0
+        # bb.x0 += yOffset
+        # bb.x1 += xOffset
+        # leg.set_bbox_to_anchor(bb, transform = ax1.transAxes)
+        pass
+
     plt.draw()
     plt.pause(0.0001)
 

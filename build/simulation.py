@@ -100,7 +100,7 @@ class Simulation():
 
         i = 0
         
-        while i < self.Config.simulation_steps:
+        while i < self.Config.simulation_steps and self.Config.visualise:
             try:
                 self.tstep()
             except KeyboardInterrupt:
@@ -119,8 +119,15 @@ class Simulation():
 
         
         if self.Config.plot_last_tstep:
-            self.fig_sir, self.spec_sir, self.ax1_sir = build_fig_SIRonly(self.Config)
-            draw_SIRonly(self.Config, self.pop_tracker, self.fig_sir, self.ax1_sir)
+            
+            data = load_matrix('SIRF_data', folder='population')
+
+            if self.Config.black_white:
+                self.fig_sir, self.spec_sir, self.ax1_sir, self.ax1_leg = build_fig_SIRonly(self.Config)
+                draw_SIRonly(self.Config, self.fig_sir, self.ax1_sir, self.ax1_leg, data=data )
+            else:
+                self.fig_sir, self.spec_sir, self.ax1_sir = build_fig_SIRonly(self.Config)
+                draw_SIRonly(self.Config, self.fig_sir, self.ax1_sir, data=data )
                             
             if self.Config.track_position:
 
@@ -167,14 +174,16 @@ if __name__ == '__main__':
     #set visuals
     sim.Config.plot_style = 'default' #can also be dark
     sim.Config.plot_text_style = 'LaTeX' #can also be LaTeX
-    sim.Config.visualise = True
-    sim.Config.visualise_every_n_frame = 500
+    sim.Config.visualise = False
+    sim.Config.visualise_every_n_frame = 100
     sim.Config.plot_last_tstep = True
     sim.Config.verbose = True
     sim.Config.report_freq = 50
     sim.Config.save_plot = True
+    sim.Config.n_plots = 1
+    sim.Config.black_white = True
     # sim.Config.marker_size = (2700 - sim.Config.pop_size) / 140
-    sim.Config.marker_size = 6
+    sim.Config.marker_size = 3
 
     # Trace path of a single individual on grid
     sim.Config.trace_path = False

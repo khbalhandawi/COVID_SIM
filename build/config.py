@@ -51,6 +51,7 @@ class Configuration():
         self.plot_path = 'render/' #folder where plots are saved to
         self.plot_style = 'default' #can be default, dark, ...
         self.plot_text_style = 'default' #can be default, LaTeX, ...
+        self.black_white = False
         self.colorblind_mode = False
         #if colorblind is enabled, set type of colorblindness
         #available: deuteranopia, protanopia, tritanopia. defauld=deuteranopia
@@ -136,6 +137,8 @@ class Configuration():
         #palette colors are: [healthy, infected, immune, dead]
         palettes = {'regular': {'default': ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
                                 'dark': ['#1C758A', '#CF5044', '#BBBBBB', '#444444']},
+                    'black_white': {'default': ['#000000', '#000000', '#BBBBBB', '#BBBBBB'],
+                                      'dark': ['#FFFFFF', '#FFFFFF', '#6C6C6C', '#6C6C6C']},
                     'deuteranopia': {'default': ['gray', '#a50f15', '#08519c', 'black'],
                                      'dark': ['#404040', '#fcae91', '#6baed6', '#000000']},
                     'protanopia': {'default': ['gray', '#a50f15', '08519c', 'black'],
@@ -146,6 +149,8 @@ class Configuration():
 
         if self.colorblind_mode:
             return palettes[self.colorblind_type.lower()][self.plot_style]
+        elif self.black_white:
+            return palettes['black_white'][self.plot_style]
         else:
             return palettes['regular'][self.plot_style]
 

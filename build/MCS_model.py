@@ -243,7 +243,7 @@ def make_pdf(dist, params, size=10000):
 # Plot pdf function
 def plot_distribution(data, fun_name, label_name, n_bins, run, 
                       discrete = False, min_bin_width = 0, 
-                      fig_swept = None, run_label = 'PDF', color = u'b',
+                      fig_swept = None, run_label = 'PDF', color = u'b', hatch_pattern = u'',
                       dataXLim = None, dataYLim = None, constraint = None,
                       fit_distribution = True, handles = [], labels = []):
 
@@ -326,9 +326,14 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
 
     if discrete:
         # discrete bin numbers
-        ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
+        # ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
+        ax2.hist(data, bins, linewidth=2, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
+
     else:
-        ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
+        # ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
+        ax2.hist(data, bins = n_bins, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
     
     # plot constraint limits
     if constraint is not None:
@@ -385,11 +390,15 @@ if __name__ == '__main__':
     # bounds = np.array([[16      , 101 ],  # Essential workers
     #                    [0.0001  , 0.2 ],  # SD_factor
     #                    [10      , 51  ]]) # testing capacity)
-    bounds = np.array([[16      , 151 ],  # Essential workers
-                       [0.0001  , 0.2 ],  # SD_factor
-                       [10      , 101 ]]) # testing capacity)
+    # bounds = np.array([[16      , 151 ],  # Essential workers
+    #                    [0.0001  , 0.2 ],  # SD_factor
+    #                    [10      , 101 ]]) # testing capacity)
+    bounds = np.array([[16      , 151  ],  # Essential workers
+                       [0.0001  , 0.15 ],  # SD_factor
+                       [10      , 51   ]]) # testing capacity)
 
-    fit_cond = True # Do not fit data
+    fit_cond = False # Do not fit data
+    color_mode = 'color' # Choose color mode (black_White)
     run = 0 # starting point
 
     #===================================================================#
@@ -431,7 +440,13 @@ if __name__ == '__main__':
     mpl.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}',
                                             r'\usepackage{amssymb}']
     mpl.rcParams['font.family'] = 'serif'
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
+    
+    if color_mode == 'color':
+        hatches = ['/'] * 10
+        colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
+    elif color_mode == 'black_white':
+        hatches = ['/','//','x','o','|||']
+        colors = ['#FFFFFF'] * 10
 
     #===================================================================#
     # Initialize
@@ -450,8 +465,8 @@ if __name__ == '__main__':
                 os.remove(dirname)
 
     # Resume MCS
-    # run = 1
-    # var_DOE = var_DOE[run:]
+    run = 4
+    var_DOE = var_DOE[run:]
 
     # terminate MCS
     # run = 3
@@ -459,7 +474,7 @@ if __name__ == '__main__':
     # var_DOE = var_DOE[run:run_end]
 
     # design parameters
-    healthcare_capacity = 150
+    healthcare_capacity = 50
 
     for var in var_DOE:
 
@@ -473,7 +488,7 @@ if __name__ == '__main__':
             if n_var == 0:
                 #=====================================================================#
                 # Essential workers sweep
-                SD = 0.1 # force amplitude
+                SD = 0.075 # force amplitude
                 test_capacity = 0 # number of people
 
                 design_variables = [int(var), SD, test_capacity]
@@ -482,7 +497,7 @@ if __name__ == '__main__':
             elif n_var == 1:
                 #=====================================================================#
                 # SD sweep
-                n_violators = 0 # number of people
+                n_violators = 84 # number of people
                 test_capacity = 0 # number of people
 
                 design_variables = [n_violators, var, test_capacity]
@@ -492,7 +507,7 @@ if __name__ == '__main__':
                 #=====================================================================#
                 # Testing sweep
                 n_violators = 0 # number of people
-                SD = 0.1 # force amplitude
+                SD = 0.05 # force amplitude
 
                 design_variables = [n_violators, SD, int(var)]
                 parameters = [healthcare_capacity]
@@ -515,7 +530,7 @@ if __name__ == '__main__':
                 distance_i = pickle.load(fid)
 
         # Legend entries
-        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor=colors[run], facecolor=colors[run], fill='None' ,alpha=0.5)
+        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='k', facecolor=colors[run], fill=True ,hatch=hatches[run])
         handles_lgd += [a]
         labels_lgd += [legend_label]
 
@@ -526,7 +541,7 @@ if __name__ == '__main__':
 
         dataXLim_i_out, dataYLim_i_out, mean_i, std_i = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = True, min_bin_width = min_bin_width_i, fig_swept = fig_infections, 
-            run_label = legend_label, color = colors[run], dataXLim = dataXLim_i, dataYLim = dataYLim_i,
+            run_label = legend_label, color = colors[run], hatch_pattern = hatches[run], dataXLim = dataXLim_i, dataYLim = dataYLim_i,
             constraint = None, fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_i_runs += [mean_i]
@@ -539,7 +554,7 @@ if __name__ == '__main__':
 
         dataXLim_f_out, dataYLim_f_out, mean_f, std_f = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = True, min_bin_width = min_bin_width_f, fig_swept = fig_fatalities, 
-            run_label = legend_label, color = colors[run], dataXLim = dataXLim_f, dataYLim = dataYLim_f,
+            run_label = legend_label, color = colors[run], hatch_pattern = hatches[run], dataXLim = dataXLim_f, dataYLim = dataYLim_f,
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_f_runs += [mean_f]
@@ -551,7 +566,7 @@ if __name__ == '__main__':
         data = distance_i
 
         dataXLim_d_out, dataYLim_d_out, mean_d, std_d = plot_distribution(data, fun_name, label_name, n_bins, run, 
-            fig_swept = fig_dist, run_label = legend_label, color = colors[run], 
+            fig_swept = fig_dist, run_label = legend_label, color = colors[run], hatch_pattern = hatches[run],
             dataXLim = dataXLim_d, dataYLim = dataYLim_d,
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
         
@@ -564,7 +579,7 @@ if __name__ == '__main__':
         data = GC_i
 
         dataXLim_GC_out, dataYLim_GC_out, mean_gc, std_gc = plot_distribution(data, fun_name, label_name, n_bins, run, 
-            fig_swept = fig_GC, run_label = legend_label, color = colors[run], 
+            fig_swept = fig_GC, run_label = legend_label, color = colors[run], hatch_pattern = hatches[run],
             dataXLim = dataXLim_GC, dataYLim = dataYLim_GC,
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
