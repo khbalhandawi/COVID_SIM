@@ -219,22 +219,6 @@ void simulation::tstep()
 	pop_tracker.update_counts(population, frame);
 
 	//======================================================================================//
-	//visualise
-	if ((Config.visualise) && ((frame % Config.visualise_every_n_frame) == 0)) {
-
-		if (Config.platform == "plt") {
-			if (Config.n_plots == 1) {
-				vis.draw_tstep_scatter(Config, population, pop_tracker, frame);
-			}
-			else if (Config.n_plots == 2) {
-				vis.draw_tstep(Config, population, pop_tracker, frame);
-			}
-		}
-
-
-
-	}
-
 	//report stuff to console
 	if ((Config.verbose) && ((frame % Config.report_freq) == 0)) {
 		cout << frame;
@@ -325,17 +309,6 @@ void simulation::run()
 {
 	/* run simulation */
 
-	if (Config.visualise) {
-		if (Config.platform == "plt") {
-			if (Config.n_plots == 1) {
-				vis.build_fig_scatter(Config);
-			}
-			else if (Config.n_plots == 2) {
-				vis.build_fig(Config);
-			}
-		}
-	}
-
 	//========================================================//
 	// Start a Qt thread for visualization
 	std::unique_ptr<MainWindow> mainWindow = nullptr; // initialize null pointer to Qt mainwindow
@@ -411,26 +384,6 @@ void simulation::run()
 			i += 1;
 		}
 
-	}
-
-	if ((Config.plot_last_tstep) && (Config.platform == "plt")) {
-		vis.build_fig_SIR(Config);
-		vis.draw_SIRonly(Config, population, pop_tracker, (frame - 1) );
-
-		if (Config.track_position) {
-			vis.build_fig_time_series(Config, { 5,10 }, "mean distance travelled");
-			vis.draw_time_series(Config, pop_tracker.distance_travelled, "D", (frame - 1) );
-		}
-
-		if (Config.track_GC) {
-			vis.build_fig_time_series(Config, { 5,10 }, "percentage of world explored");
-			vis.draw_time_series(Config, pop_tracker.mean_perentage_covered, "GC", (frame - 1), Config.update_every_n_frame );
-		}
-
-		if (Config.track_R0) {
-			vis.build_fig_time_series(Config, { 5,10 }, "R0");
-			vis.draw_time_series(Config, pop_tracker.mean_R0, "R0", (frame - 1), Config.update_R0_every_n_frame );
-		}
 	}
 
 	if (Config.save_data) {

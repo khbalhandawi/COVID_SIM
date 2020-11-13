@@ -6,9 +6,6 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/Include/**",
                 "${workspaceFolder}/libs/**",
-                "${PYTHONHOME}/include/**",
-                "${PYTHONHOME}/Lib/site-packages/numpy/core/include/**",
-                "${PYTHONHOME}/libs/**",
                 "${QT}/include/**",
                 "${QT}/lib/**"
             ],
@@ -34,9 +31,6 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/Include/**",
                 "${workspaceFolder}/libs/**",
-                "${PYTHONHOME}/include/**",
-                "${PYTHONHOME}/Lib/site-packages/numpy/core/include/**",
-                "${PYTHONHOME}/libs/**",
                 "${QT}/include/**",
                 "${QT}/lib/**"
             ],
