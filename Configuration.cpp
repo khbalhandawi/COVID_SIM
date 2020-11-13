@@ -75,6 +75,7 @@ Configuration::Configuration()
 
 	// visualisation variables
 	visualise = true; visualise_in = "true"; // whether to visualise the simulation
+	platform = "Qt"; platform_in = "Qt"; // which platform to use for visualization
 	add_cross = false; add_cross_in = "false"; // draws a red cross on hospital
 	visualise_every_n_frame = 1; visualise_every_n_frame_in = "1"; // Frequency of plot update
 	plot_mode = "sir"; plot_mode_in = "sir"; // default or sir
@@ -308,10 +309,10 @@ vector<double> Configuration::split_string(string line)
 void Configuration::set_from_file() 
 {
 
-	double area_scaling = 1.0 / double(pop_size) / 600.0;
-	double distance_scaling = 1.0 / sqrt(double(pop_size) / 600.0);
-	double force_scaling = pow(distance_scaling,2);
-	double count_scaling = double(pop_size) / 600.0;
+	area_scaling = 1.0 / double(pop_size) / 600.0;
+	distance_scaling = 1.0 / sqrt(double(pop_size) / 600.0);
+	force_scaling = pow(distance_scaling,2);
+	count_scaling = double(pop_size) / 600.0;
 
 	// simulation variables
 	simulation_steps = stoi(simulation_steps_in); // total simulation steps performed
@@ -341,6 +342,7 @@ void Configuration::set_from_file()
 
 	// visualisation variables
 	visualise = visualise_in == "true"; // whether to visualise the simulation
+	platform = platform_in; // which platform to use for visualization
 	add_cross = add_cross_in == "true"; // draws a red cross on hospital
 	visualise_every_n_frame = stoi(visualise_every_n_frame_in); // Frequency of plot update
 	plot_mode = plot_mode_in; // default or sir

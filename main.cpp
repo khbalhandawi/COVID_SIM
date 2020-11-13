@@ -146,6 +146,7 @@ void load_config(Configuration *config, const char *config_file)
 	mapper["track_R0"] = &Configuration::track_R0_in;
 	mapper["update_R0_every_n_frame"] = &Configuration::update_R0_every_n_frame_in;
 	mapper["testing_threshold_on"] = &Configuration::testing_threshold_on_in;
+	mapper["platform"] = &Configuration::platform_in;
 
 	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
 	string line, value, value_str;
@@ -183,7 +184,17 @@ int main(int argc, char* argv[])
 	if (debug) {
 		
 		// Display input arguments
-		cout << "\n" << "================= starting =================" << endl;
+		cout << "\n" << "/*---------------------------------------------------------------------------------*/";
+		cout << "\n" << "/*  COVID SIM - Agent-based model of a pandemic in a population -                  */";
+		cout << "\n" << "/*                                                                                 */";
+		cout << "\n" << "/*  COVID SIM - version 1.0.0 has been created by                                  */";
+		cout << "\n" << "/*                 Khalil Al Handawi           - McGill University                 */";
+		cout << "\n" << "/*                                                                                 */";
+		cout << "\n" << "/*  The copyright of COVID SIM - version 1.0.0 is owned by                         */";
+		cout << "\n" << "/*                 Khalil Al Handawi           - McGill University                 */";
+		cout << "\n" << "/*                 Michael Kokkolaras          - McGill University                 */";
+		cout << "\n" << "/*                                                                                 */";
+		cout << "\n" << "/*---------------------------------------------------------------------------------*/" << endl;
 
 		/*-----------------------------------------------------------*/
 		/*            Simulation configuration variables             */

@@ -98,7 +98,9 @@
         "variant": "cpp",
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "qapplication": "cpp",
+        "qtimer": "cpp"
     },
     "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe"
 }

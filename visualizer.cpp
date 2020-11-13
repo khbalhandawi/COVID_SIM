@@ -48,29 +48,110 @@ visualizer::visualizer()
 {
 }
 
+ /*-----------------------------------------------------------*/
+ /*                    Start a Qt thread                      */
+ /*-----------------------------------------------------------*/
+ std::unique_ptr<MainWindow> visualizer::start_qt(Configuration Config)
+ {
+
+ 	int argc = 0;
+ 	char **argv = NULL;
+
+ 	std::unique_ptr<MainWindow> mainWindow = nullptr; // initialize null pointer to mainwindow
+
+ 	// Start the Qt realtime plot demo in a worker thread
+ 	std::thread myThread
+ 	(
+ 		[&] {
+ 		QApplication application(argc, argv);
+ 		mainWindow = std::make_unique<MainWindow>(&Config); // lambda capture by reference
+ 		mainWindow->show();
+
+ 		return application.exec();
+ 	}
+ 	);
+
+ 	qRegisterMetaType<QVector<double> >("QVector<double>"); // register QVector<double> for queued connection type
+
+ 	return mainWindow;
+
+ }
+
+/*-----------------------------------------------------------*/
+/*                     Update Qt window                      */
+/*-----------------------------------------------------------*/
+void visualizer::update_qt(Eigen::ArrayXXf population,
+	int frame, std::unique_ptr<MainWindow> &mainWindow)
+{
+
+	// Initialize Qt Vectors
+	QVector<double> susceptible_x, susceptible_y,
+		infected_x, infected_y,
+		recovered_x, recovered_y,
+		fatalities_x, fatalities_y;
+
+	/*--------------------------------------------------*/
+	// plot population segments
+	Eigen::ArrayXXd susceptible = population(select_rows(population.col(6) == 0), { 1,2 }).cast<double>();
+	Eigen::ArrayXXd infected = population(select_rows(population.col(6) == 1), { 1,2 }).cast<double>();
+	Eigen::ArrayXXd recovered = population(select_rows(population.col(6) == 2), { 1,2 }).cast<double>();
+	Eigen::ArrayXXd fatalities = population(select_rows(population.col(6) == 3), { 1,2 }).cast<double>();
+
+	if (susceptible.rows() > 0) { // to avoid assertion errors
+		susceptible_x.resize(susceptible.rows()); Map<ArrayXd>(&susceptible_x[0], susceptible.rows(), 1) = susceptible.col(0);
+		susceptible_y.resize(susceptible.rows()); Map<ArrayXd>(&susceptible_y[0], susceptible.rows(), 1) = susceptible.col(1);
+	}
+
+	if (infected.rows() > 0) { // to avoid assertion errors
+		infected_x.resize(infected.rows()); Map<ArrayXd>(&infected_x[0], infected.rows(), 1) = infected.col(0);
+		infected_y.resize(infected.rows()); Map<ArrayXd>(&infected_y[0], infected.rows(), 1) = infected.col(1);
+	}
+
+	if (recovered.rows() > 0) { // to avoid assertion errors
+		recovered_x.resize(recovered.rows()); Map<ArrayXd>(&recovered_x[0], recovered.rows(), 1) = recovered.col(0);
+		recovered_y.resize(recovered.rows()); Map<ArrayXd>(&recovered_y[0], recovered.rows(), 1) = recovered.col(1);
+	}
+
+	if (fatalities.rows() > 0) { // to avoid assertion errors
+		fatalities_x.resize(fatalities.rows()); Map<ArrayXd>(&fatalities_x[0], fatalities.rows(), 1) = fatalities.col(0);
+		fatalities_y.resize(fatalities.rows()); Map<ArrayXd>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
+	}
+
+	// Block the calling thread for x milliseconds // http://www.cplusplus.com/reference/thread/this_thread/sleep_for/
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+	// update mainwindow using new data
+	emit mainWindow->arrivedsignal(susceptible_x, susceptible_y,
+		infected_x, infected_y,
+		recovered_x, recovered_y,
+		fatalities_x, fatalities_y,
+		frame); // emit signal
+
+}
+
 /*-----------------------------------------------------------*/
 /*                       Build figure                        */
 /*-----------------------------------------------------------*/
 void visualizer::build_fig(Configuration Config, vector<int> fig_size)
 {
-	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
-	plt::filterwarnings("ignore"); // filter and suppress all warnings
+	//plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
+	//plt::filterwarnings("ignore"); // filter and suppress all warnings
 
 	if (!Config.self_isolate) {
-		plt::figure_size(12, 5);
+		//plt::figure_size(12, 5);
 		vector<double> width_ratios = {5,5};
-		plt::add_gridspec(2, 1, width_ratios);
+		//plt::add_gridspec(2, 1, width_ratios);
 	}
 	else if (Config.self_isolate) {
-		plt::figure_size(12, 5);
+		//plt::figure_size(12, 5);
 		vector<double> width_ratios = {7,5};
-		plt::add_gridspec(2, 1, width_ratios);
+		//plt::add_gridspec(2, 1, width_ratios);
 	}
 
-	plt::add_subplot(0, 0, 1);
+	//plt::add_subplot(0, 0, 1);
 	// plt.title('infection simulation')
-	plt::xlim(Config.xbounds[0], Config.xbounds[1]);
-	plt::ylim(Config.ybounds[0], Config.ybounds[1]);
+	//plt::xlim(Config.xbounds[0], Config.xbounds[1]);
+	//plt::ylim(Config.ybounds[0], Config.ybounds[1]);
 
 	vector<double> lower_corner = { Config.xbounds[0], Config.ybounds[0] };
 	double width = Config.xbounds[1] - Config.xbounds[0];
@@ -85,21 +166,21 @@ void visualizer::build_fig(Configuration Config, vector<int> fig_size)
 					   Config.isolation_bounds[1], Config.isolation_bounds[3], bound_color, Config.add_cross);
 	}
 
-	plt::axis("off");
+	//plt::axis("off");
 
 	// SIR graph
-	plt::add_subplot(0, 0, 2);
-	plt::ylim(0, Config.pop_size);
+	//plt::add_subplot(0, 0, 2);
+	//plt::ylim(0, Config.pop_size);
 
-	plt::xlabel("Simulation Steps");
-	plt::ylabel("Number of people");
+	//plt::xlabel("Simulation Steps");
+	//plt::ylabel("Number of people");
 
 	// map<string, string> keywords_legend;
 	// keywords_legend["loc"] = "upper center";
 	// keywords_legend["ncol"] = "5";
 	// keywords_legend["fontsize"] = "10";
 
-	// plt::legend();
+	// //plt::legend();
 
 	if (Config.save_plot) {
 		check_folder(Config.plot_path); // create save directory
@@ -112,18 +193,18 @@ void visualizer::build_fig(Configuration Config, vector<int> fig_size)
 /*-----------------------------------------------------------*/
 void visualizer::build_fig_scatter(Configuration Config, vector<int> fig_size)
 {
-	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
+	//plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
 	if (!Config.self_isolate) {
-		plt::figure_size(5, 5);
+		//plt::figure_size(5, 5);
 		// plt.title('infection simulation')
-		plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		//plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
+		//plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 
 	}
 	else if (Config.self_isolate) {
-		plt::figure_size(7, 5);
-		plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		//plt::figure_size(7, 5);
+		//plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
+		//plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 	}
 
 	vector<double> lower_corner = { Config.xbounds[0], Config.ybounds[0] };
@@ -139,7 +220,7 @@ void visualizer::build_fig_scatter(Configuration Config, vector<int> fig_size)
 			Config.isolation_bounds[1], Config.isolation_bounds[3], bound_color, Config.add_cross);
 	}
 
-	//plt::axis("off");
+	////plt::axis("off");
 
 	if (Config.save_plot) {
 		check_folder(Config.plot_path); // create save directory
@@ -152,13 +233,13 @@ void visualizer::build_fig_scatter(Configuration Config, vector<int> fig_size)
 /*-----------------------------------------------------------*/
 void visualizer::build_fig_SIR(Configuration Config, vector<int> fig_size)
 {
-	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
-	plt::figure_size(7, 5);
+	//plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
+	//plt::figure_size(7, 5);
 
-	plt::ylim(0, Config.pop_size + 100);
+	//plt::ylim(0, Config.pop_size + 100);
 
-	plt::xlabel("Simulation Steps");
-	plt::ylabel("Number of people");
+	//plt::xlabel("Simulation Steps");
+	//plt::ylabel("Number of people");
 
 	if (Config.save_plot) {
 		check_folder(Config.plot_path); // create save directory
@@ -171,11 +252,11 @@ void visualizer::build_fig_SIR(Configuration Config, vector<int> fig_size)
 /*-----------------------------------------------------------*/
 void visualizer::build_fig_time_series(Configuration Config, vector<int> fig_size, string ylabel)
 {
-	plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
-	plt::figure_size(7, 5);
+	//plt::backend("WXAgg"); //https://github.com/lava/matplotlib-cpp/issues/95
+	//plt::figure_size(7, 5);
 
-	plt::xlabel("Simulation Steps");
-	plt::ylabel(ylabel);
+	//plt::xlabel("Simulation Steps");
+	//plt::ylabel(ylabel);
 
 	if (Config.save_plot) {
 		check_folder(Config.plot_path); // create save directory
@@ -192,19 +273,19 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 	// get color palettes
 	vector<string> palette = Config.get_palette();
 	// Clear first subplot
-	plt::subplot(1, 2, 1);
-	// plt::set_axis(1);
-	plt::cla();
+	//plt::subplot(1, 2, 1);
+	// //plt::set_axis(1);
+	//plt::cla();
 
 	/*--------------------------------------------------*/
 	// Replot all world and boundaries
 	if (!Config.self_isolate) {
-		plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		//plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
+		//plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 	}
 	else if (Config.self_isolate) {
-		plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		//plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
+		//plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 	}
 
 	vector<double> lower_corner = { Config.xbounds[0], Config.ybounds[0] };
@@ -220,7 +301,7 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 					   Config.isolation_bounds[1], Config.isolation_bounds[3], bound_color, Config.add_cross);
 	}
 
-	plt::axis("off");
+	//plt::axis("off");
 
 	/*--------------------------------------------------*/
 	// plot population segments
@@ -242,13 +323,13 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 
 	map<string, string> keywords;
 	keywords["color"] = palette[0];
-	plt::scatter(susceptible_x, susceptible_y, Config.marker_size, keywords);
+	//plt::scatter(susceptible_x, susceptible_y, Config.marker_size, keywords);
 	keywords["color"] = palette[1];
-	plt::scatter(infected_x, infected_y, Config.marker_size, keywords);
+	//plt::scatter(infected_x, infected_y, Config.marker_size, keywords);
 	keywords["color"] = palette[2];
-	plt::scatter(recovered_x, recovered_y, Config.marker_size, keywords);
+	//plt::scatter(recovered_x, recovered_y, Config.marker_size, keywords);
 	keywords["color"] = palette[3];
-	plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
+	//plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
 
 	//add text descriptors
 	string output_string = "timestep: " + to_string(frame) +
@@ -262,17 +343,17 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 	keywords_text["fontsize"] = "7";
 
 	if (Config.self_isolate) {
-		plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+		//plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
 	} else {
-		plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+		//plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
 	}
 
-	plt::draw();
+	//plt::draw();
 
 	/*--------------------------------------------------*/
 	// plot sir diagram
-	plt::subplot(1, 2, 2);
-	// plt::set_axis(2);
+	//plt::subplot(1, 2, 2);
+	// //plt::set_axis(2);
 
 	if (Config.treatment_dependent_risk) {
 		vector<int> infected_arr = pop_tracker.infectious;
@@ -287,7 +368,7 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 		keywords["linewidth"] = "2";
 		keywords["label"] = "healthcare capacity";
 
-		plt::plot(line_hc, keywords);
+		//plt::plot(line_hc, keywords);
 	}
 
 
@@ -296,12 +377,12 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 		map<string, string> keywords;
 		keywords["color"] = palette[1];
 
-		plt::plot(pop_tracker.infectious, keywords);
+		//plt::plot(pop_tracker.infectious, keywords);
 
 		keywords["color"] = palette[3];
 		keywords["label"] = "fatalities";
 
-		plt::plot(pop_tracker.fatalities, keywords);
+		//plt::plot(pop_tracker.fatalities, keywords);
 	}
 	else if (Config.plot_mode == "sir") {
 
@@ -331,17 +412,17 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 		fill(line.begin(), line.end(), 0);
 
 		keywords["color"] = palette[1];
-		plt::fill_between(x, line, i, keywords); // infectious
+		//plt::fill_between(x, line, i, keywords); // infectious
 		keywords["color"] = palette[0];
-		plt::fill_between(x, i, s, keywords); // susceptible
+		//plt::fill_between(x, i, s, keywords); // susceptible
 		keywords["color"] = palette[2];
-		plt::fill_between(x, s, rr, keywords); // recovered
+		//plt::fill_between(x, s, rr, keywords); // recovered
 		keywords["color"] = palette[3];
-		plt::fill_between(x, rr, rf, keywords); // fatalities
+		//plt::fill_between(x, rr, rf, keywords); // fatalities
 	}
 
-	plt::draw();
-	plt::pause(0.0001);
+	//plt::draw();
+	//plt::pause(0.0001);
 
 	if (Config.save_plot) {
 
@@ -350,7 +431,7 @@ void visualizer::draw_tstep(Configuration Config, Eigen::ArrayXXf population, Po
 		map<string, string> keywords;
 		keywords["facecolor"] = bg_color;
 
-		plt::savefig(save_path, keywords);
+		//plt::savefig(save_path, keywords);
 
 	}
 }
@@ -365,17 +446,17 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 	// get color palettes
 	vector<string> palette = Config.get_palette();
 	// Clear first subplot
-	plt::cla();
+	//plt::cla();
 
 	/*--------------------------------------------------*/
 	// Replot all world and boundaries
 	if (!Config.self_isolate) {
-		plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		//plt::xlim(Config.xbounds[0] - 0.02, Config.xbounds[1] + 0.02);
+		//plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 	}
 	else if (Config.self_isolate) {
-		plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
-		plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
+		//plt::xlim(Config.isolation_bounds[0] - 0.02, Config.xbounds[1] + 0.02);
+		//plt::ylim(Config.ybounds[0] - 0.02, Config.ybounds[1] + 0.02);
 	}
 
 	vector<double> lower_corner = { Config.xbounds[0], Config.ybounds[0] };
@@ -391,7 +472,7 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 			Config.isolation_bounds[1], Config.isolation_bounds[3], bound_color, Config.add_cross);
 	}
 
-	plt::axis("off");
+	//plt::axis("off");
 
 	/*--------------------------------------------------*/
 	// plot population segments
@@ -412,13 +493,13 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 
 	map<string, string> keywords;
 	keywords["color"] = palette[0];
-	plt::scatter(susceptible_x, susceptible_y, Config.marker_size, keywords);
+	//plt::scatter(susceptible_x, susceptible_y, Config.marker_size, keywords);
 	keywords["color"] = palette[1];
-	plt::scatter(infected_x, infected_y, Config.marker_size, keywords);
+	//plt::scatter(infected_x, infected_y, Config.marker_size, keywords);
 	keywords["color"] = palette[2];
-	plt::scatter(recovered_x, recovered_y, Config.marker_size, keywords);
+	//plt::scatter(recovered_x, recovered_y, Config.marker_size, keywords);
 	keywords["color"] = palette[3];
-	plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
+	//plt::scatter(fatalities_x, fatalities_y, Config.marker_size, keywords);
 
 	// Trace path of random individual
 	if (Config.trace_path) {
@@ -448,16 +529,16 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 
 	map<string, string> keywords_text;
 	keywords_text["fontsize"] = "7";
-	plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+	//plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
 	// if (!Config.self_isolate) {
-	// 	plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+	// 	//plt::text(Config.xbounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
 	// }
 	// else if (Config.self_isolate) {
-	// 	plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
+	// 	//plt::text(Config.isolation_bounds[0], Config.ybounds[1] + ((Config.ybounds[1] - Config.ybounds[0]) / 100), output_string, keywords_text);
 	// }
 
-	plt::draw();
-	plt::pause(0.001);
+	//plt::draw();
+	//plt::pause(0.001);
 
 	if (Config.save_plot) {
 
@@ -466,7 +547,7 @@ void visualizer::draw_tstep_scatter(Configuration Config, Eigen::ArrayXXf popula
 		map<string, string> keywords;
 		keywords["facecolor"] = bg_color;
 
-		plt::savefig(save_path, keywords);
+		//plt::savefig(save_path, keywords);
 
 	}
 
@@ -495,7 +576,7 @@ void visualizer::draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, 
 		keywords["linewidth"] = "2";
 		keywords["label"] = "healthcare capacity";
 
-		plt::plot(line_hc, keywords);
+		//plt::plot(line_hc, keywords);
 	}
 
 	if (Config.plot_mode == "default") {
@@ -504,12 +585,12 @@ void visualizer::draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, 
 		keywords["color"] = palette[1];
 		keywords["label"] = "infectious";
 
-		plt::plot(pop_tracker.infectious, keywords);
+		//plt::plot(pop_tracker.infectious, keywords);
 
 		keywords["color"] = palette[3];
 		keywords["label"] = "fatalities";
 
-		plt::plot(pop_tracker.fatalities, keywords);
+		//plt::plot(pop_tracker.fatalities, keywords);
 	}
 	else if (Config.plot_mode == "sir") {
 
@@ -527,22 +608,22 @@ void visualizer::draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, 
 
 		keywords["color"] = palette[0];
 		keywords["label"] = "susceptible";
-		plt::plot(x, s, keywords); // susceptible
+		//plt::plot(x, s, keywords); // susceptible
 		keywords["color"] = palette[1];
 		keywords["label"] = "infectious";
-		plt::plot(x, i, keywords); // infectious
+		//plt::plot(x, i, keywords); // infectious
 		keywords["color"] = palette[2];
 		keywords["label"] = "recovered";
-		plt::plot(x, r, keywords); // recovered
+		//plt::plot(x, r, keywords); // recovered
 		keywords["color"] = palette[3];
 		keywords["label"] = "fatalities";
-		plt::plot(x, f, keywords); // fatalities
+		//plt::plot(x, f, keywords); // fatalities
 	}
 
-	plt::legend();
+	//plt::legend();
 
-	plt::draw();
-	plt::pause(0.001);
+	//plt::draw();
+	//plt::pause(0.001);
 
 	if (Config.save_plot) {
 
@@ -552,7 +633,7 @@ void visualizer::draw_SIRonly(Configuration Config, Eigen::ArrayXXf population, 
 		//keywords["dpi"] = "300";
 		keywords["facecolor"] = bg_color;
 
-		plt::save(save_path);
+		//plt::save(save_path);
 
 	}
 }
@@ -574,10 +655,10 @@ void visualizer::draw_time_series(Configuration Config, vector<double> y_data, s
 	vector<double> x_data(x.begin(), x.end());
 
 	keywords["color"] = palette[0];
-	plt::plot(x_data, y_data, keywords); // susceptible
+	//plt::plot(x_data, y_data, keywords); // susceptible
 
-	plt::draw();
-	plt::pause(0.001);
+	//plt::draw();
+	//plt::pause(0.001);
 
 	if (Config.save_plot) {
 
@@ -587,7 +668,7 @@ void visualizer::draw_time_series(Configuration Config, vector<double> y_data, s
 		//keywords["dpi"] = "300";
 		keywords["facecolor"] = bg_color;
 
-		plt::save(save_path);
+		//plt::save(save_path);
 
 	}
 }
@@ -601,10 +682,10 @@ void visualizer::Rectangle(vector<double> lower_corner, double width, double hei
 	keywords["color"] = edgecolor;
 	keywords["linewidth"] = linewidth;
 	
-	plt::plot({ lower_corner[0], lower_corner[0] + width }, { lower_corner[1], lower_corner[1] }, keywords);
-	plt::plot({ lower_corner[0], lower_corner[0] }, { lower_corner[1], lower_corner[1] + height }, keywords);
-	plt::plot({ lower_corner[0], lower_corner[0] + width }, { lower_corner[1] + height , lower_corner[1] + height }, keywords);
-	plt::plot({ lower_corner[0] + width, lower_corner[0] + width }, { lower_corner[1], lower_corner[1] + height }, keywords);
+	//plt::plot({ lower_corner[0], lower_corner[0] + width }, { lower_corner[1], lower_corner[1] }, keywords);
+	//plt::plot({ lower_corner[0], lower_corner[0] }, { lower_corner[1], lower_corner[1] + height }, keywords);
+	//plt::plot({ lower_corner[0], lower_corner[0] + width }, { lower_corner[1] + height , lower_corner[1] + height }, keywords);
+	//plt::plot({ lower_corner[0] + width, lower_corner[0] + width }, { lower_corner[1], lower_corner[1] + height }, keywords);
 }
 
 /*-----------------------------------------------------------*/
@@ -660,8 +741,8 @@ void visualizer::build_hospital(double xmin, double xmax, double ymin, double ym
 
 		double offset = 0.02;
 
-		plt::plot({ xmiddle, xmiddle }, { ymax + offset, ymax + height + offset }, keywords);
-		plt::plot({ xmiddle - (height / 2), xmiddle + (height / 2) }, { ymax + (height / 2) + offset, ymax + (height / 2) + offset }, keywords);
+		//plt::plot({ xmiddle, xmiddle }, { ymax + offset, ymax + height + offset }, keywords);
+		//plt::plot({ xmiddle - (height / 2), xmiddle + (height / 2) }, { ymax + (height / 2) + offset, ymax + (height / 2) + offset }, keywords);
 	}
 
 

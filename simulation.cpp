@@ -221,12 +221,18 @@ void simulation::tstep()
 	//======================================================================================//
 	//visualise
 	if ((Config.visualise) && ((frame % Config.visualise_every_n_frame) == 0)) {
-		if (Config.n_plots == 1) {
-			vis.draw_tstep_scatter(Config, population, pop_tracker, frame);
+
+		if (Config.platform == "plt") {
+			if (Config.n_plots == 1) {
+				vis.draw_tstep_scatter(Config, population, pop_tracker, frame);
+			}
+			else if (Config.n_plots == 2) {
+				vis.draw_tstep(Config, population, pop_tracker, frame);
+			}
 		}
-		else if (Config.n_plots == 2) {
-			vis.draw_tstep(Config, population, pop_tracker, frame);
-		}
+
+
+
 	}
 
 	//report stuff to console
@@ -320,15 +326,44 @@ void simulation::run()
 	/* run simulation */
 
 	if (Config.visualise) {
-
-		if (Config.n_plots == 1) {
-			vis.build_fig_scatter(Config);
+		if (Config.platform == "plt") {
+			if (Config.n_plots == 1) {
+				vis.build_fig_scatter(Config);
+			}
+			else if (Config.n_plots == 2) {
+				vis.build_fig(Config);
+			}
 		}
-		else if (Config.n_plots == 2) {
-			vis.build_fig(Config);
-		}
-
 	}
+
+	//========================================================//
+	// Start a Qt thread for visualization
+	std::unique_ptr<MainWindow> mainWindow = nullptr; // initialize null pointer to Qt mainwindow
+
+	int argc = 0;
+	char **argv = NULL;
+
+	QString CSS = "QSlider::handle:horizontal {background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);border: 1px solid #5c5c5c;width: 18px;margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */border-radius: 3px;}";
+	// Start the Qt realtime plot demo in a worker thread
+	std::thread myThread
+	(
+		[&] {
+		if ((Config.platform == "Qt") && (Config.visualise)) {
+			QApplication application(argc, argv);
+			application.setStyleSheet(CSS);
+			mainWindow = std::make_unique<MainWindow>(&Config); // lambda capture by reference
+			mainWindow->show();
+
+			return application.exec();
+		}
+	}
+	);
+	qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
+	qRegisterMetaType<int>("int"); // register "double" for queued connection type
+    // connect(mainWindow, &MainWindow::SDvalueChanged, slider_values, &Counter::setValue);
+
+	//std::unique_ptr<MainWindow> mainWindow = vis.start_qt(Config);
+	//========================================================//
 
 	//save grid_coords if required
 	if (Config.save_ground_covered) {
@@ -344,6 +379,17 @@ void simulation::run()
 		try
 		{
 			tstep(); // code that could cause exception
+
+			if ((Config.platform == "Qt") && (Config.visualise)) {
+				// Update QVectors for scatter plot
+				if (mainWindow) {
+					Config.infection_chance = mainWindow->IC_0; // Set simulation infection_chance from slider
+					Config.social_distance_factor = 1e-6 * mainWindow->SD_0 * Config.force_scaling; // Set simulation SD_factor from slider
+					Config.number_of_tests = mainWindow->TC_0; // Set simulation number_of_tests from slider
+					vis.update_qt(population, frame, mainWindow);
+				}
+			}
+
 		}
 		catch (const exception &exc)
 		{
@@ -367,7 +413,7 @@ void simulation::run()
 
 	}
 
-	if (Config.plot_last_tstep) {
+	if ((Config.plot_last_tstep) && (Config.platform == "plt")) {
 		vis.build_fig_SIR(Config);
 		vis.draw_SIRonly(Config, population, pop_tracker, (frame - 1) );
 

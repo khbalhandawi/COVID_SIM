@@ -8,6 +8,7 @@
 *.dat
 *.log
 x64/
+Release/
 build/data
 build/population
 build/render
@@ -15,3 +16,4 @@ build/cpp_corona_simulation.exe
 .vs/
 Debug/
 *.pyc
+ui_mainwindow.h

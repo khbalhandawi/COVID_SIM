@@ -47,6 +47,7 @@ public:
 
 	// visualisation variables
 	string visualise_in; // whether to visualise the simulation
+	string platform_in; // which platform to use for visualization
 	string add_cross_in; // draws a red cross on hospital
 	string visualise_every_n_frame_in; // Frequency of plot update
 	string plot_mode_in; // default or sir
@@ -166,6 +167,7 @@ public:
 
 	// visualisation variables
 	bool visualise; // whether to visualise the simulation
+	string platform; // which platform to use for visualization
 	bool add_cross; // draws a red cross on hospital
 	int visualise_every_n_frame; // Frequency of plot update
 	string plot_mode; // default or sir
@@ -254,6 +256,12 @@ public:
 	bool constant_seed; // whether user specifies a constant seed file or not
 
 	Eigen::ArrayXf lockdown_vector;
+
+	// Scaling factors
+	double area_scaling;
+	double distance_scaling;
+	double force_scaling;
+	double count_scaling;
 
 	/*-----------------------------------------------------------*/
 	/*          Throw exception if config key not found          */

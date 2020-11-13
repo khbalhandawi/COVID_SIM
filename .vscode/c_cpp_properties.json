@@ -8,12 +8,19 @@
                 "${workspaceFolder}/libs/**",
                 "${PYTHONHOME}/include/**",
                 "${PYTHONHOME}/Lib/site-packages/numpy/core/include/**",
-                "${PYTHONHOME}/libs/**"
+                "${PYTHONHOME}/libs/**",
+                "${QT}/include/**",
+                "${QT}/lib/**"
             ],
             "defines": [
-                "_DEBUG",
+                "_WINDOWS",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "WIN32",
+                "_ENABLE_EXTENDED_ALIGNED_STORAGE",
+                "WIN64",
+                "NDEBUG",
+                "QT_NO_DEBUG"
             ],
             "windowsSdkVersion": "10.0.17763.0",
             "compilerPath": "${VC_ExcecutablePath_x64}/cl.exe",
@@ -24,12 +31,24 @@
         {
             "name": "cpp_corona_simulation",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Include/**",
+                "${workspaceFolder}/libs/**",
+                "${PYTHONHOME}/include/**",
+                "${PYTHONHOME}/Lib/site-packages/numpy/core/include/**",
+                "${PYTHONHOME}/libs/**",
+                "${QT}/include/**",
+                "${QT}/lib/**"
             ],
             "defines": [
-                "_DEBUG",
+                "_WINDOWS",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "WIN32",
+                "_ENABLE_EXTENDED_ALIGNED_STORAGE",
+                "WIN64",
+                "NDEBUG",
+                "QT_NO_DEBUG"
             ],
             "windowsSdkVersion": "10.0.17763.0",
             "compilerPath": "${VC_ExcecutablePath_x64}/cl.exe",
