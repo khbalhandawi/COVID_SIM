@@ -242,7 +242,7 @@ def make_pdf(dist, params, size=10000):
 # Plot pdf function
 def plot_distribution(data, fun_name, label_name, n_bins, run, 
                       discrete = False, min_bin_width = 0, 
-                      fig_swept = None, run_label = 'PDF', color = u'b',
+                      fig_swept = None, run_label = 'PDF', color = u'b', hatch_pattern = u'',
                       dataXLim = None, dataYLim = None, constraint = None,
                       fit_distribution = True, handles = [], labels = []):
 
@@ -326,13 +326,17 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
 
     if discrete:
         # discrete bin numbers
-        ax2.hist(data, bins, color = color, alpha=0.5, density=True)
+        # ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
+        ax2.hist(data, bins, linewidth=2, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
     else:
-        ax2.hist(data, bins = n_bins, color = color, alpha=0.5, density=True)
+        # ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
+        ax2.hist(data, bins = n_bins, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
     
     # plot constraint limits
     if constraint is not None:
-        ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='k')
+        ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='r')
     # Save plot limits
     if dataYLim is None and dataXLim is None:
         dataYLim = ax2.get_ylim()
@@ -373,6 +377,10 @@ if __name__ == '__main__':
                        [   0.0001, 0.15   ], # Social distancing factor
                        [   10    , 51    ]]) # Testing capacity
 
+    fit_cond = False # Do not fit data
+    color_mode = 'color' # Choose color mode (black_White)
+    run = 0 # starting point
+
     # Points to plot
     opt_1 = np.array([0.50, 0.50, 0.50])
     opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
@@ -389,20 +397,19 @@ if __name__ == '__main__':
     opt_5 = np.array([0.52734375, 0.86328125, 0.6484375])
     opt_5_unscaled = scaling(opt_5, bounds[:3,0], bounds[:3,1], 2)
 
-    print('point #1: E = %f, S = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
-    print('point #2: E = %f, S = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
-    print('point #3: E = %f, S = %f, T = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]))
-    print('point #4: E = %f, S = %f, T = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]))
-    print('point #5: E = %f, S = %f, T = %f' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2]))
+    print('point #1: E = %f, S_D = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
+    print('point #2: E = %f, S_D = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
+    print('point #3: E = %f, S_D = %f, T = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]))
+    print('point #4: E = %f, S_D = %f, T = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]))
+    print('point #5: E = %f, S_D = %f, T = %f' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2]))
 
     points = np.vstack((opt_1_unscaled,opt_2_unscaled,opt_3_unscaled,opt_4_unscaled,opt_5_unscaled))
 
-    labels = ['Nominal values $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
-              '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]),
-              '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]),
-              '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]),
-              '$\mathtt{StoMADS-PB}$ constrained problem, sample rate ($p^k$) = 5: $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2])]
-    fit_cond = False # Do not fit data
+    labels = ['Nominal decisions $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
+              'Solution 1 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]),
+              'Solution 2 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]),
+              'Solution 3 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]),
+              'Solution 4 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2])]
     run = 0 # starting point
 
     #===================================================================#
@@ -424,14 +431,14 @@ if __name__ == '__main__':
 
     same_axis = True
     if same_axis:
-        fig_infections = plt.figure(figsize=(10,5))
-        fig_fatalities = plt.figure(figsize=(10,5))
-        fig_dist = plt.figure(figsize=(10,5))
-        fig_GC = plt.figure(figsize=(10,5))
+        fig_infections = plt.figure(figsize=(6,5))
+        fig_fatalities = plt.figure(figsize=(6,5))
+        fig_dist = plt.figure(figsize=(6,5))
+        fig_GC = plt.figure(figsize=(6,5))
     else:
         fig_infections = fig_fatalities = fig_dist = fig_GC = None
 
-    auto_limits = True
+    auto_limits = False
     if auto_limits:
         dataXLim_i = dataYLim_i = None
         dataXLim_f = dataYLim_f = None
@@ -484,6 +491,13 @@ if __name__ == '__main__':
     # points = points[run:run_end]
     # labels = labels[run:run_end]
 
+    if color_mode == 'color':
+        hatches = ['/'] * 10
+        colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
+    elif color_mode == 'black_white':
+        hatches = ['/','//','x','o','|||']
+        colors = ['#FFFFFF'] * 10
+
     for point,legend_label in zip(points,labels):
 
         # Model variables
@@ -519,58 +533,61 @@ if __name__ == '__main__':
                 distance_i = pickle.load(fid)
                 
         # Legend entries
-        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor=colors[run], facecolor=colors[run], fill='None' ,alpha=0.5)
-        
+        # Legend entries
+        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='k', facecolor=colors[run], fill=True ,hatch=hatches[run])
+
         handles_lgd += [a]
         labels_lgd += [legend_label]
 
         # Infected plot
-        label_name = u'Maximum number of infected ($I(\mathbf{x})$)'
+        label_name = u'Maximum number of infected $\max{I(\mathbf{x})}$'
         fun_name = 'infections'
         data = infected_i
 
         dataXLim_i_out, dataYLim_i_out, mean_i, std_i = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = True, min_bin_width = min_bin_width_i, fig_swept = fig_infections, 
-            run_label = legend_label, color = colors[run], dataXLim = dataXLim_i, dataYLim = dataYLim_i, constraint = healthcare_capacity,
+            run_label = legend_label, color = colors[run],  hatch_pattern = hatches[run], 
+            dataXLim = dataXLim_i, dataYLim = dataYLim_i, constraint = healthcare_capacity,
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_i_runs += [mean_i]
         std_i_runs += [std_i]
 
         # Fatalities plot
-        label_name = u'Number of fatalities ($F(\mathbf{x})$)'
+        label_name = u'Number of fatalities $F(\mathbf{x})$'
         fun_name = 'fatalities'
         data = fatalities_i
 
         dataXLim_f_out, dataYLim_f_out, mean_f, std_f = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = True, min_bin_width = min_bin_width_f, fig_swept = fig_fatalities, 
-            run_label = legend_label, color = colors[run], dataXLim = dataXLim_f, dataYLim = dataYLim_f,
+            run_label = legend_label, color = colors[run], hatch_pattern = hatches[run], 
+            dataXLim = dataXLim_f, dataYLim = dataYLim_f,
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_f_runs += [mean_f]
         std_f_runs += [std_f]
 
         # Distance plot
-        label_name = u'Average cumulative distance travelled ($D(\mathbf{x})$)'
+        label_name = u'Average cumulative distance travelled $D(\mathbf{x})$'
         fun_name = 'distance'
         data = distance_i
 
         dataXLim_d_out, dataYLim_d_out, mean_d, std_d = plot_distribution(data, fun_name, label_name, n_bins, run, 
             fig_swept = fig_dist, run_label = legend_label, color = colors[run], 
-            dataXLim = dataXLim_d, dataYLim = dataYLim_d,
+            hatch_pattern = hatches[run], dataXLim = dataXLim_d, dataYLim = dataYLim_d,
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_d_runs += [mean_d]
         std_d_runs += [std_d]
 
-        label_name = u'Percentage of world explored ($D(\mathbf{x})$)'
+        label_name = u'Population mobility $D(\mathbf{x})$'
         fun_name = 'ground covered'
         data = GC_i
 
         # Ground covered plot
         dataXLim_GC_out, dataYLim_GC_out, mean_gc, std_gc = plot_distribution(data, fun_name, label_name, n_bins, run, 
             fig_swept = fig_GC, run_label = legend_label, color = colors[run], 
-            dataXLim = dataXLim_GC, dataYLim = dataYLim_GC,
+            hatch_pattern = hatches[run], dataXLim = dataXLim_GC, dataYLim = dataYLim_GC,
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_gc_runs += [mean_gc]

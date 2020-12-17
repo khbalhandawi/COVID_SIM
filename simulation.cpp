@@ -316,14 +316,14 @@ void simulation::run()
 	int argc = 0;
 	char **argv = NULL;
 
-	QString CSS = "QSlider::handle:horizontal {background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);border: 1px solid #5c5c5c;width: 18px;margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */border-radius: 3px;}";
+	//QString CSS = "QSlider::handle:horizontal {background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);border: 1px solid #5c5c5c;width: 18px;margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */border-radius: 3px;}";
 	// Start the Qt realtime plot demo in a worker thread
 	std::thread myThread
 	(
 		[&] {
 		if ((Config.platform == "Qt") && (Config.visualise)) {
 			QApplication application(argc, argv);
-			application.setStyleSheet(CSS);
+			//application.setStyleSheet(CSS);
 			mainWindow = std::make_unique<MainWindow>(&Config); // lambda capture by reference
 			mainWindow->show();
 
@@ -333,6 +333,7 @@ void simulation::run()
 	);
 	qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
 	qRegisterMetaType<int>("int"); // register "double" for queued connection type
+	qRegisterMetaType<float>("float"); // register "double" for queued connection type
     // connect(mainWindow, &MainWindow::SDvalueChanged, slider_values, &Counter::setValue);
 
 	//std::unique_ptr<MainWindow> mainWindow = vis.start_qt(Config);
@@ -349,39 +350,50 @@ void simulation::run()
 
 	while (i < Config.simulation_steps) {
 
-		try
-		{
-			tstep(); // code that could cause exception
+		// wait for mainwindow thread to start
+		if ((mainWindow) || (Config.visualise == false)) { 
 
-			if ((Config.platform == "Qt") && (Config.visualise)) {
-				// Update QVectors for scatter plot
-				if (mainWindow) {
-					Config.infection_chance = mainWindow->IC_0; // Set simulation infection_chance from slider
-					Config.social_distance_factor = 1e-6 * mainWindow->SD_0 * Config.force_scaling; // Set simulation SD_factor from slider
-					Config.number_of_tests = mainWindow->TC_0; // Set simulation number_of_tests from slider
-					vis.update_qt(population, frame, mainWindow);
+			if (mainWindow) {
+				if ((mainWindow->pause_action == true) && (Config.platform == "Qt") && (Config.visualise)) // run/pause animation
+				{
+					continue; //Skip the rest of the loop to …
 				}
 			}
 
-		}
-		catch (const exception &exc)
-		{
-			// catch anything thrown within try block that derives from std::exception
-			cerr << exc.what();
-		}
+			try
+			{
+				tstep(); // code that could cause exception
 
-		// check whether to end if no infectious persons remain.
-		// check if frame is above some threshold to prevent early breaking when simulation
-		// starts initially with no infections.
-		if ((Config.endif_no_infections) && (frame >= 300)) {
+				if ((Config.platform == "Qt") && (Config.visualise)) {
+					// Update QVectors for scatter plot
+					if (mainWindow) {
+						Config.infection_chance = mainWindow->IC_0; // Set simulation infection_chance from slider
+						Config.social_distance_factor = 1e-6 * mainWindow->SD_0 * Config.force_scaling; // Set simulation SD_factor from slider
+						Config.number_of_tests = mainWindow->TC_0; // Set simulation number_of_tests from slider
+						vis.update_qt(population, frame, pop_tracker.mean_R0.back(), mainWindow);
+					}
+				}
 
-			cond << (population.col(6) == 1), (population.col(6) == 4);
-			if (population(select_rows_any(cond), Eigen::all).rows() == 0) {
-				i = Config.simulation_steps;
 			}
-		}
-		else {
-			i += 1;
+			catch (const exception &exc)
+			{
+				// catch anything thrown within try block that derives from std::exception
+				cerr << exc.what();
+			}
+
+			// check whether to end if no infectious persons remain.
+			// check if frame is above some threshold to prevent early breaking when simulation
+			// starts initially with no infections.
+			if ((Config.endif_no_infections) && (frame >= 300)) {
+
+				cond << (population.col(6) == 1), (population.col(6) == 4);
+				if (population(select_rows_any(cond), Eigen::all).rows() == 0) {
+					i = Config.simulation_steps;
+				}
+			}
+			else {
+				i += 1;
+			}
 		}
 
 	}

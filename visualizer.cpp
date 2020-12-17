@@ -51,37 +51,37 @@ visualizer::visualizer()
  /*-----------------------------------------------------------*/
  /*                    Start a Qt thread                      */
  /*-----------------------------------------------------------*/
- std::unique_ptr<MainWindow> visualizer::start_qt(Configuration Config)
- {
+std::unique_ptr<MainWindow> visualizer::start_qt(Configuration Config)
+{
 
- 	int argc = 0;
- 	char **argv = NULL;
+	int argc = 0;
+	char **argv = NULL;
 
- 	std::unique_ptr<MainWindow> mainWindow = nullptr; // initialize null pointer to mainwindow
+	std::unique_ptr<MainWindow> mainWindow = nullptr; // initialize null pointer to mainwindow
 
- 	// Start the Qt realtime plot demo in a worker thread
- 	std::thread myThread
- 	(
+	// Start the Qt realtime plot demo in a worker thread
+	std::thread myThread
+	(
  		[&] {
  		QApplication application(argc, argv);
  		mainWindow = std::make_unique<MainWindow>(&Config); // lambda capture by reference
  		mainWindow->show();
 
  		return application.exec();
- 	}
- 	);
+	}
+	);
 
- 	qRegisterMetaType<QVector<double> >("QVector<double>"); // register QVector<double> for queued connection type
+	qRegisterMetaType<QVector<double> >("QVector<double>"); // register QVector<double> for queued connection type
 
- 	return mainWindow;
+	return mainWindow;
 
- }
+	}
 
 /*-----------------------------------------------------------*/
 /*                     Update Qt window                      */
 /*-----------------------------------------------------------*/
 void visualizer::update_qt(Eigen::ArrayXXf population,
-	int frame, std::unique_ptr<MainWindow> &mainWindow)
+	int frame, float R0, std::unique_ptr<MainWindow> &mainWindow)
 {
 
 	// Initialize Qt Vectors
@@ -125,7 +125,7 @@ void visualizer::update_qt(Eigen::ArrayXXf population,
 		infected_x, infected_y,
 		recovered_x, recovered_y,
 		fatalities_x, fatalities_y,
-		frame); // emit signal
+		frame, R0); // emit signal
 
 }
 

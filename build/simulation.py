@@ -174,19 +174,20 @@ if __name__ == '__main__':
     #set visuals
     sim.Config.plot_style = 'default' #can also be dark
     sim.Config.plot_text_style = 'LaTeX' #can also be LaTeX
-    sim.Config.visualise = False
+    sim.Config.visualise = True
     sim.Config.visualise_every_n_frame = 100
     sim.Config.plot_last_tstep = True
     sim.Config.verbose = True
     sim.Config.report_freq = 50
     sim.Config.save_plot = True
     sim.Config.n_plots = 1
-    sim.Config.black_white = True
-    # sim.Config.marker_size = (2700 - sim.Config.pop_size) / 140
-    sim.Config.marker_size = 3
+    sim.Config.black_white = False
+    sim.Config.marker_size = (2700 - sim.Config.pop_size) / 100
+    # sim.Config.marker_size = 3
+    # sim.Config.isolation_bounds=None
 
     # Trace path of a single individual on grid
-    sim.Config.trace_path = False
+    sim.Config.trace_path = True
     
     sim.initialize_simulation()
     #run, hold CTRL+C in terminal to end scenario early

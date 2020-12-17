@@ -64,6 +64,7 @@ public:
 	double SD_min, IC_min, TC_min;
 	double IC_0, SD_0;
 	int TC_0;
+	bool pause_action, run_action;
 
 	void setupDemo(int demoIndex, Configuration *Config);
 	void setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration *Config);
@@ -73,7 +74,7 @@ public slots:
 							   QVector<double> x1, QVector<double> y1,
 							   QVector<double> x2, QVector<double> y2,
 							   QVector<double> x3, QVector<double> y3,
-							   int frame);
+							   int frame, float R0);
 	void setICValue(int IC);
 	void setSDValue(int SD);
 	void setTCValue(int TC);
@@ -85,14 +86,17 @@ signals:
 					   QVector<double> x1, QVector<double> y1,
 					   QVector<double> x2, QVector<double> y2,
 					   QVector<double> x3, QVector<double> y3,
-					   int frame);
-  
+					   int frame, float R0);
+
 private:
 	Ui::MainWindow *ui;
 	QString demoName;
 	QTimer dataTimer;
 	QCPItemTracer *itemDemoPhaseTracer;
 	int currentDemoIndex;
+
+private slots:
+	void on_run_button_clicked();
 };
 
 #endif // MAINWINDOW_H

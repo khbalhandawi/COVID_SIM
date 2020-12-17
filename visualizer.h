@@ -24,7 +24,7 @@ public:
 	/*                     Update Qt window                      */
 	/*-----------------------------------------------------------*/
 	void visualizer::update_qt(Eigen::ArrayXXf population, 
-		int frame, std::unique_ptr<MainWindow> &mainWindow);
+		int frame, float R0, std::unique_ptr<MainWindow> &mainWindow);
 
 	/*-----------------------------------------------------------*/
 	/*                        Constructor                        */

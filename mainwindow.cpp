@@ -61,12 +61,12 @@ MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
 									   QVector<double>, QVector<double>, 
 									   QVector<double>, QVector<double>, 
 									   QVector<double>, QVector<double>,
-									   int)),
+									   int, float)),
 			this, SLOT(realtimeDataInputSlot(QVector<double>, QVector<double>,
 											 QVector<double>, QVector<double>,
 											 QVector<double>, QVector<double>,
 											 QVector<double>, QVector<double>,
-											 int)));
+											 int, float)));
 
 	IC_0 = 0.3; // initialize slider to current IC value
 	IC_max = 0.5; // maximum slider position
@@ -77,6 +77,8 @@ MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
 	TC_0 = 10; // initialize slider to current TC value
 	TC_max = 40; // maximum slider position
 	TC_min = 0; // minimum slider position
+	run_action = false;
+	pause_action = true;
 	setupDemo(0, Config);
   
 	// for making screenshots of the current demo or all demos (for website screenshots):
@@ -90,7 +92,8 @@ void MainWindow::setupDemo(int demoIndex, Configuration *Config)
 	{
 		case 0: setupRealtimeScatterDemo(ui->customPlot, Config); break;
 	}
-	setWindowTitle("QCustomPlot: "+ demoName);
+	setWindowTitle(demoName);
+	setWindowIcon(QIcon("covid.png"));
 	statusBar()->clearMessage();
 	setGeometry(200, 210, 1100, 500);
 	currentDemoIndex = demoIndex;
@@ -99,19 +102,31 @@ void MainWindow::setupDemo(int demoIndex, Configuration *Config)
 
 void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration *Config)
 {
-	//customPlot->setParent(this);
-	//customPlot->setBackgroundRole(QPalette::Shadow);
-	//customPlot->setStyleSheet("color:black;");
 
 	// configure axis rect:
 	customPlot->plotLayout()->clear(); // clear default axis rect so we can start from scratch
+	customPlot->setBaseSize(1300, 500);
 	QCPAxisRect *ABMAxisRect = new QCPAxisRect(customPlot); // ABM axis object
 	QCPAxisRect *SIRAxisRect = new QCPAxisRect(customPlot); // SIR axis object
 	
+	// background settings
+	QColor bg_color;
+	bg_color.setNamedColor("#ffffff"); // background color
+	customPlot->setBackground(bg_color);
+
+	QRadialGradient gradient(50, 50, 50, 50, 50);
+	gradient.setColorAt(0, QColor::fromRgbF(0, 1, 0, 1));
+	gradient.setColorAt(1, QColor::fromRgbF(0, 0, 0, 0));
+
+	QBrush brush(gradient);
+
 	//QCPLayoutGrid *subLayout = new QCPLayoutGrid;
 	customPlot->plotLayout()->addElement(1, 0, ABMAxisRect); // insert axis rect in first column
 	customPlot->plotLayout()->addElement(1, 1, SIRAxisRect); // insert axis rect in second column
-	
+
+	// set axis margins
+	customPlot->plotLayout()->setMargins(QMargins(5, 5, 5, 5));
+
 	// get color palettes
 	vector<string> palette = Config->get_palette();
 
@@ -128,13 +143,20 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	demoName = "Pandemic simulation";
 
 	// setup an extra legend for that axis rect:
+	QSize legend_dim; legend_dim.setHeight(10); // legend maximum height
+
 	QCPLegend *ABMLegend = new QCPLegend;
 	ABMAxisRect->insetLayout()->addElement(ABMLegend, Qt::AlignTop | Qt::AlignRight);
 	ABMLegend->setLayer("legend");
 	ABMLegend->setVisible(true);
-	ABMLegend->setFont(QFont("Helvetica", 9));
+	ABMLegend->setFont(QFont("Century Gothic", 14));
 	ABMLegend->setRowSpacing(-3);
 	ABMLegend->setFillOrder(QCPLegend::foColumnsFirst); // make legend horizontal
+	ABMLegend->setBorderPen(QPen(Qt::black));
+	ABMLegend->setTextColor(Qt::black);
+	ABMLegend->setBrush(Qt::NoBrush);
+	//ABMLegend->setMaximumSize(legend_dim);
+
 	customPlot->plotLayout()->addElement(0, 0, ABMLegend);
 
 	customPlot->setAutoAddPlottableToLegend(false); // would add to the main legend (in the primary axis rect)
@@ -150,6 +172,8 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	s_points->setPen(QPen(S_color));
 	s_points->setLineStyle(QCPGraph::lsNone);
 	s_points->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 4));
+	//s_points->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(Qt::white, 0.5), S_color, 4));
+
 	s_points->setName("susceptible");
 
 	ABMLegend->addItem(new QCPPlottableLegendItem(ABMLegend, i_points)); // infected dots
@@ -176,6 +200,10 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	ABMAxisRect->axis(QCPAxis::atLeft, 0)->setTicks(false); // yAxis
 	ABMAxisRect->axis(QCPAxis::atBottom, 0)->setTickLabels(false); // xAxis
 	ABMAxisRect->axis(QCPAxis::atLeft, 0)->setTickLabels(false); // yAxis
+	ABMAxisRect->axis(QCPAxis::atBottom, 0)->setVisible(false); // xAxis
+	ABMAxisRect->axis(QCPAxis::atLeft, 0)->setVisible(false); // yAxis
+	ABMAxisRect->axis(QCPAxis::atBottom, 0)->grid()->setVisible(false); // xAxis
+	ABMAxisRect->axis(QCPAxis::atLeft, 0)->grid()->setVisible(false); // yAxis
 
 	if (!Config->self_isolate) {
 		ABMAxisRect->setMinimumSize(480, 450); // make ABM axis rect size fixed
@@ -218,9 +246,15 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	SIRAxisRect->insetLayout()->addElement(SIRLegend, Qt::AlignTop | Qt::AlignRight);
 	SIRLegend->setLayer("legend");
 	SIRLegend->setVisible(true);
-	SIRLegend->setFont(QFont("Helvetica", 9));
+	SIRLegend->setFont(QFont("Century Gothic", 14));
 	SIRLegend->setRowSpacing(-3);
 	SIRLegend->setFillOrder(QCPLegend::foColumnsFirst); // make legend horizontal
+	SIRLegend->setBorderPen(QPen(Qt::black));
+	SIRLegend->setTextColor(Qt::black);
+	SIRLegend->setBrush(Qt::NoBrush);
+
+	//SIRLegend->setMaximumSize(legend_dim);
+
 	customPlot->plotLayout()->addElement(0, 1, SIRLegend);
 
 	customPlot->setAutoAddPlottableToLegend(false); // would add to the main legend (in the primary axis rect)
@@ -261,6 +295,26 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	//SIRAxisRect->axis(QCPAxis::atBottom, 0)->setRange(Config->xbounds[0] - 0.02, Config->xbounds[1] + 0.02); // xAxis
 	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setRange(0, Config->pop_size); // yAxis
 
+	// Axis labels
+	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setLabel("Simulation steps"); // xAxis
+	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setLabel("Population size"); // yAxis
+	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setLabelFont(QFont("Century Gothic", 14)); // xAxis
+	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setLabelFont(QFont("Century Gothic", 14)); // yAxis
+
+	// change axis colors
+	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setSubTickPen(QPen(Qt::black)); // xAxis
+	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setSubTickPen(QPen(Qt::black)); // yAxis
+	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setTickPen(QPen(Qt::black)); // xAxis
+	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setTickPen(QPen(Qt::black)); // yAxis
+	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setBasePen(QPen(Qt::black)); // xAxis
+	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setBasePen(QPen(Qt::black)); // yAxis
+	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setTickLabelColor(Qt::black); // xAxis
+	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setTickLabelColor(Qt::black); // yAxis
+
+	// turn off grid lines
+	SIRAxisRect->axis(QCPAxis::atBottom, 0)->grid()->setVisible(false); // xAxis
+	SIRAxisRect->axis(QCPAxis::atLeft, 0)->grid()->setVisible(false); // yAxis
+
 	// make left and bottom axes always transfer their ranges to right and top axes:
 	//connect(SIRAxisRect->axis(QCPAxis::atBottom, 0), SIGNAL(rangeChanged(QCPRange)), SIRAxisRect->axis(QCPAxis::atTop, 0), SLOT(setRange(QCPRange)));
 	//connect(SIRAxisRect->axis(QCPAxis::atLeft, 0), SIGNAL(rangeChanged(QCPRange)), SIRAxisRect->axis(QCPAxis::atRight, 0), SLOT(setRange(QCPRange)));
@@ -268,48 +322,30 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	//=============================================================================//
 	// Set up VARIABLE sliders
 
-	// create empty space for sliders to sit on
-	QCPLayoutGrid *bottom_bar = new QCPLayoutGrid;
-	customPlot->plotLayout()->addElement(2, 0, bottom_bar);
-	bottom_bar->setMinimumSize(300, 70);
-
-	QGridLayout *bottom_bar_layout = new QGridLayout;
-
 	// Essential workers slider
-	QLabel *ic_label = new QLabel(this);
-	ic_label->setText("Infection chance");
-	ic_label->setGeometry(340, 530, 300, 10);
+	ui->ICslider->setGeometry(10, 520, 300, 10);
+	ui->ICslider->setValue(int(((IC_0 - IC_min) / (IC_max - IC_min)) * 100));
+	ui->ICslider->setSliderPosition(int(((IC_0 - IC_min) / (IC_max - IC_min)) * 100));
 
-	QSlider *ICslider = new QSlider(Qt::Horizontal, customPlot);
-	ICslider->setGeometry(10, 520, 300, 10);
-	ICslider->setValue(int(((IC_0 - IC_min) / (IC_max - IC_min)) * 100));
-	ICslider->setSliderPosition(int(((IC_0 - IC_min) / (IC_max - IC_min)) * 100));
-
-	connect(ICslider, SIGNAL(valueChanged(int)), this, SLOT(setICValue(int)));
+	connect(ui->ICslider, SIGNAL(valueChanged(int)), this, SLOT(setICValue(int)));
 
 	// social distancing slider
-	QLabel *sd_label = new QLabel(this);
-	sd_label->setText("Social distancing factor");
-	sd_label->setGeometry(340, 560, 300, 10);
+	ui->SDslider->setGeometry(10, 550, 300, 10);
+	ui->SDslider->setValue(int(((SD_0 - SD_min) / (SD_max - SD_min)) * 100));
+	ui->SDslider->setSliderPosition(int(((SD_0 - SD_min) / (SD_max - SD_min)) * 100));
 
-	QSlider *SDslider = new QSlider(Qt::Horizontal, customPlot);
-	SDslider->setGeometry(10, 550, 300, 10);
-	SDslider->setValue(int(((SD_0 - SD_min) / (SD_max - SD_min)) * 100));
-	SDslider->setSliderPosition(int(((SD_0 - SD_min) / (SD_max - SD_min)) * 100));
-
-	connect(SDslider, SIGNAL(valueChanged(int)), this, SLOT(setSDValue(int)));
+	connect(ui->SDslider, SIGNAL(valueChanged(int)), this, SLOT(setSDValue(int)));
 
 	// Number of tests slider
-	QLabel *tc_label = new QLabel(this);
-	tc_label->setText("Number of tests per day");
-	tc_label->setGeometry(340, 590, 300, 10);
+	ui->TCslider->setGeometry(10, 580, 300, 10);
+	ui->TCslider->setValue(int(((TC_0 - TC_min) / (TC_max - TC_min)) * 100));
+	ui->TCslider->setSliderPosition(int(((TC_0 - TC_min) / (TC_max - TC_min)) * 100));
 
-	QSlider *TCslider = new QSlider(Qt::Horizontal, customPlot);
-	TCslider->setGeometry(10, 580, 300, 10);
-	TCslider->setValue(int(((TC_0 - TC_min) / (TC_max - TC_min)) * 100));
-	TCslider->setSliderPosition(int(((TC_0 - TC_min) / (TC_max - TC_min)) * 100));
+	connect(ui->TCslider, SIGNAL(valueChanged(int)), this, SLOT(setTCValue(int)));
 
-	connect(TCslider, SIGNAL(valueChanged(int)), this, SLOT(setTCValue(int)));
+	//=============================================================================//
+	// Set up R0 display
+	//ui->R0_box->setMinimumSize(200, 50);
 
 }
 
@@ -317,7 +353,7 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 									   QVector<double> x1, QVector<double> y1,
 									   QVector<double> x2, QVector<double> y2,
 									   QVector<double> x3, QVector<double> y3,
-									   int frame)
+									   int frame, float R0)
 {
 	
 	static QTime time(QTime::currentTime());
@@ -349,6 +385,12 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 		ui->customPlot->axisRects()[1]->graphs()[2]->addData(frame, x0.size() + x1.size() + x2.size());
 		ui->customPlot->axisRects()[1]->graphs()[3]->addData(frame, x0.size() + x1.size() + x2.size() + x3.size());
 
+		//=============================================================================//
+		// Display R0 value
+		QString R0_q;
+		R0_q.sprintf("%.2f", R0);
+		ui->R0_indicator->setText(R0_q);
+
 		lastPointKey = key;
 	}
 
@@ -356,11 +398,6 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 	// make axis range scroll with the data (at a constant range size of 8):
 	ui->customPlot->axisRects()[1]->axis(QCPAxis::atBottom, 0)->setRange(0, frame+1);
 
-}
-
-MainWindow::~MainWindow()
-{
-  delete ui;
 }
 
 void MainWindow::setICValue(int IC_new)
@@ -376,6 +413,20 @@ void MainWindow::setSDValue(int SD_new)
 void MainWindow::setTCValue(int TC_new)
 {
 	TC_0 = int(((TC_max - TC_min) * (TC_new / 99.0)) + TC_min);
+}
+
+void MainWindow::on_run_button_clicked()
+{
+	if (pause_action) {
+		run_action = true;
+		pause_action = false;
+		ui->run_button->setText("pause");
+}
+	else if (run_action) {
+		run_action = false;
+		pause_action = true;
+		ui->run_button->setText("run");
+	}
 }
 
 void MainWindow::screenShot()
@@ -427,39 +478,7 @@ void MainWindow::allScreenShots()
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+MainWindow::~MainWindow()
+{
+	delete ui;
+}
