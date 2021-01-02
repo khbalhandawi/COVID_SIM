@@ -8,34 +8,35 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 TARGET = cpp_corona_simulation
 TEMPLATE = app
 
-SOURCES += main.cpp\
-			Configuration.cpp\
-			Convert.cpp\
-			infection.cpp\
-			motion.cpp\
-			path_planning.cpp\
-			Population_trackers.cpp\
-			RandomDevice.cpp\
-			simulation.cpp\
-			tic_toc.cpp\
-			utilities.cpp\
-			visualizer.cpp\
-           mainwindow.cpp \
-		   qcustomplot.cpp
-
-HEADERS  += Configuration.h\
-			Convert.h\
-			infection.h\
-			motion.h\
-			path_planning.h\
-			Population_trackers.h\
-			RandomDevice.h\
-			simulation.h\
-			tic_toc.h\
-			utilities.h\
-			visualizer.h\
-			mainwindow.h \
-			qcustomplot.h
-
-FORMS    += mainwindow.ui
+HEADERS += ./header/visualizer.h \
+    ./header/utilities.h \
+    ./header/tic_toc.h \
+    ./header/simulation.h \
+    ./header/RandomDevice.h \
+    ./header/qcustomplot.h \
+    ./header/Population_trackers.h \
+    ./header/pch.h \
+    ./header/path_planning.h \
+    ./header/motion.h \
+    ./header/mainwindow.h \
+    ./header/infection.h \
+    ./header/Convert.h \
+    ./header/Configuration.h
+	
+SOURCES += ./src/visualizer.cpp \
+    ./src/utilities.cpp \
+    ./src/simulation.cpp \
+    ./src/qcustomplot.cpp \
+    ./src/Population_trackers.cpp \
+    ./src/pch.cpp \
+    ./src/path_planning.cpp \
+    ./src/mainwindow.cpp \
+    ./src/main.cpp \
+    ./src/infection.cpp \
+    ./src/Convert.cpp \
+    ./src/Configuration.cpp \
+    ./src/RandomDevice.cpp \
+    ./src/motion.cpp
+	
+FORMS += ./mainwindow.ui
 

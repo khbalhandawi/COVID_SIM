@@ -76,7 +76,7 @@
   </ImportGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>GeneratedFiles\$(ConfigurationName);GeneratedFiles;.;$(SolutionDir)Release;$(SolutionDir)Include;$(PYTHONHOME)\Lib\site-packages\numpy\core\include;$(PYTHONHOME)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>GeneratedFiles\$(ConfigurationName);GeneratedFiles;.;$(SolutionDir)Release;$(SolutionDir)Include;$(SolutionDir)header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>release\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -127,7 +127,7 @@
     </QtMoc>
     <QtUic>
       <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
-      <QtUicDir>$(ProjectDir)</QtUicDir>
+      <QtUicDir>$(ProjectDir)Include</QtUicDir>
       <QtUicFileName>ui_%(Filename).h</QtUicFileName>
     </QtUic>
   </ItemDefinitionGroup>
@@ -185,25 +185,6 @@
     </QtUic>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Configuration.cpp" />
-    <ClCompile Include="Convert.cpp" />
-    <ClCompile Include="infection.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="mainwindow.cpp" />
-    <ClCompile Include="motion.cpp" />
-    <ClCompile Include="path_planning.cpp" />
-    <ClCompile Include="Population_trackers.cpp" />
-    <ClCompile Include="qcustomplot.cpp" />
-    <ClCompile Include="RandomDevice.cpp" />
-    <ClCompile Include="simulation.cpp" />
-    <ClCompile Include="utilities.cpp" />
-    <ClCompile Include="visualizer.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="mainwindow.h">
-    </QtMoc>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -226,22 +207,36 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="qcustomplot.h" />
+    <ClInclude Include="header\Configuration.h" />
+    <ClInclude Include="header\Convert.h" />
+    <ClInclude Include="header\infection.h" />
+    <ClInclude Include="header\motion.h" />
+    <ClInclude Include="header\path_planning.h" />
+    <ClInclude Include="header\pch.h" />
+    <ClInclude Include="header\Population_trackers.h" />
+    <QtMoc Include="header\qcustomplot.h" />
+    <ClInclude Include="header\RandomDevice.h" />
+    <ClInclude Include="header\simulation.h" />
+    <ClInclude Include="header\tic_toc.h" />
+    <ClInclude Include="header\utilities.h" />
+    <ClInclude Include="header\visualizer.h" />
+    <QtMoc Include="header\mainwindow.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Configuration.h" />
-    <ClInclude Include="Convert.h" />
-    <ClInclude Include="infection.h" />
-    <ClInclude Include="motion.h" />
-    <ClInclude Include="path_planning.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Population_trackers.h" />
-    <ClInclude Include="RandomDevice.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="simulation.h" />
-    <ClInclude Include="tic_toc.h" />
-    <ClInclude Include="utilities.h" />
-    <ClInclude Include="visualizer.h" />
+    <ClCompile Include="src\Configuration.cpp" />
+    <ClCompile Include="src\Convert.cpp" />
+    <ClCompile Include="src\infection.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\mainwindow.cpp" />
+    <ClCompile Include="src\motion.cpp" />
+    <ClCompile Include="src\path_planning.cpp" />
+    <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\Population_trackers.cpp" />
+    <ClCompile Include="src\qcustomplot.cpp" />
+    <ClCompile Include="src\RandomDevice.cpp" />
+    <ClCompile Include="src\simulation.cpp" />
+    <ClCompile Include="src\utilities.cpp" />
+    <ClCompile Include="src\visualizer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
