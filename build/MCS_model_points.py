@@ -11,6 +11,8 @@ import pickle
 import matplotlib.patches as patches
 import subprocess
 from subprocess import PIPE,STDOUT
+from pyDOE import lhs
+from utils import check_folder
 
 #==============================================================================#
 # SCALING BY A RANGE
@@ -130,6 +132,48 @@ def serial_sampling(design_variables, parameters, output_file_base, n_samples):
         distance_i += [mean_distance]
 
     return infected_i, fatalities_i, GC_i, distance_i
+
+#==============================================================================
+# Create or retrieve LHS data
+def LHS_sampling(n_samples, lob_var=None, upb_var=None, folder='data/',base_name='LHS_points', new_LHS=False,):
+    # LHS distribution
+    if new_LHS and lob_var is not None and upb_var is not None :
+        points = lhs(len(lob_var), samples=n_samples, criterion='maximin') # generate LHS grid (maximin criterion)
+        points_us = scaling(points,lob_var,upb_var,2) # unscale latin hypercube points
+        
+        check_folder('data/')
+
+        DOE_full_name = base_name +'.npy'
+        DOE_filepath = folder + DOE_full_name
+        np.save(DOE_filepath, points_us) # save DOE array
+        
+            
+        DOE_full_name = base_name +'.pkl'
+        DOE_filepath = folder + DOE_full_name
+        
+        resultsfile=open(DOE_filepath,'wb')
+        
+        pickle.dump(lob_var, resultsfile)
+        pickle.dump(upb_var, resultsfile)
+        pickle.dump(points, resultsfile)
+        pickle.dump(points_us, resultsfile)
+    
+        resultsfile.close()
+
+    else:
+        DOE_full_name = base_name +'.pkl'
+        DOE_filepath = folder + DOE_full_name
+        resultsfile=open(DOE_filepath,'rb')
+        
+        lob_var = pickle.load(resultsfile)
+        upb_var = pickle.load(resultsfile)
+        # read up to n_samples
+        points = pickle.load(resultsfile)[:n_samples,:]
+        points_us = pickle.load(resultsfile)[:n_samples,:]
+    
+        resultsfile.close()
+
+    return lob_var, upb_var, points, points_us
 
 #==============================================================================#
 # Create models from data
@@ -372,9 +416,52 @@ if __name__ == '__main__':
     #===================================================================#
     # R7 opts
     
+    # # Model variables
+    # bounds = np.array([[   16    , 101   ], # number of essential workers
+    #                    [   0.0001, 0.15  ], # Social distancing factor
+    #                    [   10    , 51    ]]) # Testing capacity
+
+    # fit_cond = False # Do not fit data
+    # color_mode = 'color' # Choose color mode (black_White)
+    # run = 0 # starting point
+
+    # # Points to plot
+    # opt_1 = np.array([0.50, 0.50, 0.50])
+    # opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
+
+    # opt_2 = np.array([0.910569989, 0.800558656, 0.745847484])
+    # opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
+
+    # opt_3 = np.array([0.5546875, 0.8203125, 0.74609375])
+    # opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
+
+    # opt_4 = np.array([0.49218546, 0.863279802, 0.710941315])
+    # opt_4_unscaled = scaling(opt_4, bounds[:3,0], bounds[:3,1], 2)
+
+    # opt_5 = np.array([0.52734375, 0.86328125, 0.6484375])
+    # opt_5_unscaled = scaling(opt_5, bounds[:3,0], bounds[:3,1], 2)
+
+    # print('point #1: E = %f, S_D = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
+    # print('point #2: E = %f, S_D = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
+    # print('point #3: E = %f, S_D = %f, T = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]))
+    # print('point #4: E = %f, S_D = %f, T = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]))
+    # print('point #5: E = %f, S_D = %f, T = %f' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2]))
+
+    # points = np.vstack((opt_1_unscaled,opt_2_unscaled,opt_3_unscaled,opt_4_unscaled,opt_5_unscaled))
+
+    # labels = ['Nominal decisions $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
+    #           'Solution 1 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]),
+    #           'Solution 2 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]),
+    #           'Solution 3 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]),
+    #           'Solution 4 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2])]
+    # run = 0 # starting point
+
+    #===================================================================#
+    # LHS search
+
     # Model variables
     bounds = np.array([[   16    , 101   ], # number of essential workers
-                       [   0.0001, 0.15   ], # Social distancing factor
+                       [   0.0001, 0.15  ], # Social distancing factor
                        [   10    , 51    ]]) # Testing capacity
 
     fit_cond = False # Do not fit data
@@ -382,34 +469,16 @@ if __name__ == '__main__':
     run = 0 # starting point
 
     # Points to plot
-    opt_1 = np.array([0.50, 0.50, 0.50])
-    opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
+    lob_var = bounds[:,0] # lower bounds
+    upb_var = bounds[:,1] # upper bounds
+    
+    new_LHS = False
+    n_samples_LH = 300
 
-    opt_2 = np.array([0.910569989, 0.800558656, 0.745847484])
-    opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
+    # LHS distribution
+    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=True)
 
-    opt_3 = np.array([0.5546875, 0.8203125, 0.74609375])
-    opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
-
-    opt_4 = np.array([0.49218546, 0.863279802, 0.710941315])
-    opt_4_unscaled = scaling(opt_4, bounds[:3,0], bounds[:3,1], 2)
-
-    opt_5 = np.array([0.52734375, 0.86328125, 0.6484375])
-    opt_5_unscaled = scaling(opt_5, bounds[:3,0], bounds[:3,1], 2)
-
-    print('point #1: E = %f, S_D = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
-    print('point #2: E = %f, S_D = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
-    print('point #3: E = %f, S_D = %f, T = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]))
-    print('point #4: E = %f, S_D = %f, T = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]))
-    print('point #5: E = %f, S_D = %f, T = %f' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2]))
-
-    points = np.vstack((opt_1_unscaled,opt_2_unscaled,opt_3_unscaled,opt_4_unscaled,opt_5_unscaled))
-
-    labels = ['Nominal decisions $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
-              'Solution 1 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]),
-              'Solution 2 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2]),
-              'Solution 3 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2]),
-              'Solution 4 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2])]
+    labels = [None] * len(points)
     run = 0 # starting point
 
     #===================================================================#
@@ -423,13 +492,9 @@ if __name__ == '__main__':
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
 
-    new_run = False
+    new_run = True
 
-    n_violators_sweep = np.arange(16, 101, 21)
-    SD_factors = np.linspace(0.0001,0.1,5)
-    test_capacities = np.arange(10, 51, 10)
-
-    same_axis = True
+    same_axis = False
     if same_axis:
         fig_infections = plt.figure(figsize=(6,5))
         fig_fatalities = plt.figure(figsize=(6,5))
@@ -438,7 +503,7 @@ if __name__ == '__main__':
     else:
         fig_infections = fig_fatalities = fig_dist = fig_GC = None
 
-    auto_limits = False
+    auto_limits = True
     if auto_limits:
         dataXLim_i = dataYLim_i = None
         dataXLim_f = dataYLim_f = None
@@ -525,6 +590,8 @@ if __name__ == '__main__':
                 pickle.dump(fatalities_i,fid)
                 pickle.dump(GC_i,fid)
                 pickle.dump(distance_i,fid)
+                run += 1
+                continue
         else:
             with open('data/MCS_data_r%i.pkl' %run,'rb') as fid:
                 infected_i = pickle.load(fid)

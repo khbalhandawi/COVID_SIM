@@ -43,7 +43,7 @@ public:
 	/*-----------------------------------------------------------*/
 	/*                       Constructor                         */
 	/*-----------------------------------------------------------*/
-	Population_trackers(Configuration Config, Eigen::ArrayXXf grid_coords, Eigen::ArrayXXf ground_covered);
+	Population_trackers(Configuration Config);
 
 	/*-----------------------------------------------------------*/
 	/*                        Destructor                         */

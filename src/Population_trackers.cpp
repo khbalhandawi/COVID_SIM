@@ -45,7 +45,7 @@
 /*-----------------------------------------------------------*/
 /*                       Constructor                         */
 /*-----------------------------------------------------------*/
-Population_trackers::Population_trackers(Configuration Config_init, Eigen::ArrayXXf grid_coords_init, Eigen::ArrayXXf ground_covered_init)
+Population_trackers::Population_trackers(Configuration Config_init)
 {
 	susceptible = { };
 	infectious = { };
@@ -56,8 +56,6 @@ Population_trackers::Population_trackers(Configuration Config_init, Eigen::Array
 	total_distance = Eigen::ArrayXf::Zero(Config_init.pop_size, 1); // distance travelled by individuals
 	mean_perentage_covered = { };
 	mean_R0 = { };
-	grid_coords = grid_coords_init;
-	ground_covered = ground_covered_init;
 	perentage_covered = Eigen::ArrayXf::Zero(Config_init.pop_size, 1); // portion of world covered by individuals
 	// PLACEHOLDER - whether recovered individual can be reinfected
 	reinfect = false;

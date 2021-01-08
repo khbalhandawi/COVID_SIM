@@ -17,3 +17,5 @@ build/cpp_corona_simulation.exe
 Debug/
 *.pyc
 ui_mainwindow.h
+*.npy
+*.pkl

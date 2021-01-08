@@ -68,13 +68,16 @@ MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
 											 QVector<double>, QVector<double>,
 											 int, float)));
 
-	IC_0 = 0.3; // initialize slider to current IC value
+	double distance_scaling = 1.0 / sqrt(double(Config->pop_size) / 600.0);
+	double force_scaling = pow(distance_scaling, 2);
+
+	IC_0 = Config->infection_chance; // initialize slider to current IC value
 	IC_max = 0.5; // maximum slider position
 	IC_min = 0.1; // minimum slider position
-	SD_0 = 0.1; // initialize slider to current SD value
+	SD_0 = Config->social_distance_factor / (1e-6 * force_scaling); // initialize slider to current SD value
 	SD_max = 0.3; // maximum slider position
 	SD_min = 0.0; // minimum slider position
-	TC_0 = 10; // initialize slider to current TC value
+	TC_0 = Config->number_of_tests; // initialize slider to current TC value
 	TC_max = 40; // maximum slider position
 	TC_min = 0; // minimum slider position
 	run_action = false;

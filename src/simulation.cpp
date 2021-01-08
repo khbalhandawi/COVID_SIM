@@ -1,9 +1,9 @@
 #include "simulation.h"
 
 simulation::simulation(Configuration Config_init, unsigned long seed) :
-	Population_trackers(Config_init, grid_coords, ground_covered),
+	Population_trackers(Config_init),
 	RandomDevice(seed),
-	pop_tracker(Config_init, grid_coords, ground_covered), my_rand(seed)
+	pop_tracker(Config_init), my_rand(seed)
 {
 
 	Config = Config_init;
@@ -316,7 +316,6 @@ void simulation::run()
 	int argc = 0;
 	char **argv = NULL;
 
-	//QString CSS = "QSlider::handle:horizontal {background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);border: 1px solid #5c5c5c;width: 18px;margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */border-radius: 3px;}";
 	// Start the Qt realtime plot demo in a worker thread
 	std::thread myThread
 	(
@@ -334,7 +333,7 @@ void simulation::run()
 	qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
 	qRegisterMetaType<int>("int"); // register "double" for queued connection type
 	qRegisterMetaType<float>("float"); // register "double" for queued connection type
-    // connect(mainWindow, &MainWindow::SDvalueChanged, slider_values, &Counter::setValue);
+	// connect(mainWindow, &MainWindow::SDvalueChanged, slider_values, &Counter::setValue);
 
 	//std::unique_ptr<MainWindow> mainWindow = vis.start_qt(Config);
 	//========================================================//
@@ -428,6 +427,8 @@ void simulation::run()
 			cout << "Max R0: " << *max_element(pop_tracker.mean_R0.begin(), pop_tracker.mean_R0.end()) << endl;
 		}
 	}
+
+	myThread.join(); // terminate visualizer thread
 
 }
 

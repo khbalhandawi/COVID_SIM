@@ -260,6 +260,8 @@ int main(int argc, char* argv[])
 		load_config(&Config, config_file);
 		Config.set_from_file();
 
+		cout << "Config loaded!" << endl;
+
 		double area_scaling = 1.0 / double(Config.pop_size) / 600.0;
 		double distance_scaling = 1.0 / sqrt(double(Config.pop_size) / 600.0);
 		double force_scaling = pow(distance_scaling,2);
@@ -278,6 +280,9 @@ int main(int argc, char* argv[])
 			Config.wander_factor_dest = 0.1;
 			Config.set_self_isolation(test_capacity, 1.0, { -0.26, 0.02, 0.0, 0.28 }, false);
 		}
+		else {
+			Config.number_of_tests = 0;
+		}
 
 		/*-----------------------------------------------------------*/
 		/*                    Log blackbox outputs                   */
@@ -287,7 +292,7 @@ int main(int argc, char* argv[])
 		/* using nano-seconds instead of seconds */
 		unsigned long seed = static_cast<uint32_t>(high_resolution_clock::now().time_since_epoch().count());
 		simulation sim(Config, seed);
-
+		cout << "initialized simulation" << endl;
 		check_folder("data");
 		string filename = "matlab_out_Blackbox.log";
 		string full_filename = "data/" + filename;
