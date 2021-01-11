@@ -336,6 +336,9 @@ void simulation::run()
 	// connect(mainWindow, &MainWindow::SDvalueChanged, slider_values, &Counter::setValue);
 
 	//std::unique_ptr<MainWindow> mainWindow = vis.start_qt(Config);
+	if (Config.visualise == false) {
+		myThread.join(); // terminate visualizer thread
+	}
 	//========================================================//
 
 	//save grid_coords if required
@@ -428,7 +431,9 @@ void simulation::run()
 		}
 	}
 
-	myThread.join(); // terminate visualizer thread
+	if (Config.visualise == true) {
+		myThread.join(); // terminate visualizer thread
+	}
 
 }
 

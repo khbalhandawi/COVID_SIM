@@ -87,7 +87,8 @@ def parallel_sampling(design_variables,parameters,output_file_base,n_samples):
     from multiprocessing import Process, Pool
     import subprocess
     
-    num_threads = multiprocessing.cpu_count() - 4
+    # num_threads = int(multiprocessing.cpu_count()/2)
+    num_threads = 6
 
     # qout = multiprocessing.Queue()
     # processes = [multiprocessing.Process(target=processInput, args=(i, design_variables, parameters, output_file_base, qout)) for i in range(n_samples)]
@@ -476,7 +477,7 @@ if __name__ == '__main__':
     n_samples_LH = 300
 
     # LHS distribution
-    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=True)
+    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=False)
 
     labels = [None] * len(points)
     run = 0 # starting point
@@ -546,11 +547,11 @@ if __name__ == '__main__':
                 os.remove(dirname)
 
     # Resume MCS
-    # run = 4
-    # points = points[run:]
-    # labels = labels[run:]
+    run = 30
+    points = points[run:]
+    labels = labels[run:]
 
-    # terminate MCS
+    # # terminate MCS
     # run = 3
     # run_end = 3 + 1
     # points = points[run:run_end]

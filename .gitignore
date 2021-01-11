@@ -19,3 +19,4 @@ Debug/
 ui_mainwindow.h
 *.npy
 *.pkl
+cpp_corona_simulation.pro.user.*
