@@ -82,6 +82,7 @@ class Population_trackers():
         self.infectious.append(len(population[population[:,6] == 1]))
         self.recovered.append(len(population[population[:,6] == 2]))
         self.fatalities.append(len(population[population[:,6] == 3]))
+        self.ground_covered = load_ground_covered(tstep=frame, folder='population')
 
         # Mark recovered individuals as susceptible if reinfection enables
         if self.reinfect:

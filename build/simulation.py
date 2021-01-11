@@ -179,7 +179,7 @@ if __name__ == '__main__':
     sim.Config.plot_last_tstep = True
     sim.Config.verbose = True
     sim.Config.report_freq = 50
-    sim.Config.save_plot = True
+    sim.Config.save_plot = False
     sim.Config.n_plots = 1
     sim.Config.black_white = False
     sim.Config.marker_size = (2700 - sim.Config.pop_size) / 100

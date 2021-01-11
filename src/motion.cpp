@@ -40,6 +40,9 @@
  */
 
 #include "motion.h"
+#ifdef GPU_ACC
+	#include "CUDA_functions.h"
+#endif // GPU_ACC
 
  /*-----------------------------------------------------------*/
  /*                      Update positions                     */
@@ -245,6 +248,12 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 	vector<int> rows_cond = select_rows(cond);
 
 	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);
+	int pop_size = population.rows();
+
+#ifdef GPU_ACC
+	Eigen::ArrayXf repulsion_force_x(pop_size), repulsion_force_y(pop_size);
+	pairwise_gpu(&repulsion_force_x, &repulsion_force_y, population.col(1), population.col(2), social_distance_factor, 1024);
+#else
 	Eigen::ArrayXXf dist;
 
 	if (compute_dist_all) {
@@ -256,8 +265,6 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 		dist = pairwise_dist(population_all(rows_cond, { 1,2 }));
 	}
 
-	int pop_size = population.rows();
-
 	float epsilon = 1e-15; // to avoid division by zero errors
 	// dist += Eigen::MatrixXf::Identity(pop_size, pop_size).array();
 
@@ -266,6 +273,7 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 
 	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / ((dist * dist * dist) + epsilon)).rowwise().sum();
 	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / ((dist * dist * dist) + epsilon)).rowwise().sum();
+#endif // GPU_ACC
 
 	population.col(15) += repulsion_force_x;
 	population.col(16) += repulsion_force_y;

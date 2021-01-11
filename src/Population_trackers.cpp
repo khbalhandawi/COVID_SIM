@@ -41,6 +41,9 @@
 
 #include "Population_trackers.h"
 #include "Convert.h"
+#ifdef GPU_ACC
+#include "CUDA_functions.h"
+#endif // GPU_ACC
 
 /*-----------------------------------------------------------*/
 /*                       Constructor                         */
@@ -101,7 +104,16 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			int n_inside_world = (population.col(11) == 0).count();
 			Eigen::ArrayXXf position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
 			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
+#ifdef GPU_ACC
+			Eigen::ArrayXf p(n_inside_world); // Initialize percentage arrays
+			tracker_gpu(&GC_matrix, &p, position_vector.col(0), position_vector.col(1), n_inside_world, Config.n_gridpoints - 1, 1024);
 
+			ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
+
+			// count number of non-zeros rowwise
+			perentage_covered(select_rows(population.col(11) == 0)) = p / (Config.n_gridpoints * Config.n_gridpoints);
+			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
+#else
 			// 1D
 			Eigen::ArrayXf pos_vector_x = position_vector.col(0);
 			Eigen::ArrayXf pos_vector_y = position_vector.col(1);
@@ -124,6 +136,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			// count number of non-zeros rowwise
 			perentage_covered = (ground_covered != 0).rowwise().count().cast<float>() / grid_coords.rows();
 			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
+#endif
 		}
 	}
 	else {
