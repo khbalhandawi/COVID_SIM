@@ -309,7 +309,7 @@ vector<double> Configuration::split_string(string line)
 void Configuration::set_from_file() 
 {
 
-	area_scaling = 1.0 / double(pop_size) / 600.0;
+	area_scaling = 1.0 / (double(pop_size) / 600.0);
 	distance_scaling = 1.0 / sqrt(double(pop_size) / 600.0);
 	force_scaling = pow(distance_scaling,2);
 	count_scaling = double(pop_size) / 600.0;

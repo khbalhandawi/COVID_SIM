@@ -111,7 +111,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
 
 			// count number of non-zeros rowwise
-			perentage_covered(select_rows(population.col(11) == 0)) = p / (Config.n_gridpoints * Config.n_gridpoints);
+			perentage_covered(select_rows(population.col(11) == 0)) = p / ((Config.n_gridpoints - 1) * (Config.n_gridpoints - 1));
 			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
 #else
 			// 1D

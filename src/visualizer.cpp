@@ -118,7 +118,7 @@ void visualizer::update_qt(Eigen::ArrayXXf population,
 	}
 
 	// Block the calling thread for x milliseconds // http://www.cplusplus.com/reference/thread/this_thread/sleep_for/
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
 	// update mainwindow using new data
 	emit mainWindow->arrivedsignal(susceptible_x, susceptible_y,

@@ -100,7 +100,12 @@
         "xlocmes": "cpp",
         "core": "cpp",
         "qapplication": "cpp",
-        "qtimer": "cpp"
+        "qtimer": "cpp",
+        "qdesktopwidget": "cpp",
+        "qscreen": "cpp",
+        "qmetaenum": "cpp",
+        "*.h": "cpp",
+        "*.hpp": "cpp"
     },
     "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe"
 }

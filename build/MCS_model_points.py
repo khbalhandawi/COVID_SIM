@@ -309,14 +309,26 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
         right_of_last_bin = max(data) + float(d)/2
         bins = np.arange(left_of_first_bin, right_of_last_bin + d, d)
 
-        plt.hist(data, bins, alpha=0.5, density=True)
+        # plt.hist(data, bins, alpha=0.5, density=True)
+        plt.hist(data, bins = n_bins, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
     else:
-        plt.hist(data, bins = n_bins, alpha=0.5, density=True)
+        # plt.hist(data, bins = n_bins, alpha=0.5, density=True)
+        plt.hist(data, bins = n_bins, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
 
     ax = fig0.gca()
 
+    # Save plot limits
+    if dataYLim is None and dataXLim is None:
+        ax.set_xlim(ax.get_xlim())
+        ax.set_ylim(ax.get_ylim())
+    else:
+        # Update plots
+        ax.set_xlim(dataXLim)
+        ax.set_ylim(dataYLim)
+
     # Update plots
-    ax.set_ylim(ax.get_ylim())
     ax.set_xlabel(label_name)
     ax.set_ylabel('Frequency')
 
@@ -332,7 +344,6 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     ax = fig1.gca()
 
     # Update plots
-    ax.set_ylim(ax.get_ylim())
     ax.set_xlabel(label_name)
     ax.set_ylabel('Frequency')
 
@@ -395,11 +406,11 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     ax2.set_xlabel(label_name, fontsize=14)
     ax2.set_ylabel('Probability density', fontsize=14)
 
-    fig0.savefig('data/RAW_%s_r%i.pdf' %(fun_name,run), 
+    fig0.savefig('data/%i_RAW_%s.pdf' %(run,fun_name), 
         format='pdf', dpi=100,bbox_inches='tight')
     
     if fig_swept is None:
-        fig2.savefig('data/PDF_%s_r%i.pdf' %(fun_name,run), 
+        fig2.savefig('data/%i_PDF_%s.pdf' %(run,fun_name), 
                 format='pdf', dpi=100,bbox_inches='tight')
 
     if fig_swept is None:    
@@ -547,7 +558,7 @@ if __name__ == '__main__':
                 os.remove(dirname)
 
     # Resume MCS
-    run = 30
+    run = 295
     points = points[run:]
     labels = labels[run:]
 
@@ -662,13 +673,13 @@ if __name__ == '__main__':
         std_gc_runs += [std_gc]
 
         if not auto_limits:
-            fig_infections.savefig('data/PDF_%s_r%i.pdf' %('infections', run + 1), 
+            fig_infections.savefig('data/%i_PDF_%s.pdf' %(run , 'infections'), 
                                     format='pdf', dpi=100,bbox_inches='tight')
-            fig_fatalities.savefig('data/PDF_%s_r%i.pdf' %('fatalities', run + 1), 
+            fig_fatalities.savefig('data/%i_PDF_%s.pdf' %(run , 'fatalities'), 
                                 format='pdf', dpi=100,bbox_inches='tight')
-            fig_dist.savefig('data/PDF_%s_r%i.pdf' %('distance', run + 1), 
+            fig_dist.savefig('data/%i_PDF_%s.pdf' %(run , 'distance'), 
                             format='pdf', dpi=100,bbox_inches='tight')
-            fig_GC.savefig('data/PDF_%s_r%i.pdf' %('ground_covered', run + 1), 
+            fig_GC.savefig('data/%i_PDF_%s.pdf' %(run , 'ground_covered'), 
                             format='pdf', dpi=100,bbox_inches='tight')
 
         print('==============================================')
