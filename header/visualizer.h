@@ -6,15 +6,16 @@
 #include "Population_trackers.h"
 #include <algorithm>
 #include <thread>
+#ifndef _N_QT
 #include <QApplication>
 #include "mainwindow.h"
-
+#endif _N_QT
 using namespace std;
 
 class visualizer
 {
 public:
-
+#ifndef _N_QT
 	 /*-----------------------------------------------------------*/
 	 /*                    Start a Qt thread                      */
 	 /*-----------------------------------------------------------*/
@@ -25,7 +26,7 @@ public:
 	/*-----------------------------------------------------------*/
 	void visualizer::update_qt(Eigen::ArrayXXf population, 
 		int frame, float R0, std::unique_ptr<MainWindow> &mainWindow);
-
+#endif _N_QT
 	/*-----------------------------------------------------------*/
 	/*                        Constructor                        */
 	/*-----------------------------------------------------------*/

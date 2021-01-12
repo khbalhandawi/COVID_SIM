@@ -6,10 +6,11 @@
 #include "utilities.h"
 #include "motion.h"
 #include "RandomDevice.h"
-#include "visualizer.h"
 #include "infection.h"
 #include "tic_toc.h"
-
+#ifndef _N_QT
+#include "visualizer.h"
+#endif
 class simulation : Population_trackers, RandomDevice
 {
 public:
@@ -35,8 +36,10 @@ public:
 	Eigen::ArrayXXf ground_covered;
 	// RNG
 	unsigned long seed;
+#ifndef _N_QT
 	// Visualization
 	visualizer vis;
+#endif
 	// Ppopulation segments
 	Eigen::ArrayXXf outside_world; // outside main world
 	Eigen::ArrayXXf inside_world; // inside main world

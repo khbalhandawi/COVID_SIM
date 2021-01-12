@@ -39,8 +39,8 @@
  \see    visualizer.h
  */
 
+#ifndef _N_QT
 #include "visualizer.h"
-
  /*-----------------------------------------------------------*/
  /*                       Constructor                         */
  /*-----------------------------------------------------------*/
@@ -135,3 +135,5 @@ void visualizer::update_qt(Eigen::ArrayXXf population,
 visualizer::~visualizer()
 {
 }
+
+#endif

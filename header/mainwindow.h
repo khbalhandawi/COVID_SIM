@@ -39,6 +39,7 @@
 **                                                                                                         **
 *************************************************************************************************************/
 
+#ifndef _N_QT
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -100,3 +101,4 @@ private slots:
 };
 
 #endif // MAINWINDOW_H
+#endif // _N_QT

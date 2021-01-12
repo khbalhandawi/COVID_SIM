@@ -40,6 +40,7 @@
 *************************************************************************************************************/
 
 #include "mainwindow.h"
+#ifndef _N_QT
 #include "ui_mainwindow.h"
 #include <QDebug>
 #include <QDesktopWidget>
@@ -485,3 +486,5 @@ MainWindow::~MainWindow()
 {
 	delete ui;
 }
+
+#endif // _N_QT

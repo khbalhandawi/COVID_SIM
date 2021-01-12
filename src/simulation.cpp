@@ -9,9 +9,10 @@ simulation::simulation(Configuration Config_init, unsigned long seed) :
 	Config = Config_init;
 	// initialize simulation
 	frame = 0;
+#ifndef _N_QT
 	// load visualizer
 	vis = visualizer();
-
+#endif
 	// If user specified seed should be used
 	if (Config.constant_seed) {
 		my_rand.load_state();
@@ -308,7 +309,7 @@ void simulation::callback()
 void simulation::run()
 {
 	/* run simulation */
-
+#ifndef _N_QT
 	//========================================================//
 	// Start a Qt thread for visualization
 	std::unique_ptr<MainWindow> mainWindow = nullptr; // initialize null pointer to Qt mainwindow
@@ -340,7 +341,7 @@ void simulation::run()
 		myThread.join(); // terminate visualizer thread
 	}
 	//========================================================//
-
+#endif
 	//save grid_coords if required
 	if (Config.save_ground_covered) {
 		save_grid_coords(pop_tracker.grid_coords, Config.save_pop_folder);
@@ -351,7 +352,7 @@ void simulation::run()
 	ArrayXXb cond(Config.pop_size, 2);
 
 	while (i < Config.simulation_steps) {
-
+#ifndef _N_QT
 		// wait for mainwindow thread to start
 		if ((mainWindow) || (Config.visualise == false)) { 
 
@@ -361,11 +362,11 @@ void simulation::run()
 					continue; //Skip the rest of the loop to …
 				}
 			}
-
+#endif
 			try
 			{
 				tstep(); // code that could cause exception
-
+#ifndef _N_QT
 				if ((Config.platform == "Qt") && (Config.visualise)) {
 					// Update QVectors for scatter plot
 					if (mainWindow) {
@@ -375,7 +376,7 @@ void simulation::run()
 						vis.update_qt(population, frame, pop_tracker.mean_R0.back(), mainWindow);
 					}
 				}
-
+#endif
 			}
 			catch (const exception &exc)
 			{
@@ -396,8 +397,9 @@ void simulation::run()
 			else {
 				i += 1;
 			}
+#ifndef _N_QT
 		}
-
+#endif
 	}
 
 	if (Config.save_data) {
@@ -430,11 +432,11 @@ void simulation::run()
 			cout << "Max R0: " << *max_element(pop_tracker.mean_R0.begin(), pop_tracker.mean_R0.end()) << endl;
 		}
 	}
-
+#ifndef _N_QT
 	if (Config.visualise == true) {
 		myThread.join(); // terminate visualizer thread
 	}
-
+#endif
 }
 
 /*-----------------------------------------------------------*/
