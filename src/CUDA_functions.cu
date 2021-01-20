@@ -40,8 +40,9 @@
 #include <thrust/host_vector.h>
 #include  "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#ifndef CUBLAS_NDEBUG
 #include <cublas_v2.h>
-
+#endif
 #include <iostream>
 #include <stdio.h>
 #include <assert.h>
@@ -53,6 +54,7 @@
 
 using namespace std;
 
+#ifndef CUBLAS_NDEBUG
 /*-----------------------------------------------------------*/
 /*             CUBLAS ERROR MESSAGES ENUMERATOR              */
 /*-----------------------------------------------------------*/
@@ -110,6 +112,7 @@ inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int lin
 /*               CUBLAS ERROR CHECKING (macro)               */
 /*-----------------------------------------------------------*/
 #define cublascheck(ans) { __cublasSafeCall((ans), __FILE__, __LINE__); }
+#endif
 
 /*-----------------------------------------------------------*/
 /*                    CUDA ERROR CHECKING                    */
@@ -190,7 +193,7 @@ DLL_API void pairwise_gpu(Eigen::ArrayXf *force_x, Eigen::ArrayXf *force_y, Eige
 	check(cudaMalloc((void **)&d_ones, bytes));
 	const float value = 1.f;
 	initKernel << <n_blocks, threads_per_block >> > (d_ones, value, N); // initialize vector with ones using CUDA
-
+#ifndef CUBLAS_NDEBUG
 	cublasHandle_t handle;
 	cublascheck(cublasCreate(&handle)); // construct cublas handle
 
@@ -202,6 +205,7 @@ DLL_API void pairwise_gpu(Eigen::ArrayXf *force_x, Eigen::ArrayXf *force_y, Eige
 		thrust::raw_pointer_cast(d_ones), 1, &beta, thrust::raw_pointer_cast(force_y_d), 1)); // rowwise multiplication y
 
 	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+#endif
 	//======================================================//
 
 	//=======================================//
@@ -325,7 +329,7 @@ DLL_API void tracker_gpu(Eigen::ArrayXXf *G, Eigen::ArrayXf *p, Eigen::ArrayXf a
 
 	int n_blocks(div_up(N_cols, sqrt(threads_per_block)));
 	initKernel << <n_blocks, threads_per_block >> > (d_ones, value, N_cols); // initialize vector with ones using CUDA
-
+#ifndef CUBLAS_NDEBUG
 	cublasHandle_t handle;
 	cublascheck(cublasCreate(&handle)); // construct cublas handle
 
@@ -335,7 +339,7 @@ DLL_API void tracker_gpu(Eigen::ArrayXXf *G, Eigen::ArrayXf *p, Eigen::ArrayXf a
 		thrust::raw_pointer_cast(d_ones), 1, &beta, thrust::raw_pointer_cast(p_d), 1)); // rowwise multiplication
 
 	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
-
+#endif CUBLAS_NDEBUG
 	//=======================================//
 	//          Retrieve values....          //
 	//=======================================//

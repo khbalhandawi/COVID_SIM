@@ -131,7 +131,8 @@ __global__ void calc_tracking_matrix(float* G, float* atoms_x, float* atoms_y, i
 
 	//	bool p = ((atoms_x[i] >= g1) && (atoms_y[i] >= g2) && (atoms_x[i] <= g3) && (atoms_y[i] <= g4));
 	//p: G[i + N_cols * j] = 1; // single instruction
-	////!p: G[i + N_cols * j] = 0; // single instruction
+	////!p: G[i + N_cols * j] = 0; // single instruction
+
 	//if ((atoms_x[i] >= g1) & (atoms_y[i] >= g2) & (atoms_x[i] <= g3) & (atoms_y[i] <= g4))
 	//{
 	//	G[i + N_cols * j] = 1;
