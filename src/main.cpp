@@ -29,8 +29,8 @@ vector<double> processInput(int i,simulation *sim, ofstream *file)
 	int infected, fatalities, SD_thresh, E, T, f;
 	double mean_distance, mean_GC, SD;
 
-	double distance_scaling = 1.0 / sqrt(double(sim->Config.pop_size) / 600.0);
-	double force_scaling = pow(distance_scaling,2);
+	double distance_scaling = sim->Config.distance_scaling;
+	double force_scaling = sim->Config.force_scaling;
 
 	SD = sim->Config.social_distance_factor / (1e-6 * force_scaling);
 	SD_thresh = sim->Config.social_distance_threshold_on;
@@ -147,6 +147,8 @@ void load_config(Configuration *config, const char *config_file)
 	mapper["update_R0_every_n_frame"] = &Configuration::update_R0_every_n_frame_in;
 	mapper["testing_threshold_on"] = &Configuration::testing_threshold_on_in;
 	mapper["platform"] = &Configuration::platform_in;
+	mapper["wall_buffer"] = &Configuration::wall_buffer_in;
+	mapper["bounce_buffer"] = &Configuration::bounce_buffer_in;
 
 	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
 	string line, value, value_str;
@@ -262,16 +264,11 @@ int main(int argc, char* argv[])
 
 		cout << "Config loaded!" << endl;
 
-		double area_scaling = 1.0 / double(Config.pop_size) / 600.0;
-		double distance_scaling = 1.0 / sqrt(double(Config.pop_size) / 600.0);
-		double force_scaling = pow(distance_scaling,2);
-		double count_scaling = double(Config.pop_size) / 600.0;
-
 		/*-----------------------------------------------------------*/
 		/*                      Design variables                     */
 		/*-----------------------------------------------------------*/
 
-        Config.social_distance_factor = 1e-6 * SD * force_scaling;
+        Config.social_distance_factor = 1e-6 * SD * Config.force_scaling;
         Config.social_distance_violation = n_violators; // number of people
         Config.healthcare_capacity = healthcare_capacity;
 

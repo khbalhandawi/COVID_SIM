@@ -21,6 +21,7 @@ public:
 	// initialize times
 	int frame;
 	double time;
+	double computation_time;
 	double last_step_change;
 	bool above_act_thresh;
 	bool above_deact_thresh;

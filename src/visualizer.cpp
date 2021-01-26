@@ -81,7 +81,7 @@ std::unique_ptr<MainWindow> visualizer::start_qt(Configuration Config)
 /*                     Update Qt window                      */
 /*-----------------------------------------------------------*/
 void visualizer::update_qt(Eigen::ArrayXXf population,
-	int frame, float R0, std::unique_ptr<MainWindow> &mainWindow)
+	int frame, float R0, double computation_time, std::unique_ptr<MainWindow> &mainWindow)
 {
 
 	// Initialize Qt Vectors
@@ -117,15 +117,12 @@ void visualizer::update_qt(Eigen::ArrayXXf population,
 		fatalities_y.resize(fatalities.rows()); Map<ArrayXd>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
 	}
 
-	// Block the calling thread for x milliseconds // http://www.cplusplus.com/reference/thread/this_thread/sleep_for/
-	std::this_thread::sleep_for(std::chrono::milliseconds(20));
-
 	// update mainwindow using new data
 	emit mainWindow->arrivedsignal(susceptible_x, susceptible_y,
 		infected_x, infected_y,
 		recovered_x, recovered_y,
 		fatalities_x, fatalities_y,
-		frame, R0); // emit signal
+		frame, R0, computation_time); // emit signal
 
 }
 

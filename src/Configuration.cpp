@@ -128,6 +128,9 @@ Configuration::Configuration()
 	social_distance_violation = 0; social_distance_violation_in = "0"; //  number of people
 	SD_act_onset = false; SD_act_onset_in = "false";
 
+	wall_buffer = 0.01; wall_buffer_in = "0.01"; // wall repulsion zone
+	bounce_buffer = 0.005; bounce_buffer_in = "0.005";  // maximum overshoot outside wall
+
 	// when people have an active destination, the wander range defines the area
 	// surrounding the destination they will wander upon arriving
 	wander_range = 0.05; wander_range_in = "0.05";
@@ -308,11 +311,15 @@ vector<double> Configuration::split_string(string line)
 /*-----------------------------------------------------------*/
 void Configuration::set_from_file() 
 {
+	pop_size = stoi(pop_size_in); // obtain pop_size first
 
-	area_scaling = 1.0 / (double(pop_size) / 600.0);
-	distance_scaling = 1.0 / sqrt(double(pop_size) / 600.0);
-	force_scaling = pow(distance_scaling,2);
-	count_scaling = double(pop_size) / 600.0;
+	// these scaling factors where calculated for a default pop size of 2000
+	area_scaling = 1.0 / (double(pop_size) / (600.0 / 2));
+	distance_scaling = 1.0 / sqrt(double(pop_size) / (600.0 / 2));
+	//distance_scaling = 1.0 / (double(pop_size) / (547.72));
+	//distance_scaling = 1.0 / (double(pop_size) / (1000.0));
+	force_scaling = pow(distance_scaling, 2) ;
+	count_scaling = double(pop_size) / (600.0 / 2);
 
 	// simulation variables
 	simulation_steps = stoi(simulation_steps_in); // total simulation steps performed
@@ -366,7 +373,6 @@ void Configuration::set_from_file()
 	marker_size = stoi(marker_size_in); // markersize for plotting individuals
 
 	// population variables
-	pop_size = stoi(pop_size_in);
 	mean_age = stoi(mean_age_in);
 	max_age = stoi(max_age_in);
 	age_dependent_risk = age_dependent_risk_in == "true"; // whether risk increases with age
@@ -394,6 +400,9 @@ void Configuration::set_from_file()
 	social_distance_threshold_off = stoi(social_distance_threshold_off_in); // number of remaining infected people
 	social_distance_violation = stoi(social_distance_violation_in); // number of people
 	SD_act_onset = SD_act_onset_in == "true";
+
+	wall_buffer = stod(wall_buffer_in); // wall repulsion zone
+	bounce_buffer = stod(bounce_buffer_in) * distance_scaling; // maximum overshoot outside wall
 
 	// when people have an active destination, the wander range defines the area
 	// surrounding the destination they will wander upon arriving

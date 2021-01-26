@@ -102,6 +102,9 @@ public:
 	string social_distance_violation_in; //  number of people
 	string SD_act_onset_in;
 
+	string wall_buffer_in; // wall repulsion zone
+	string bounce_buffer_in;  // maximum overshoot outside wall
+
 	// when people have an active destination, the wander range defines the area
 	// surrounding the destination they will wander upon arriving
 	string wander_range_in;
@@ -221,6 +224,9 @@ public:
 	int social_distance_threshold_off; //  number of remaining infected people
 	int social_distance_violation; //  number of people
 	bool SD_act_onset;
+
+	double wall_buffer; // wall repulsion zone
+	double bounce_buffer;  // maximum overshoot outside wall
 
 	// when people have an active destination, the wander range defines the area
 	// surrounding the destination they will wander upon arriving

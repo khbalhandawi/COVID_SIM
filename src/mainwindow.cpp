@@ -62,15 +62,15 @@ MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
 									   QVector<double>, QVector<double>, 
 									   QVector<double>, QVector<double>, 
 									   QVector<double>, QVector<double>,
-									   int, float)),
+									   int, float, float)),
 			this, SLOT(realtimeDataInputSlot(QVector<double>, QVector<double>,
 											 QVector<double>, QVector<double>,
 											 QVector<double>, QVector<double>,
 											 QVector<double>, QVector<double>,
-											 int, float)));
+											 int, float, float)));
 
-	double distance_scaling = 1.0 / sqrt(double(Config->pop_size) / 600.0);
-	double force_scaling = pow(distance_scaling, 2);
+	double distance_scaling = Config->distance_scaling;
+	double force_scaling = Config->force_scaling;
 
 	IC_0 = Config->infection_chance; // initialize slider to current IC value
 	IC_max = 0.5; // maximum slider position
@@ -92,6 +92,7 @@ MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
 
 void MainWindow::setupDemo(int demoIndex, Configuration *Config)
 {
+	flag_busy = true;
 	switch (demoIndex)
 	{
 		case 0: setupRealtimeScatterDemo(ui->customPlot, Config); break;
@@ -102,6 +103,7 @@ void MainWindow::setupDemo(int demoIndex, Configuration *Config)
 	setGeometry(200, 210, 1100, 500);
 	currentDemoIndex = demoIndex;
 	ui->customPlot->replot();
+	flag_busy = false;
 }
 
 void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration *Config)
@@ -357,9 +359,9 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 									   QVector<double> x1, QVector<double> y1,
 									   QVector<double> x2, QVector<double> y2,
 									   QVector<double> x3, QVector<double> y3,
-									   int frame, float R0)
+									   int frame, float R0, float computation_time)
 {
-	
+	flag_busy = true;
 	static QTime time(QTime::currentTime());
 	// calculate two new data points:
 	double key = time.elapsed() / 1000.0; // time elapsed since start of demo, in seconds
@@ -401,6 +403,28 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 	ui->customPlot->replot();
 	// make axis range scroll with the data (at a constant range size of 8):
 	ui->customPlot->axisRects()[1]->axis(QCPAxis::atBottom, 0)->setRange(0, frame+1);
+
+	// calculate frames per second:
+	static double lastFpsKey;
+	static int frameCount;
+	++frameCount;
+	if (key - lastFpsKey > 0.2) // average fps over 0.2 seconds
+	{
+		ui->statusBar->showMessage(
+			QString("%1 FPS, Total Data points: %2")
+			.arg(frameCount / (key - lastFpsKey), 0, 'f', 0)
+			.arg(ui->customPlot->axisRects()[1]->graphs()[0]->data()->size()), 0);
+		lastFpsKey = key;
+		frameCount = 0;
+	}
+
+	int sleep_time = (1000 / 60) - computation_time - (time.elapsed() - key); // target frame rate = 60 FPS
+	if (sleep_time > 0) {
+		// Block the calling thread for x milliseconds // http://www.cplusplus.com/reference/thread/this_thread/sleep_for/
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+	}
+
+	flag_busy = false;
 
 }
 

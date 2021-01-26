@@ -44,6 +44,7 @@ void simulation::initialize_simulation()
 	// initialize times
 	frame = 0;
 	time = 0;
+	computation_time = 0.0; // in ms
 	last_step_change = 0.0;
 	above_act_thresh = false;
 	above_deact_thresh = false;
@@ -159,7 +160,7 @@ void simulation::tstep()
 					Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.ybounds[1] - buffer);
 
 		population(select_rows(population.col(11) == 0), Eigen::all) = update_wall_forces(population(select_rows(population.col(11) == 0), Eigen::all),
-																				  		  _xbounds, _ybounds);
+																				  		  _xbounds, _ybounds, Config.wall_buffer, Config.bounce_buffer);
 
 		if (population.col(15).isNaN().any()) {
 			cout << "Infinite wall forces!" << endl;
@@ -259,6 +260,7 @@ void simulation::tstep()
 	//update frame
 	frame += 1;
 	time += Config.dt;
+	computation_time = tc.toc();
 }
 
 /*-----------------------------------------------------------*/
@@ -359,7 +361,7 @@ void simulation::run()
 			if (mainWindow) {
 				if ((mainWindow->pause_action == true) && (Config.platform == "Qt") && (Config.visualise)) // run/pause animation
 				{
-					continue; //Skip the rest of the loop to …
+					continue; //skip the rest of the loop
 				}
 			}
 #endif
@@ -373,7 +375,12 @@ void simulation::run()
 						Config.infection_chance = mainWindow->IC_0; // Set simulation infection_chance from slider
 						Config.social_distance_factor = 1e-6 * mainWindow->SD_0 * Config.force_scaling; // Set simulation SD_factor from slider
 						Config.number_of_tests = mainWindow->TC_0; // Set simulation number_of_tests from slider
-						vis.update_qt(population, frame, pop_tracker.mean_R0.back(), mainWindow);
+						vis.update_qt(population, frame, pop_tracker.mean_R0.back(), computation_time, mainWindow);
+
+						// wait for Qt window to finish updating plots
+						while (mainWindow->flag_busy) {
+							std::this_thread::sleep_for(std::chrono::milliseconds(1));
+						}
 					}
 				}
 #endif

@@ -88,7 +88,7 @@ def parallel_sampling(design_variables,parameters,output_file_base,n_samples):
     import subprocess
     
     # num_threads = int(multiprocessing.cpu_count()/2)
-    num_threads = 6
+    num_threads = 8
 
     # qout = multiprocessing.Queue()
     # processes = [multiprocessing.Process(target=processInput, args=(i, design_variables, parameters, output_file_base, qout)) for i in range(n_samples)]
@@ -133,48 +133,6 @@ def serial_sampling(design_variables, parameters, output_file_base, n_samples):
         distance_i += [mean_distance]
 
     return infected_i, fatalities_i, GC_i, distance_i
-
-#==============================================================================
-# Create or retrieve LHS data
-def LHS_sampling(n_samples, lob_var=None, upb_var=None, folder='data/',base_name='LHS_points', new_LHS=False,):
-    # LHS distribution
-    if new_LHS and lob_var is not None and upb_var is not None :
-        points = lhs(len(lob_var), samples=n_samples, criterion='maximin') # generate LHS grid (maximin criterion)
-        points_us = scaling(points,lob_var,upb_var,2) # unscale latin hypercube points
-        
-        check_folder('data/')
-
-        DOE_full_name = base_name +'.npy'
-        DOE_filepath = folder + DOE_full_name
-        np.save(DOE_filepath, points_us) # save DOE array
-        
-            
-        DOE_full_name = base_name +'.pkl'
-        DOE_filepath = folder + DOE_full_name
-        
-        resultsfile=open(DOE_filepath,'wb')
-        
-        pickle.dump(lob_var, resultsfile)
-        pickle.dump(upb_var, resultsfile)
-        pickle.dump(points, resultsfile)
-        pickle.dump(points_us, resultsfile)
-    
-        resultsfile.close()
-
-    else:
-        DOE_full_name = base_name +'.pkl'
-        DOE_filepath = folder + DOE_full_name
-        resultsfile=open(DOE_filepath,'rb')
-        
-        lob_var = pickle.load(resultsfile)
-        upb_var = pickle.load(resultsfile)
-        # read up to n_samples
-        points = pickle.load(resultsfile)[:n_samples,:]
-        points_us = pickle.load(resultsfile)[:n_samples,:]
-    
-        resultsfile.close()
-
-    return lob_var, upb_var, points, points_us
 
 #==============================================================================#
 # Create models from data
@@ -426,57 +384,58 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
 if __name__ == '__main__':
 
     #===================================================================#
-    # R7 opts
     
     # Model variables
     bounds = np.array([[   16    , 101   ], # number of essential workers
                        [   0.0001, 0.15  ], # Social distancing factor
-                       [   10    , 51    ]]) # Testing capacity
+                       [   10    , 81    ]]) # Testing capacity
 
-    fit_cond = False # Do not fit data
-    color_mode = 'color' # Choose color mode (black_White)
+    # bounds = np.array([[   16    , 101   ], # number of essential workers
+    #                    [   0.0001, 0.15  ], # Social distancing factor
+    #                    [   10    , 51    ]]) # Testing capacity
+
     run = 0 # starting point
+
+    # # Points to plot
+    # # Run opt 1
+    # opts = np.array([[0.910569989 , 0.800558656 , 0.745847484 ],
+    #                  [0.5546875   , 0.8203125   , 0.74609375  ],
+    #                  [0.49218546  , 0.863279802 , 0.710941315 ],
+    #                  [0.375       , 0.26563     , 0.76563     ],
+    #                  [0.1875      , 0.6875      , 0.375       ]])
 
     # Points to plot
-    opt_1 = np.array([0.375, 0.26563, 0.76563])
-    opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
+    # Run opt 2
+    # StoMADS V2
 
-    opt_2 = np.array([0.1875, 0.6875, 0.375])
-    opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
+    opts = np.array([[0.7517850000, 0.2591500000, 0.9448890000],
+                     [0.8299100000, 0.2354680000, 0.9180330000],
+                     [0.7998810000, 0.2279000000, 0.9204750000],
+                     [0.3371230000, 0.1621820000, 0.7942850000],
+                     [0.8142670000, 0.2432810000, 0.9292320000],
+                     [0.0357630000, 0.1758740000, 0.7217580000],
+                     [0.9451740000, 0.2089350000, 0.7092820000]])
 
-    print('point #1: E = %f, S_D = %f, T = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]))
-    print('point #2: E = %f, S_D = %f, T = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2]))
+    # StoMADS V1
+    # opts = np.array([[ 0.375 , 0.26563, 0.76563 ],
+    #                  [ 0.1875, 0.6875 , 0.375   ]])
 
-    points = np.vstack((opt_1_unscaled,opt_2_unscaled))
+    opts_unscaled = scaling(opts, bounds[:3,0], bounds[:3,1], 2)
 
-    labels = ['Solution 1 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2]),
-              'Solution 2 $\mathbf{x} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2])]
-    run = 0 # starting point
-
-    #===================================================================#
-    # LHS search
-
-    # Model variables
-    bounds = np.array([[   16    , 101   ], # number of essential workers
-                       [   0.0001, 0.15  ], # Social distancing factor
-                       [   10    , 51    ]]) # Testing capacity
-
-    fit_cond = False # Do not fit data
-    color_mode = 'color' # Choose color mode (black_White)
-    run = 0 # starting point
+    i = 0
+    for point in opts_unscaled:
+        print('point #%i: E = %f, S_D = %f, T = %f' %(i+1,point[0],point[1],point[2])); i+=1
 
     # Points to plot
     lob_var = bounds[:,0] # lower bounds
     upb_var = bounds[:,1] # upper bounds
-    
-    new_LHS = False
-    n_samples_LH = 300
 
-    # LHS distribution
-    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=False)
-
-    labels = [None] * len(points)
-    run = 0 # starting point
+    # save optimization points in LHS format file
+    with open('data/points_opts.pkl','wb') as fid:
+        pickle.dump(lob_var, fid)
+        pickle.dump(upb_var, fid)
+        pickle.dump(opts, fid)
+        pickle.dump(opts_unscaled, fid)
 
     #===================================================================#
     # n_samples = 1000
@@ -489,47 +448,10 @@ if __name__ == '__main__':
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
 
-    new_run = True
-
-    same_axis = False
-    if same_axis:
-        fig_infections = plt.figure(figsize=(6,5))
-        fig_fatalities = plt.figure(figsize=(6,5))
-        fig_dist = plt.figure(figsize=(6,5))
-        fig_GC = plt.figure(figsize=(6,5))
-    else:
-        fig_infections = fig_fatalities = fig_dist = fig_GC = None
-
-    auto_limits = True
-    if auto_limits:
-        dataXLim_i = dataYLim_i = None
-        dataXLim_f = dataYLim_f = None
-        dataXLim_d = dataYLim_d = None
-        dataXLim_GC = dataYLim_GC = None
-    else:
-        with open('data/MCS_data_limits.pkl','rb') as fid:
-            dataXLim_i = pickle.load(fid)
-            dataYLim_i = pickle.load(fid)
-            dataXLim_f = pickle.load(fid)
-            dataYLim_f = pickle.load(fid)
-            dataXLim_d = pickle.load(fid)
-            dataYLim_d = pickle.load(fid)
-            dataXLim_GC = pickle.load(fid)
-            dataYLim_GC = pickle.load(fid)
-
-    mean_i_runs = []; std_i_runs = []; mean_f_runs = []; std_f_runs = []
-    mean_d_runs = []; std_d_runs = []; mean_gc_runs = []; std_gc_runs = []
-
-    mpl.rc('text', usetex = True)
-    mpl.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}',
-                                            r'\usepackage{amssymb}']
-    mpl.rcParams['font.family'] = 'serif'
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
+    new_run = False
 
     #===================================================================#
     # Initialize
-    handles_lgd = []; labels_lgd = [] # initialize legend
-
     if new_run:
         # New MCS
         run = 0
@@ -542,35 +464,24 @@ if __name__ == '__main__':
             if dirname.endswith(".log"):
                 os.remove(dirname)
 
-    # Resume MCS
-    run = 295
-    points = points[run:]
-    labels = labels[run:]
+        # # Resume MCS
+        # run = 5
+        # opts_unscaled = opts_unscaled[run:]
 
-    # # terminate MCS
-    # run = 3
-    # run_end = 3 + 1
-    # points = points[run:run_end]
-    # labels = labels[run:run_end]
+        # # terminate MCS
+        # run = 3
+        # run_end = 3 + 1
+        # opts_unscaled = opts_unscaled[run:run_end]
 
-    if color_mode == 'color':
-        hatches = ['/'] * 10
-        colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
-    elif color_mode == 'black_white':
-        hatches = ['/','//','x','o','|||']
-        colors = ['#FFFFFF'] * 10
+        for point in opts_unscaled:
 
-    for point,legend_label in zip(points,labels):
+            # Model variables
+            n_violators = int(point[0])
+            SD = point[1]
+            test_capacity = int(point[2])
 
-        # Model variables
-        n_violators = int(point[0])
-        SD = point[1]
-        test_capacity = int(point[2])
-
-        # Model parameters
-        healthcare_capacity = 50
-
-        if new_run:
+            # Model parameters
+            healthcare_capacity = 50
 
             #=====================================================================#
             # Design variables
@@ -589,122 +500,3 @@ if __name__ == '__main__':
                 pickle.dump(distance_i,fid)
                 run += 1
                 continue
-        else:
-            with open('data/MCS_data_r%i.pkl' %run,'rb') as fid:
-                infected_i = pickle.load(fid)
-                fatalities_i = pickle.load(fid)
-                GC_i = pickle.load(fid)
-                distance_i = pickle.load(fid)
-                
-        # Legend entries
-        # Legend entries
-        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='k', facecolor=colors[run], fill=True ,hatch=hatches[run])
-
-        handles_lgd += [a]
-        labels_lgd += [legend_label]
-
-        # Infected plot
-        label_name = u'Maximum number of infected $\max{I(\mathbf{x})}$'
-        fun_name = 'infections'
-        data = infected_i
-
-        dataXLim_i_out, dataYLim_i_out, mean_i, std_i = plot_distribution(data, fun_name, label_name, n_bins, run, 
-            discrete = True, min_bin_width = min_bin_width_i, fig_swept = fig_infections, 
-            run_label = legend_label, color = colors[run],  hatch_pattern = hatches[run], 
-            dataXLim = dataXLim_i, dataYLim = dataYLim_i, constraint = healthcare_capacity,
-            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
-
-        mean_i_runs += [mean_i]
-        std_i_runs += [std_i]
-
-        # Fatalities plot
-        label_name = u'Number of fatalities $F(\mathbf{x})$'
-        fun_name = 'fatalities'
-        data = fatalities_i
-
-        dataXLim_f_out, dataYLim_f_out, mean_f, std_f = plot_distribution(data, fun_name, label_name, n_bins, run, 
-            discrete = True, min_bin_width = min_bin_width_f, fig_swept = fig_fatalities, 
-            run_label = legend_label, color = colors[run], hatch_pattern = hatches[run], 
-            dataXLim = dataXLim_f, dataYLim = dataYLim_f,
-            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
-
-        mean_f_runs += [mean_f]
-        std_f_runs += [std_f]
-
-        # Distance plot
-        label_name = u'Average cumulative distance travelled $D(\mathbf{x})$'
-        fun_name = 'distance'
-        data = distance_i
-
-        dataXLim_d_out, dataYLim_d_out, mean_d, std_d = plot_distribution(data, fun_name, label_name, n_bins, run, 
-            fig_swept = fig_dist, run_label = legend_label, color = colors[run], 
-            hatch_pattern = hatches[run], dataXLim = dataXLim_d, dataYLim = dataYLim_d,
-            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
-
-        mean_d_runs += [mean_d]
-        std_d_runs += [std_d]
-
-        label_name = u'Population mobility $D(\mathbf{x})$'
-        fun_name = 'ground covered'
-        data = GC_i
-
-        # Ground covered plot
-        dataXLim_GC_out, dataYLim_GC_out, mean_gc, std_gc = plot_distribution(data, fun_name, label_name, n_bins, run, 
-            fig_swept = fig_GC, run_label = legend_label, color = colors[run], 
-            hatch_pattern = hatches[run], dataXLim = dataXLim_GC, dataYLim = dataYLim_GC,
-            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
-
-        mean_gc_runs += [mean_gc]
-        std_gc_runs += [std_gc]
-
-        if not auto_limits:
-            fig_infections.savefig('data/%i_PDF_%s.pdf' %(run , 'infections'), 
-                                    format='pdf', dpi=100,bbox_inches='tight')
-            fig_fatalities.savefig('data/%i_PDF_%s.pdf' %(run , 'fatalities'), 
-                                format='pdf', dpi=100,bbox_inches='tight')
-            fig_dist.savefig('data/%i_PDF_%s.pdf' %(run , 'distance'), 
-                            format='pdf', dpi=100,bbox_inches='tight')
-            fig_GC.savefig('data/%i_PDF_%s.pdf' %(run , 'ground_covered'), 
-                            format='pdf', dpi=100,bbox_inches='tight')
-
-        print('==============================================')
-        print('Run %i stats:' %(run))
-        print('mean infections: %f; std infections: %f' %(mean_i,std_i))
-        print('mean fatalities: %f; std fatalities: %f' %(mean_f,std_f))
-        print('mean distance: %f; std distance: %f' %(mean_d,std_d))
-        print('mean ground covered: %f; std ground covered: %f' %(mean_gc,std_gc))
-        print('==============================================')
-        run += 1
-
-    if not new_run:
-
-        with open('data/MCS_data_limits.pkl','wb') as fid:
-            pickle.dump(dataXLim_i_out,fid)
-            pickle.dump(dataYLim_i_out,fid)
-            pickle.dump(dataXLim_f_out,fid)
-            pickle.dump(dataYLim_f_out,fid)
-            pickle.dump(dataXLim_d_out,fid)
-            pickle.dump(dataYLim_d_out,fid)
-            pickle.dump(dataXLim_GC_out,fid)
-            pickle.dump(dataYLim_GC_out,fid)
-
-        with open('data/MCS_data_stats.pkl','wb') as fid:
-            pickle.dump(mean_i_runs,fid)
-            pickle.dump(std_i_runs,fid)
-            pickle.dump(mean_f_runs,fid)
-            pickle.dump(std_f_runs,fid)
-            pickle.dump(mean_d_runs,fid)
-            pickle.dump(std_d_runs,fid)
-            pickle.dump(mean_gc_runs,fid)
-            pickle.dump(std_gc_runs,fid)
-
-        if same_axis:
-            fig_infections.savefig('data/PDF_%s.pdf' %('infections'), 
-                                    format='pdf', dpi=100,bbox_inches='tight')
-            fig_fatalities.savefig('data/PDF_%s.pdf' %('fatalities'), 
-                                format='pdf', dpi=100,bbox_inches='tight')
-            fig_dist.savefig('data/PDF_%s.pdf' %('distance'), 
-                            format='pdf', dpi=100,bbox_inches='tight')
-            fig_GC.savefig('data/PDF_%s.pdf' %('ground_covered'), 
-                        format='pdf', dpi=100,bbox_inches='tight')
-            plt.show()
