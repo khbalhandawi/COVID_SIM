@@ -25,7 +25,7 @@ public:
 	/*                     Update Qt window                      */
 	/*-----------------------------------------------------------*/
 	void visualizer::update_qt(Eigen::ArrayXXf population, 
-		int frame, float R0, double computation_time, std::unique_ptr<MainWindow> &mainWindow);
+		int frame, double computation_time, std::unique_ptr<MainWindow> &mainWindow, Population_trackers *pop_tracker, Configuration *Config);
 #endif _N_QT
 	/*-----------------------------------------------------------*/
 	/*                        Constructor                        */

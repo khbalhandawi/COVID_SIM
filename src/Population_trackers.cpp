@@ -82,8 +82,6 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 	recovered.push_back(n_recovered);
 	fatalities.push_back(n_fatalities);
 
-	Eigen::ArrayXXf ground_covered_zero = Eigen::ArrayXXf::Zero(pop_size, int(pow((Config.n_gridpoints - 1), 2)) );
-
 	// Total distance travelled
 	if (Config.track_position) {
 		Eigen::ArrayXXf speed_vector = population(select_rows(population.col(11) == 0), { 3,4 }); // speed of individuals within world
@@ -106,7 +104,9 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
 #ifdef GPU_ACC
 			Eigen::ArrayXf p(n_inside_world); // Initialize percentage arrays
-			tracker_gpu(&GC_matrix, &p, position_vector.col(0), position_vector.col(1), n_inside_world, Config.n_gridpoints - 1, 1024);
+			Eigen::ArrayXf x_normalized = (position_vector.col(0) - Config.xbounds[0]) / (Config.xbounds[1] - Config.xbounds[0]);
+			Eigen::ArrayXf y_normalized = (position_vector.col(1) - Config.ybounds[0]) / (Config.ybounds[1] - Config.ybounds[0]);
+			tracker_gpu(&GC_matrix, &p, x_normalized, y_normalized, n_inside_world, Config.n_gridpoints - 1, 1024);
 
 			ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
 

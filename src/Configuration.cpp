@@ -202,17 +202,17 @@ vector<string> Configuration::get_palette()
 	map < string, vector<string> > protanopia;
 	map < string, vector<string> > tritanopia;
 
-	regular["dark"] = { "#1C758A", "#CF5044", "#BBBBBB", "#444444" };
-	regular["default"] = { "#1C758A", "#CF5044", "#BBBBBB", "#444444" };
+	regular["dark"] = { "#1C758A", "#CF5044", "#BBBBBB", "#444444", "#FFA500" };
+	regular["default"] = { "#1C758A", "#CF5044", "#BBBBBB", "#444444", "#FFA500" };
 
-	deuteranopia["dark"] = { "gray", "#a50f15", "#08519c", "black" };
-	deuteranopia["default"] = { "#404040", "#fcae91", "#6baed6", "#000000" };
+	deuteranopia["dark"] = { "gray", "#a50f15", "#08519c", "black", "#FFA500" };
+	deuteranopia["default"] = { "#404040", "#fcae91", "#6baed6", "#000000", "#FFA500" };
 
-	protanopia["dark"] = { "gray", "#a50f15", "08519c", "black" };
-	protanopia["default"] = { "#404040", "#fcae91", "#6baed6", "#000000" };
+	protanopia["dark"] = { "gray", "#a50f15", "08519c", "black", "#FFA500" };
+	protanopia["default"] = { "#404040", "#fcae91", "#6baed6", "#000000", "#FFA500" };
 
-	tritanopia["dark"] = { "gray", "#a50f15", "08519c", "black" };
-	tritanopia["default"] = { "#404040", "#fcae91", "#6baed6", "#000000" };
+	tritanopia["dark"] = { "gray", "#a50f15", "08519c", "black", "#FFA500" };
+	tritanopia["default"] = { "#404040", "#fcae91", "#6baed6", "#000000", "#FFA500" };
 
 	palettes["regular"] = regular;
 	palettes["deuteranopia"] = deuteranopia;

@@ -58,16 +58,22 @@ MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
 	ui->setupUi(this);
 
 	// Connect data signal to updator slot
-	connect(this, SIGNAL(arrivedsignal(QVector<double>, QVector<double>, 
-									   QVector<double>, QVector<double>, 
-									   QVector<double>, QVector<double>, 
-									   QVector<double>, QVector<double>,
-									   int, float, float)),
-			this, SLOT(realtimeDataInputSlot(QVector<double>, QVector<double>,
-											 QVector<double>, QVector<double>,
-											 QVector<double>, QVector<double>,
-											 QVector<double>, QVector<double>,
-											 int, float, float)));
+	connect(this, SIGNAL(arrivedsignal(QVector<double>, QVector<double>,
+				QVector<double>, QVector<double>,
+				QVector<double>, QVector<double>,
+				QVector<double>, QVector<double>, 			   
+				QVector<double>, QVector<double>,
+				int, float, float, 
+				QVector<double>, QVector<double>, 
+				QVector<double>, QVector<double>)),
+			this, SLOT(realtimeDataInputSlot(QVector<double>, QVector<double>,						 
+				QVector<double>, QVector<double>,
+				QVector<double>, QVector<double>,
+				QVector<double>, QVector<double>,
+				QVector<double>, QVector<double>,
+				int, float, float, 
+				QVector<double>, QVector<double>, 
+				QVector<double>, QVector<double>)));
 
 	double distance_scaling = Config->distance_scaling;
 	double force_scaling = Config->force_scaling;
@@ -83,6 +89,7 @@ MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
 	TC_min = 0; // minimum slider position
 	run_action = false;
 	pause_action = true;
+	frame_count = 0;
 	setupDemo(0, Config);
   
 	// for making screenshots of the current demo or all demos (for website screenshots):
@@ -103,6 +110,12 @@ void MainWindow::setupDemo(int demoIndex, Configuration *Config)
 	setGeometry(200, 210, 1100, 500);
 	currentDemoIndex = demoIndex;
 	ui->customPlot->replot();
+
+	if ((Config->save_plot) && (Config->n_plots == 1)) {
+		if (Config->self_isolate)  ui->customPlot->setMaximumSize(650, 500); 
+		else ui->customPlot->setMaximumSize(580, 500);
+	}
+
 	flag_busy = false;
 }
 
@@ -112,9 +125,7 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	// configure axis rect:
 	customPlot->plotLayout()->clear(); // clear default axis rect so we can start from scratch
 	customPlot->setBaseSize(1300, 500);
-	QCPAxisRect *ABMAxisRect = new QCPAxisRect(customPlot); // ABM axis object
-	QCPAxisRect *SIRAxisRect = new QCPAxisRect(customPlot); // SIR axis object
-	
+
 	// background settings
 	QColor bg_color;
 	bg_color.setNamedColor("#ffffff"); // background color
@@ -127,8 +138,6 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	QBrush brush(gradient);
 
 	//QCPLayoutGrid *subLayout = new QCPLayoutGrid;
-	customPlot->plotLayout()->addElement(1, 0, ABMAxisRect); // insert axis rect in first column
-	customPlot->plotLayout()->addElement(1, 1, SIRAxisRect); // insert axis rect in second column
 
 	// set axis margins
 	customPlot->plotLayout()->setMargins(QMargins(5, 5, 5, 5));
@@ -137,16 +146,19 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	vector<string> palette = Config->get_palette();
 
 	// Define colors from palette
-	QColor S_color, I_color, R_color, F_color;
+	QColor S_color, I_color, R_color, F_color, T_color;
 	S_color.setNamedColor(palette[0].c_str()); // susceptible color
 	I_color.setNamedColor(palette[1].c_str()); // infected color
 	R_color.setNamedColor(palette[2].c_str()); // recovered color
 	F_color.setNamedColor(palette[3].c_str()); // fatalities color
+	T_color.setNamedColor(palette[4].c_str()); // fatalities color
 
+	demoName = "Pandemic simulation";
 	//=============================================================================//
 	// Set up ABM plot first
 
-	demoName = "Pandemic simulation";
+	QCPAxisRect *ABMAxisRect = new QCPAxisRect(customPlot); // ABM axis object
+	customPlot->plotLayout()->addElement(1, 0, ABMAxisRect); // insert axis rect in first column
 
 	// setup an extra legend for that axis rect:
 	QSize legend_dim; legend_dim.setHeight(10); // legend maximum height
@@ -155,7 +167,10 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	ABMAxisRect->insetLayout()->addElement(ABMLegend, Qt::AlignTop | Qt::AlignRight);
 	ABMLegend->setLayer("legend");
 	ABMLegend->setVisible(true);
-	ABMLegend->setFont(QFont("Century Gothic", 14));
+
+	if (Config->save_plot) ABMLegend->setFont(QFont("Century Gothic", 10)); 
+	else ABMLegend->setFont(QFont("Century Gothic", 14));
+
 	ABMLegend->setRowSpacing(-3);
 	ABMLegend->setFillOrder(QCPLegend::foColumnsFirst); // make legend horizontal
 	ABMLegend->setBorderPen(QPen(Qt::black));
@@ -172,6 +187,7 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	QCPGraph *i_points = customPlot->addGraph(ABMAxisRect->axis(QCPAxis::atBottom), ABMAxisRect->axis(QCPAxis::atLeft)); // infected dots
 	QCPGraph *r_points = customPlot->addGraph(ABMAxisRect->axis(QCPAxis::atBottom), ABMAxisRect->axis(QCPAxis::atLeft)); // recovered dots
 	QCPGraph *f_points = customPlot->addGraph(ABMAxisRect->axis(QCPAxis::atBottom), ABMAxisRect->axis(QCPAxis::atLeft)); // fatalities dots
+	QCPGraph *t_points = customPlot->addGraph(ABMAxisRect->axis(QCPAxis::atBottom), ABMAxisRect->axis(QCPAxis::atLeft)); // tracked dots;
 
 	// add a legend item to the new legend, representing the graph:
 	ABMLegend->addItem(new QCPPlottableLegendItem(ABMLegend, s_points));
@@ -199,6 +215,14 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	f_points->setLineStyle(QCPGraph::lsNone);
 	f_points->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 4));
 	f_points->setName("fatalities");
+
+	if (Config->trace_path) {
+		ABMLegend->addItem(new QCPPlottableLegendItem(ABMLegend, t_points)); // fatalities dots
+		t_points->setPen(QPen(T_color));
+		t_points->setLineStyle(QCPGraph::lsNone);
+		t_points->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 8));
+		t_points->setName("tracked");
+	}
 
 	// set blank axis lines:
 	customPlot->rescaleAxes();
@@ -246,80 +270,85 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 
 	//=============================================================================//
 	// Set up SIR plot second
+	if (Config->n_plots == 2) {
 
-	// setup an extra legend for that axis rect:
-	QCPLegend *SIRLegend = new QCPLegend;
-	SIRAxisRect->insetLayout()->addElement(SIRLegend, Qt::AlignTop | Qt::AlignRight);
-	SIRLegend->setLayer("legend");
-	SIRLegend->setVisible(true);
-	SIRLegend->setFont(QFont("Century Gothic", 14));
-	SIRLegend->setRowSpacing(-3);
-	SIRLegend->setFillOrder(QCPLegend::foColumnsFirst); // make legend horizontal
-	SIRLegend->setBorderPen(QPen(Qt::black));
-	SIRLegend->setTextColor(Qt::black);
-	SIRLegend->setBrush(Qt::NoBrush);
+		QCPAxisRect *SIRAxisRect = new QCPAxisRect(customPlot); // SIR axis object
+		customPlot->plotLayout()->addElement(1, 1, SIRAxisRect); // insert axis rect in second column
 
-	//SIRLegend->setMaximumSize(legend_dim);
+		// setup an extra legend for that axis rect:
+		QCPLegend *SIRLegend = new QCPLegend;
+		SIRAxisRect->insetLayout()->addElement(SIRLegend, Qt::AlignTop | Qt::AlignRight);
+		SIRLegend->setLayer("legend");
+		SIRLegend->setVisible(true);
+		SIRLegend->setFont(QFont("Century Gothic", 14));
+		SIRLegend->setRowSpacing(-3);
+		SIRLegend->setFillOrder(QCPLegend::foColumnsFirst); // make legend horizontal
+		SIRLegend->setBorderPen(QPen(Qt::black));
+		SIRLegend->setTextColor(Qt::black);
+		SIRLegend->setBrush(Qt::NoBrush);
 
-	customPlot->plotLayout()->addElement(0, 1, SIRLegend);
+		//SIRLegend->setMaximumSize(legend_dim);
 
-	customPlot->setAutoAddPlottableToLegend(false); // would add to the main legend (in the primary axis rect)
+		customPlot->plotLayout()->addElement(0, 1, SIRLegend);
 
-	// create a graph in the new axis rect:
-	QCPGraph *s_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // susceptible graph
-	QCPGraph *i_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // infected graph
-	QCPGraph *r_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // recovered graph
-	QCPGraph *f_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // fatalities graph
+		customPlot->setAutoAddPlottableToLegend(false); // would add to the main legend (in the primary axis rect)
 
-	// add a legend item to the new legend, representing the graph:
-	SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, s_graph));
-	s_graph->setPen(QPen(S_color));
-	//s_graph->setLineStyle(QCPGraph::lsNone);
-	s_graph->setName("susceptible");
-	s_graph->setBrush(QBrush(S_color)); // first graph will be filled with translucent blue
+		// create a graph in the new axis rect:
+		QCPGraph *s_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // susceptible graph
+		QCPGraph *i_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // infected graph
+		QCPGraph *r_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // recovered graph
+		QCPGraph *f_graph = customPlot->addGraph(SIRAxisRect->axis(QCPAxis::atBottom), SIRAxisRect->axis(QCPAxis::atLeft)); // fatalities graph
 
-	SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, i_graph)); // infected graph
-	i_graph->setPen(QPen(I_color));
-	i_graph->setName("infected");
-	i_graph->setBrush(QBrush(I_color)); // second graph will be filled with translucent red
+		// add a legend item to the new legend, representing the graph:
+		SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, s_graph));
+		s_graph->setPen(QPen(S_color));
+		//s_graph->setLineStyle(QCPGraph::lsNone);
+		s_graph->setName("susceptible");
+		s_graph->setBrush(QBrush(S_color)); // first graph will be filled with translucent blue
 
-	SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, r_graph)); // recovered graph
-	r_graph->setPen(QPen(R_color));
-	r_graph->setName("recovered");
-	r_graph->setBrush(QBrush(R_color)); // third graph will be filled with translucent grey
+		SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, i_graph)); // infected graph
+		i_graph->setPen(QPen(I_color));
+		i_graph->setName("infected");
+		i_graph->setBrush(QBrush(I_color)); // second graph will be filled with translucent red
 
-	SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, f_graph)); // fatalities graph
-	f_graph->setPen(QPen(F_color));
-	f_graph->setName("fatalities");
-	f_graph->setBrush(QBrush(F_color)); // fourth graph will be filled with translucent black
+		SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, r_graph)); // recovered graph
+		r_graph->setPen(QPen(R_color));
+		r_graph->setName("recovered");
+		r_graph->setBrush(QBrush(R_color)); // third graph will be filled with translucent grey
 
-	s_graph->setChannelFillGraph(i_graph); // fill between S and I graphs
-	r_graph->setChannelFillGraph(s_graph); // fill between R and S graphs
-	f_graph->setChannelFillGraph(r_graph); // fill between F and R graphs
+		SIRLegend->addItem(new QCPPlottableLegendItem(SIRLegend, f_graph)); // fatalities graph
+		f_graph->setPen(QPen(F_color));
+		f_graph->setName("fatalities");
+		f_graph->setBrush(QBrush(F_color)); // fourth graph will be filled with translucent black
 
-	SIRAxisRect->setMinimumSize(480, 450); // make ABM axis rect size fixed
-	//SIRAxisRect->axis(QCPAxis::atBottom, 0)->setRange(Config->xbounds[0] - 0.02, Config->xbounds[1] + 0.02); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setRange(0, Config->pop_size); // yAxis
+		s_graph->setChannelFillGraph(i_graph); // fill between S and I graphs
+		r_graph->setChannelFillGraph(s_graph); // fill between R and S graphs
+		f_graph->setChannelFillGraph(r_graph); // fill between F and R graphs
 
-	// Axis labels
-	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setLabel("Simulation steps"); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setLabel("Population size"); // yAxis
-	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setLabelFont(QFont("Century Gothic", 14)); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setLabelFont(QFont("Century Gothic", 14)); // yAxis
+		SIRAxisRect->setMinimumSize(480, 450); // make ABM axis rect size fixed
+		//SIRAxisRect->axis(QCPAxis::atBottom, 0)->setRange(Config->xbounds[0] - 0.02, Config->xbounds[1] + 0.02); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setRange(0, Config->pop_size); // yAxis
 
-	// change axis colors
-	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setSubTickPen(QPen(Qt::black)); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setSubTickPen(QPen(Qt::black)); // yAxis
-	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setTickPen(QPen(Qt::black)); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setTickPen(QPen(Qt::black)); // yAxis
-	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setBasePen(QPen(Qt::black)); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setBasePen(QPen(Qt::black)); // yAxis
-	SIRAxisRect->axis(QCPAxis::atBottom, 0)->setTickLabelColor(Qt::black); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->setTickLabelColor(Qt::black); // yAxis
+		// Axis labels
+		SIRAxisRect->axis(QCPAxis::atBottom, 0)->setLabel("Simulation steps"); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setLabel("Population size"); // yAxis
+		SIRAxisRect->axis(QCPAxis::atBottom, 0)->setLabelFont(QFont("Century Gothic", 14)); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setLabelFont(QFont("Century Gothic", 14)); // yAxis
 
-	// turn off grid lines
-	SIRAxisRect->axis(QCPAxis::atBottom, 0)->grid()->setVisible(false); // xAxis
-	SIRAxisRect->axis(QCPAxis::atLeft, 0)->grid()->setVisible(false); // yAxis
+		// change axis colors
+		SIRAxisRect->axis(QCPAxis::atBottom, 0)->setSubTickPen(QPen(Qt::black)); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setSubTickPen(QPen(Qt::black)); // yAxis
+		SIRAxisRect->axis(QCPAxis::atBottom, 0)->setTickPen(QPen(Qt::black)); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setTickPen(QPen(Qt::black)); // yAxis
+		SIRAxisRect->axis(QCPAxis::atBottom, 0)->setBasePen(QPen(Qt::black)); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setBasePen(QPen(Qt::black)); // yAxis
+		SIRAxisRect->axis(QCPAxis::atBottom, 0)->setTickLabelColor(Qt::black); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setTickLabelColor(Qt::black); // yAxis
+
+		// turn off grid lines
+		SIRAxisRect->axis(QCPAxis::atBottom, 0)->grid()->setVisible(false); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->grid()->setVisible(false); // yAxis
+	}
 
 	// make left and bottom axes always transfer their ranges to right and top axes:
 	//connect(SIRAxisRect->axis(QCPAxis::atBottom, 0), SIGNAL(rangeChanged(QCPRange)), SIRAxisRect->axis(QCPAxis::atTop, 0), SLOT(setRange(QCPRange)));
@@ -359,7 +388,10 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 									   QVector<double> x1, QVector<double> y1,
 									   QVector<double> x2, QVector<double> y2,
 									   QVector<double> x3, QVector<double> y3,
-									   int frame, float R0, float computation_time)
+									   QVector<double> x4, QVector<double> y4,
+									   int frame, float R0, float computation_time,
+									   QVector<double> x_lower, QVector<double> y_lower, 
+									   QVector<double> x_upper, QVector<double> y_upper)
 {
 	flag_busy = true;
 	static QTime time(QTime::currentTime());
@@ -376,20 +408,23 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 		ui->customPlot->axisRects()[0]->graphs()[1]->data()->clear();
 		ui->customPlot->axisRects()[0]->graphs()[2]->data()->clear();
 		ui->customPlot->axisRects()[0]->graphs()[3]->data()->clear();
+		if (Config->trace_path) ui->customPlot->axisRects()[0]->graphs()[4]->data()->clear();
 		
 		// add data to lines:
 		ui->customPlot->axisRects()[0]->graphs()[0]->addData(x0, y0);
 		ui->customPlot->axisRects()[0]->graphs()[1]->addData(x1, y1);
 		ui->customPlot->axisRects()[0]->graphs()[2]->addData(x2, y2);
 		ui->customPlot->axisRects()[0]->graphs()[3]->addData(x3, y3);
+		if (Config->trace_path) ui->customPlot->axisRects()[0]->graphs()[4]->addData(x4, y4);
 
 		//=============================================================================//
 		// Operate on SIR plot next
-
-		ui->customPlot->axisRects()[1]->graphs()[0]->addData(frame, x0.size() + x1.size());
-		ui->customPlot->axisRects()[1]->graphs()[1]->addData(frame, x1.size());
-		ui->customPlot->axisRects()[1]->graphs()[2]->addData(frame, x0.size() + x1.size() + x2.size());
-		ui->customPlot->axisRects()[1]->graphs()[3]->addData(frame, x0.size() + x1.size() + x2.size() + x3.size());
+		if (Config->n_plots == 2) {
+			ui->customPlot->axisRects()[1]->graphs()[0]->addData(frame, x0.size() + x1.size());
+			ui->customPlot->axisRects()[1]->graphs()[1]->addData(frame, x1.size());
+			ui->customPlot->axisRects()[1]->graphs()[2]->addData(frame, x0.size() + x1.size() + x2.size());
+			ui->customPlot->axisRects()[1]->graphs()[3]->addData(frame, x0.size() + x1.size() + x2.size() + x3.size());
+		}
 
 		//=============================================================================//
 		// Display R0 value
@@ -400,9 +435,27 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 		lastPointKey = key;
 	}
 
+	if ((Config->trace_path) && (Config->track_GC)) {
+
+		for (int i = 0; i < x_lower.size(); i++) {
+			// draw a rectangle around an individual
+			QCPItemRect* rect_trace = new QCPItemRect(ui->customPlot);
+			rect_trace->setPen(QPen(Qt::red));
+
+			QPointF topLeft_coor = QPointF(x_lower[i], y_upper[i]);
+			QPointF bottomRight_coor = QPointF(x_upper[i], y_lower[i]);
+
+			rect_trace->topLeft->setCoords(topLeft_coor);
+			rect_trace->bottomRight->setCoords(bottomRight_coor);
+		}
+
+	}
+
 	ui->customPlot->replot();
-	// make axis range scroll with the data (at a constant range size of 8):
-	ui->customPlot->axisRects()[1]->axis(QCPAxis::atBottom, 0)->setRange(0, frame+1);
+	if (Config->n_plots == 2) {
+		// make axis range scroll with the data (at a constant range size of 8):
+		ui->customPlot->axisRects()[1]->axis(QCPAxis::atBottom, 0)->setRange(0, frame + 1);
+	}
 
 	// calculate frames per second:
 	static double lastFpsKey;
@@ -413,9 +466,17 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 		ui->statusBar->showMessage(
 			QString("%1 FPS, Total Data points: %2")
 			.arg(frameCount / (key - lastFpsKey), 0, 'f', 0)
-			.arg(ui->customPlot->axisRects()[1]->graphs()[0]->data()->size()), 0);
+			.arg(frame), 0);
 		lastFpsKey = key;
 		frameCount = 0;
+	}
+
+	frame_count = frame;
+
+	// take a screenshot
+	if ((Config->save_plot) && ((frame % Config->save_pop_freq) == 0)) {
+		//QTimer::singleShot(4000, this, SLOT(screenShot()));
+		pdfrender(); // only works in debug mode
 	}
 
 	int sleep_time = (1000 / 60) - computation_time - (time.elapsed() - key); // target frame rate = 60 FPS
@@ -466,44 +527,16 @@ void MainWindow::screenShot()
 #else
 	QPixmap pm = qApp->primaryScreen()->grabWindow(qApp->desktop()->winId(), this->x()-7, this->y()-7, this->frameGeometry().width()+14, this->frameGeometry().height()+14);
 #endif
-	QString fileName = demoName.toLower()+".png";
+	QString fileName = demoName.toLower() + "_" + QString::number(frame_count) + ".png";
 	fileName.replace(" ", "");
 	pm.save("./screenshots/"+fileName);
-	qApp->quit();
 }
 
-void MainWindow::allScreenShots()
+void MainWindow::pdfrender()
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-	QPixmap pm = QPixmap::grabWindow(qApp->desktop()->winId(), this->x()+2, this->y()+2, this->frameGeometry().width()-4, this->frameGeometry().height()-4);
-#elif QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
-	QPixmap pm = qApp->primaryScreen()->grabWindow(qApp->desktop()->winId(), this->x()+2, this->y()+2, this->frameGeometry().width()-4, this->frameGeometry().height()-4);
-#else
-	QPixmap pm = qApp->primaryScreen()->grabWindow(qApp->desktop()->winId(), this->x()-7, this->y()-7, this->frameGeometry().width()+14, this->frameGeometry().height()+14);
-#endif
-	QString fileName = demoName.toLower()+".png";
-	fileName.replace(" ", "");
-	pm.save("./screenshots/"+fileName);
-  
-	if (currentDemoIndex < 19) {
-		if (dataTimer.isActive()) {
-			dataTimer.stop();
-			dataTimer.disconnect();
-			delete ui->customPlot;
-			ui->customPlot = new QCustomPlot(ui->centralWidget);
-			ui->verticalLayout->addWidget(ui->customPlot);
-			setupDemo(currentDemoIndex + 1, Config);
-			// setup delay for demos that need time to develop proper look:
-			int delay = 250;
-			if (currentDemoIndex == 10) // Next is Realtime data demo
-				delay = 12000;
-			else if (currentDemoIndex == 15) // Next is Item demo
-				delay = 5000;
-			QTimer::singleShot(delay, this, SLOT(allScreenShots()));
-		}
-	} else {
-		qApp->quit();
-	}
+	QString folder = QString::fromStdString(Config->plot_path);
+	QString fileName = "./" + folder + "/sim_" + QString::number(frame_count) + ".pdf";
+	ui->customPlot->savePdf(fileName);
 }
 
 MainWindow::~MainWindow()

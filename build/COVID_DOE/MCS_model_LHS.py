@@ -119,10 +119,10 @@ if __name__ == '__main__':
             if dirname.endswith(".log"):
                 os.remove(dirname)
 
-    # Resume MCS
-    run = 295
-    points = points[run:]
-    labels = labels[run:]
+    # # Resume MCS
+    # run = 46
+    # points = points[run:]
+    # labels = labels[run:]
 
     # # terminate MCS
     # run = 3

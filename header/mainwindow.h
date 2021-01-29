@@ -66,28 +66,36 @@ public:
 	double IC_0, SD_0;
 	int TC_0;
 	bool pause_action, run_action, flag_busy;
+	int frame_count;
 
 	void setupDemo(int demoIndex, Configuration *Config);
 	void setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration *Config);
+	void pdfrender();
   
 public slots:
 	void realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
-							   QVector<double> x1, QVector<double> y1,
-							   QVector<double> x2, QVector<double> y2,
-							   QVector<double> x3, QVector<double> y3,
-							   int frame, float R0, float computation_time);
+		QVector<double> x1, QVector<double> y1,
+		QVector<double> x2, QVector<double> y2,
+		QVector<double> x3, QVector<double> y3,
+		QVector<double> x4, QVector<double> y4,
+		int frame, float R0, float computation_time,
+		QVector<double> x_lower, QVector<double> y_lower,
+		QVector<double> x_upper, QVector<double> y_upper);
+
 	void setICValue(int IC);
 	void setSDValue(int SD);
 	void setTCValue(int TC);
 	void screenShot();
-	void allScreenShots();
 
 signals:
 	void arrivedsignal(QVector<double> x0, QVector<double> y0,
-					   QVector<double> x1, QVector<double> y1,
-					   QVector<double> x2, QVector<double> y2,
-					   QVector<double> x3, QVector<double> y3,
-					   int frame, float R0, float computation_time);
+		QVector<double> x1, QVector<double> y1,
+		QVector<double> x2, QVector<double> y2,
+		QVector<double> x3, QVector<double> y3,
+		QVector<double> x4, QVector<double> y4,
+		int frame, float R0, float computation_time,
+		QVector<double> x_lower, QVector<double> y_lower,
+		QVector<double> x_upper, QVector<double> y_upper);
 
 private:
 	Ui::MainWindow *ui;
