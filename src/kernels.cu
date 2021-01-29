@@ -112,15 +112,15 @@ __global__ void calc_tracking_matrix(float* G, float* atoms_x, float* atoms_y, i
 
 	float g1 = (float)(j % n_grids) / float(n_grids);
 	float g2 = (float)(j / n_grids) / float(n_grids);
-	float g3 = (float)(j % n_grids + 1) / float(n_grids);
+	float g3 = (float)((j % n_grids) + 1) / float(n_grids);
 	float g4 = (float)((j / n_grids) + 1) / float(n_grids);
 
 	bool check = (atoms_x[i] > g1) && (atoms_y[i] > g2) && (atoms_x[i] <= g3) && (atoms_y[i] <= g4);
 
 	//float o = G[j + N_cols * i];
 	//float t = (check) ? 1 : 0;
-	float t = (check) ? 1 : G[j + N_cols * i];
-	G[j + N_cols * i] = t;
+	float t = (check) ? 1 : 0;
+	G[j + N_cols * i] += t;
 
 	//int xl_i, y_l_i, x_u_i, y_u_i;
 
