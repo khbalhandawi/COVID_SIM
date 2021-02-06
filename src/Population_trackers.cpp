@@ -64,6 +64,103 @@ Population_trackers::Population_trackers(Configuration Config_init)
 	reinfect = false;
 }
 
+#ifdef GPU_ACC
+/*-----------------------------------------------------------*/
+/*                   Update counts (CUDA)                    */
+/*-----------------------------------------------------------*/
+void Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int frame, CUDA_GPU::Kernels *ABM_cuda)
+{
+
+	/*docstring
+	*/
+	int pop_size = int(population.rows());
+
+	int n_infected = int((population.col(6) == 1).count());
+	int n_recovered = int((population.col(6) == 2).count());
+	int n_fatalities = int((population.col(6) == 3).count());
+
+	infectious.push_back(n_infected);
+	recovered.push_back(n_recovered);
+	fatalities.push_back(n_fatalities);
+
+	// Total distance travelled
+	if (Config.track_position) {
+		Eigen::ArrayXXf speed_vector = population(select_rows(population.col(11) == 0), { 3,4 }); // speed of individuals within world
+		Eigen::ArrayXf distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
+
+		total_distance(select_rows(population.col(11) == 0), all) += distance_individuals; // cumulative distance travelled
+		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumulative distance
+	}
+	else {
+		distance_travelled.push_back(0.0); // mean cumulative distance
+	}
+
+	// Compute and track ground covered
+	if (Config.track_GC) {
+		if (frame % Config.update_every_n_frame == 0) {
+
+			// Track ground covered
+			Eigen::ArrayXf p(Config.pop_size); // Initialize percentage arrays
+			Eigen::ArrayXf x_normalized = (population.col(1) - Config.xbounds[0]) / (Config.xbounds[1] - Config.xbounds[0]);
+			Eigen::ArrayXf y_normalized = (population.col(2) - Config.ybounds[0]) / (Config.ybounds[1] - Config.ybounds[0]);
+			x_normalized(select_rows(population.col(11) != 0)) = -1.0;
+			y_normalized(select_rows(population.col(11) != 0)) = -1.0;
+
+			ABM_cuda->tracker_gpu(x_normalized, y_normalized);
+			ABM_cuda->get_p(&p);
+			if (Config.trace_path || Config.save_ground_covered) ABM_cuda->get_G(&ground_covered);
+
+			// count number of non-zeros rowwise
+			perentage_covered = p / ((Config.n_gridpoints - 1) * (Config.n_gridpoints - 1));
+			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
+
+		}
+	}
+	else {
+		mean_perentage_covered.push_back(0.0); // mean ground covered
+	}
+
+	// Compute and track R0
+	if (Config.track_R0) {
+		if (frame % Config.update_R0_every_n_frame == 0) {
+			double mean_infection_time = (Config.recovery_duration[0] + Config.recovery_duration[1]) / 2; // how many ticks it may take to recover from the illness
+
+			vector<int> rows_IRF = select_rows(population.col(6) != 0);
+			// If there are non-healthy people present
+			if (rows_IRF.size() > 0) {
+				Eigen::ArrayXXf pop_IRF = population(rows_IRF, Eigen::all);
+				Eigen::ArrayXf prop = (frame - pop_IRF.col(8)) / (pop_IRF.col(19) != 0.0).select(mean_infection_time, frame - pop_IRF.col(19));
+
+				vector<int> R0_rows = select_rows(prop >= 0.1);
+				// if prop values above threshold for computing R0
+				if (R0_rows.size() > 0) {
+					Eigen::ArrayXf R0_values = pop_IRF(R0_rows, { 20 }) / prop(R0_rows);
+					mean_R0.push_back(R0_values.mean()); // basic reproductive number
+				}
+				else {
+					mean_R0.push_back(0.0); // basic reproductive number
+				}
+			}
+			else {
+				mean_R0.push_back(0.0); // basic reproductive number
+			}
+		}
+	}
+	else {
+		mean_R0.push_back(0.0); // basic reproductive number
+	}
+
+	// Mark recovered individuals as susceptable if reinfection enables
+	if (reinfect) {
+		susceptible.push_back(pop_size - (infectious.back() + fatalities.back()));
+	}
+	else {
+		susceptible.push_back(pop_size - (infectious.back() + recovered.back() + fatalities.back()));
+	}
+
+}
+
+#else
 /*-----------------------------------------------------------*/
 /*                      Update counts                        */
 /*-----------------------------------------------------------*/
@@ -73,7 +170,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 	/*docstring
 	*/
 	int pop_size = int(population.rows());
-	
+
 	int n_infected = int((population.col(6) == 1).count());
 	int n_recovered = int((population.col(6) == 2).count());
 	int n_fatalities = int((population.col(6) == 3).count());
@@ -102,18 +199,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			int n_inside_world = (population.col(11) == 0).count();
 			Eigen::ArrayXXf position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
 			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
-#ifdef GPU_ACC
-			Eigen::ArrayXf p(n_inside_world); // Initialize percentage arrays
-			Eigen::ArrayXf x_normalized = (position_vector.col(0) - Config.xbounds[0]) / (Config.xbounds[1] - Config.xbounds[0]);
-			Eigen::ArrayXf y_normalized = (position_vector.col(1) - Config.ybounds[0]) / (Config.ybounds[1] - Config.ybounds[0]);
-			tracker_gpu(&GC_matrix, &p, x_normalized, y_normalized, n_inside_world, Config.n_gridpoints - 1, 1024);
 
-			ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
-
-			// count number of non-zeros rowwise
-			perentage_covered(select_rows(population.col(11) == 0)) = p / ((Config.n_gridpoints - 1) * (Config.n_gridpoints - 1));
-			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
-#else
 			// 1D
 			Eigen::ArrayXf pos_vector_x = position_vector.col(0);
 			Eigen::ArrayXf pos_vector_y = position_vector.col(1);
@@ -136,7 +222,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			// count number of non-zeros rowwise
 			perentage_covered = (ground_covered != 0).rowwise().count().cast<float>() / grid_coords.rows();
 			mean_perentage_covered.push_back(perentage_covered.mean()); // mean ground covered
-#endif
+
 		}
 	}
 	else {
@@ -153,32 +239,37 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			if (rows_IRF.size() > 0) {
 				Eigen::ArrayXXf pop_IRF = population(rows_IRF, Eigen::all);
 				Eigen::ArrayXf prop = (frame - pop_IRF.col(8)) / (pop_IRF.col(19) != 0.0).select(mean_infection_time, frame - pop_IRF.col(19));
-				
+
 				vector<int> R0_rows = select_rows(prop >= 0.1);
 				// if prop values above threshold for computing R0
 				if (R0_rows.size() > 0) {
-					Eigen::ArrayXf R0_values = pop_IRF(R0_rows, {20} ) / prop(R0_rows);
+					Eigen::ArrayXf R0_values = pop_IRF(R0_rows, { 20 }) / prop(R0_rows);
 					mean_R0.push_back(R0_values.mean()); // basic reproductive number
-				} else {
+				}
+				else {
 					mean_R0.push_back(0.0); // basic reproductive number
 				}
-			} else {
+			}
+			else {
 				mean_R0.push_back(0.0); // basic reproductive number
 			}
 		}
-	} else {
+	}
+	else {
 		mean_R0.push_back(0.0); // basic reproductive number
 	}
 
 	// Mark recovered individuals as susceptable if reinfection enables
 	if (reinfect) {
-		susceptible.push_back( pop_size - (infectious.back() + fatalities.back()) );
+		susceptible.push_back(pop_size - (infectious.back() + fatalities.back()));
 	}
 	else {
-		susceptible.push_back( pop_size - (infectious.back() + recovered.back() + fatalities.back()) );
+		susceptible.push_back(pop_size - (infectious.back() + recovered.back() + fatalities.back()));
 	}
 
 }
+
+#endif // GPU_ACC
 
 /*-----------------------------------------------------------*/
 /*                        Destructor                         */
@@ -239,7 +330,7 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 	float epsilon = 1e-15;
 	// initialize population matrix
 	Eigen::ArrayXXf population = Eigen::ArrayXXf::Zero(Config.pop_size, 21);
-	// initalize unique IDs
+	// initialize unique IDs
 	population.col(0) = Eigen::ArrayXf::LinSpaced(Config.pop_size, 0, Config.pop_size - 1);
 
 	// initialize random coordinates
@@ -251,7 +342,7 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 	Eigen::ArrayXXf speed_vector = vect_un.array().colwise() / ( vect_un.rowwise().norm() + epsilon );
 	population(Eigen::all, { 3,4 }) = Config.max_speed * speed_vector;
 
-	// initalize ages
+	// initialize ages
 	double std_age = (max_age - mean_age) / 3;
 	population.col(7) = my_rand->normal_dist(mean_age, std_age, Config.pop_size, 1).round();
 	population.col(7) = population.col(7).max(0).min(max_age); // clip those younger than 0 years
@@ -274,7 +365,7 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 /*-----------------------------------------------------------*/
 Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinations)
 {
-	/*intializes the destination matrix
+	/*initializes the destination matrix
 
 	function that initializes the destination matrix used to
 	define individual location and roam zones for population members
@@ -301,7 +392,7 @@ Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinatio
 void initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::ArrayXXf &ground_covered, int pop_size, int n_gridpoints, vector<double> xbounds,
 	vector<double> ybounds)
 {
-	/*intializes the destination matrix
+	/*initializes the destination matrix
 
 	function that initializes the destination matrix used to
 	define individual location and roam zones for population members
@@ -369,7 +460,7 @@ void set_destination_bounds(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destin
 	whether to instantly teleport individuals to the defined locations
 	*/
 
-	// teleport
+	// teleport TODO: return to original location in main world
 	if (teleport) {
 		population.col(1) = my_rand->uniform_dist(xmin, xmax, population.rows(), 1);
 		population.col(2) = my_rand->uniform_dist(ymin, ymax, population.rows(), 1);

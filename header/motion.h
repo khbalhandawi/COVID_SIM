@@ -2,6 +2,9 @@
 
 #include "utilities.h"
 #include "RandomDevice.h"
+#ifdef GPU_ACC
+#include "CUDA_functions.h"
+#endif // GPU_ACC
 
 using namespace std;
 
@@ -9,6 +12,19 @@ using namespace std;
 /*                      Update positions                     */
 /*-----------------------------------------------------------*/
 void update_positions(Eigen::ArrayXXf &population, double dt = 0.01);
+
+#ifdef GPU_ACC
+/*-----------------------------------------------------------*/
+/*                   Update repulsive forces                 */
+/*-----------------------------------------------------------*/
+void update_repulsive_forces_cuda(Eigen::ArrayXXf &population_all, double social_distance_factor, CUDA_GPU::Kernels *ABM_cuda);
+
+#else
+/*-----------------------------------------------------------*/
+/*                   Update repulsive forces                 */
+/*-----------------------------------------------------------*/
+void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor, Eigen::ArrayXXf &dist_all, bool compute_dist_all = false);
+#endif // GPU_ACC
 
 /*-----------------------------------------------------------*/
 /*                      Update velocities                    */
@@ -19,11 +35,6 @@ void update_velocities(Eigen::ArrayXXf &population_all, double max_speed = 0.3, 
 /*                      Update wall forces                   */
 /*-----------------------------------------------------------*/
 Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf xbounds, Eigen::ArrayXXf ybounds, double wall_buffer = 0.01, double bounce_buffer = 0.005);
-
-/*-----------------------------------------------------------*/
-/*                   Update repulsive forces                 */
-/*-----------------------------------------------------------*/
-void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor, Eigen::ArrayXXf &dist_all, bool compute_dist_all = false);
 
 /*-----------------------------------------------------------*/
 /*                    Update gravity forces                  */

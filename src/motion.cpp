@@ -224,6 +224,43 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 
 }
 
+#ifdef GPU_ACC
+/*-----------------------------------------------------------*/
+/*                   Update repulsive forces                 */
+/*-----------------------------------------------------------*/
+void update_repulsive_forces_cuda(Eigen::ArrayXXf &population_all, double social_distance_factor, CUDA_GPU::Kernels *ABM_cuda)
+{
+	/*calculated repulsive forces between individuals
+
+	Function that calculates repulsion forces between individuals during social distancing.
+
+	Keyword arguments
+	---------------- -
+	population : ndarray
+	the array containing all the population information
+
+	social_distance_factor : float
+	Amplitude of repulsive force used to enforce social distancing
+	*/
+
+	// update selectively
+	ArrayXXb cond(population_all.rows(), 2);
+	cond << (population_all.col(17) == 0), (population_all.col(11) == 0);
+	vector<int> rows_cond = select_rows(cond);
+
+	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);
+	int pop_size = population.rows();
+
+	Eigen::ArrayXf repulsion_force_x(pop_size), repulsion_force_y(pop_size);
+	ABM_cuda->pairwise_gpu(population.col(1), population.col(2), social_distance_factor);
+	ABM_cuda->get_forces(&repulsion_force_x, &repulsion_force_y);
+	
+	// Update forces
+	population_all.col(15)(rows_cond) += repulsion_force_x;
+	population_all.col(16)(rows_cond) += repulsion_force_y;
+}
+
+#else
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
@@ -250,10 +287,6 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);
 	int pop_size = population.rows();
 
-#ifdef GPU_ACC
-	Eigen::ArrayXf repulsion_force_x(pop_size), repulsion_force_y(pop_size);
-	pairwise_gpu(&repulsion_force_x, &repulsion_force_y, population.col(1), population.col(2), social_distance_factor, 1024);
-#else
 	Eigen::ArrayXXf dist;
 
 	if (compute_dist_all) {
@@ -273,7 +306,6 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 
 	Eigen::ArrayXf repulsion_force_x = -social_distance_factor * (to_point_x / ((dist * dist * dist) + epsilon)).rowwise().sum();
 	Eigen::ArrayXf repulsion_force_y = -social_distance_factor * (to_point_y / ((dist * dist * dist) + epsilon)).rowwise().sum();
-#endif // GPU_ACC
 
 	population.col(15) += repulsion_force_x;
 	population.col(16) += repulsion_force_y;
@@ -282,6 +314,7 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 	population_all(rows_cond, Eigen::all) = population;
 
 }
+#endif // GPU_ACC
 
 /*-----------------------------------------------------------*/
 /*                    Update gravity forces                  */

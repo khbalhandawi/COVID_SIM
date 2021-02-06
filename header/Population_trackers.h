@@ -35,11 +35,17 @@ public:
 	// PLACEHOLDER - whether recovered individual can be reinfected
 	bool reinfect;
 
+#ifdef GPU_ACC
+	/*-----------------------------------------------------------*/
+	/*                   Update counts (CUDA)                    */
+	/*-----------------------------------------------------------*/
+	void update_counts_cuda(Eigen::ArrayXXf population, int frame, CUDA_GPU::Kernels *ABM_cuda);
+#else
 	/*-----------------------------------------------------------*/
 	/*                      Update counts                        */
 	/*-----------------------------------------------------------*/
 	void update_counts(Eigen::ArrayXXf population, int frame);
-	
+#endif
 	/*-----------------------------------------------------------*/
 	/*                       Constructor                         */
 	/*-----------------------------------------------------------*/

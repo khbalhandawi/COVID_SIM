@@ -1,9 +1,14 @@
 #include "simulation.h"
 
+#ifdef GPU_ACC
 simulation::simulation(Configuration Config_init, unsigned long seed) :
-	Population_trackers(Config_init),
-	RandomDevice(seed),
+	Population_trackers(Config_init), RandomDevice(seed), CUDA_GPU::Kernels(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024),
+	pop_tracker(Config_init), my_rand(seed), ABM_cuda(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024)
+#else
+simulation::simulation(Configuration Config_init, unsigned long seed) :
+	Population_trackers(Config_init), RandomDevice(seed), 
 	pop_tracker(Config_init), my_rand(seed)
+#endif
 {
 
 	Config = Config_init;
@@ -137,7 +142,11 @@ void simulation::tstep()
 	//activate social distancing only for compliant individuals
 	if ((Config.social_distance_factor > 0) && (act_social_distancing)) {
 
+#ifdef GPU_ACC
+		update_repulsive_forces_cuda(population, Config.social_distance_factor, &ABM_cuda);
+#else
 		update_repulsive_forces(population, Config.social_distance_factor, dist);
+#endif // GPU_ACC
 
 		if (population.col(15).isNaN().any()) {
 			cout << "Infinite repulsive forces!" << endl;
@@ -218,7 +227,12 @@ void simulation::tstep()
 
 	//======================================================================================//
 	//update population statistics
+#ifdef GPU_ACC
+	pop_tracker.update_counts_cuda(population, frame, &ABM_cuda);
+#else
 	pop_tracker.update_counts(population, frame);
+#endif // GPU_ACC
+
 
 	//======================================================================================//
 	//report stuff to console

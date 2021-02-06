@@ -11,3 +11,6 @@
 #else
 #define DLL_API
 #endif
+
+//#define CUBLAS_NDEBUG
+//#define RANDOM_DEBUG

@@ -8,15 +8,27 @@
 #include "RandomDevice.h"
 #include "infection.h"
 #include "tic_toc.h"
+#ifdef GPU_ACC
+#include "CUDA_functions.h"
+#endif
 #ifndef _N_QT
 #include "visualizer.h"
 #endif
+
+#ifdef GPU_ACC
+class simulation : Population_trackers, RandomDevice, CUDA_GPU::Kernels
+#else
 class simulation : Population_trackers, RandomDevice
+#endif
 {
 public:
 	Configuration Config;
 	Population_trackers pop_tracker;
 	RandomDevice my_rand;
+#ifdef GPU_ACC
+	CUDA_GPU::Kernels ABM_cuda;
+#endif
+
 	TicToc tc;
 	// initialize times
 	int frame;
