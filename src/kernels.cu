@@ -42,10 +42,10 @@
 #include  "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
- /*-----------------------------------------------------------*/
- /*     Compute pairwise distance matrix matrix (kernel)      */
- /*-----------------------------------------------------------*/
- __global__ void calc_distances(float* distances, float* atoms_x, float* atoms_y, int N)
+/*-----------------------------------------------------------*/
+/*     Compute pairwise distance matrix matrix (kernel)      */
+/*-----------------------------------------------------------*/
+ __global__ void CUDA_GPU::calc_distances(float* distances, float* atoms_x, float* atoms_y, int N)
  {
  	int i(threadIdx.x + blockIdx.x * blockDim.x);
  	int j(threadIdx.y + blockIdx.y * blockDim.y);
@@ -59,10 +59,10 @@
  		(atoms_y[i] - atoms_y[j]) * (atoms_y[i] - atoms_y[j]);
  }
 
- /*-----------------------------------------------------------*/
- /*          Compute repulsive force matrix (kernel)          */
- /*-----------------------------------------------------------*/
-__global__ void calc_force_m(float* diffs_x, float* diffs_y, float* atoms_x, float* atoms_y, float SD_factor, int N)
+/*-----------------------------------------------------------*/
+/*          Compute repulsive force matrix (kernel)          */
+/*-----------------------------------------------------------*/
+__global__ void CUDA_GPU::calc_force_m(float* diffs_x, float* diffs_y, float* atoms_x, float* atoms_y, float SD_factor, int N)
 {
 	int i(threadIdx.x + blockIdx.x * blockDim.x);
 	int j(threadIdx.y + blockIdx.y * blockDim.y);
@@ -83,7 +83,7 @@ __global__ void calc_force_m(float* diffs_x, float* diffs_y, float* atoms_x, flo
 /*-----------------------------------------------------------*/
 /*           Reduce repulsive force matrix (kernel)          */
 /*-----------------------------------------------------------*/
-__global__ void calc_forces(float* force, float* force_m, int N)
+__global__ void CUDA_GPU::calc_forces(float* force, float* force_m, int N)
 {
 	int i(threadIdx.x + blockIdx.x * blockDim.x);
 
@@ -100,7 +100,7 @@ __global__ void calc_forces(float* force, float* force_m, int N)
 /*-----------------------------------------------------------*/
 /*              Compute tracking matrix (kernel)             */
 /*-----------------------------------------------------------*/
-__global__ void calc_tracking_matrix(float* G, float* atoms_x, float* atoms_y, int n_pop, int n_grids, int N_rows, int N_cols)
+__global__ void CUDA_GPU::calc_tracking_matrix(float* G, float* G_track, float* atoms_x, float* atoms_y, int n_grids, int N_rows, int N_cols)
 {
 	int i(threadIdx.x + blockIdx.x * blockDim.x);
 	int j(threadIdx.y + blockIdx.y * blockDim.y);
@@ -117,29 +117,10 @@ __global__ void calc_tracking_matrix(float* G, float* atoms_x, float* atoms_y, i
 
 	bool check = (atoms_x[i] > g1) && (atoms_y[i] > g2) && (atoms_x[i] <= g3) && (atoms_y[i] <= g4);
 
-	//float o = G[j + N_cols * i];
-	//float t = (check) ? 1 : 0;
 	float t = (check) ? 1 : 0;
-	G[j + N_cols * i] += t;
+	G[i + j * N_rows] += t; // update tracing matrix
 
-	//int xl_i, y_l_i, x_u_i, y_u_i;
-
-	//if (x_l) { xl_i = 1; }; 
-	//if (y_l) { y_l_i = 1; };
-	//if (x_u) { x_u_i = 1; };
-	//if (x_u) { y_u_i = 1; };
-
-	//	bool p = ((atoms_x[i] >= g1) && (atoms_y[i] >= g2) && (atoms_x[i] <= g3) && (atoms_y[i] <= g4));
-	//p: G[i + N_cols * j] = 1; // single instruction
-	////!p: G[i + N_cols * j] = 0; // single instruction
-
-	//if ((atoms_x[i] >= g1) & (atoms_y[i] >= g2) & (atoms_x[i] <= g3) & (atoms_y[i] <= g4))
-	//{
-	//	G[i + N_cols * j] = 1;
-	//}
-	//else 
-	//{
-	//	G[i + N_cols * j] = 0;
-	//}
+	float track = (check) ? 1 : G_track[i + j * N_rows];
+	G_track[i + j * N_rows] = track; // update tracking matrix
 
 }

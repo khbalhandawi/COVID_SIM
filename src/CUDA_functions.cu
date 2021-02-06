@@ -54,7 +54,11 @@
 
 using namespace std;
 
+
 #ifndef CUBLAS_NDEBUG
+
+cublasHandle_t handle;
+
 /*-----------------------------------------------------------*/
 /*             CUBLAS ERROR MESSAGES ENUMERATOR              */
 /*-----------------------------------------------------------*/
@@ -131,126 +135,133 @@ inline void _check(cudaError_t code, char *file, int line)
 #define check(ans) { _check((ans), __FILE__, __LINE__); }
 
 /*-----------------------------------------------------------*/
+/*						 Constructor					     */
+/*-----------------------------------------------------------*/
+CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads_per_block_in)
+{
+	N_rows = n_pop; // number of rows
+	N_cols = n_grids * n_grids; // number of rows
+	N_grids = n_grids;
+	threads_per_block = threads_per_block_in;
+
+	bytes = N_rows * sizeof(float); // Size, in bytes, of each vector
+
+	check(cudaMallocHost(&atoms_x_h, bytes));
+	check(cudaMallocHost(&atoms_y_h, bytes));
+	check(cudaMalloc(&atoms_x_d, bytes));
+	check(cudaMalloc(&atoms_y_d, bytes));
+
+	//======================================================//
+	// Pairwise distance and difference calculation
+
+	check(cudaMalloc(&diffs_x_d, N_rows * bytes));
+	check(cudaMalloc(&diffs_y_d, N_rows * bytes));
+
+	//======================================================//
+	// Force outputs
+
+	check(cudaMalloc(&force_x_d, bytes));
+	check(cudaMalloc(&force_y_d, bytes));
+
+	check(cudaMallocHost(&force_x_h, bytes));
+	check(cudaMallocHost(&force_y_h, bytes));
+
+	//======================================================//
+	// Ground covered outputs
+
+	bytes_rows = N_rows * sizeof(float); // Size, in bytes, of each vector
+	bytes_cols = N_cols * sizeof(float); // Size, in bytes, of each vector
+
+	check(cudaMallocHost(&G_h, N_rows * N_cols * sizeof(float))); // tracing matrix (host)
+	check(cudaMalloc(&G_d, N_rows * N_cols * sizeof(float))); // tracing matrix (device)
+
+	check(cudaMallocHost(&G_track_h, N_rows * N_cols * sizeof(float))); // tracking matrix (host)
+	check(cudaMalloc(&G_track_d, N_rows * N_cols * sizeof(float))); // tracking matrix (device)
+	//======================================================//
+	// Percentage covered outputs
+
+	check(cudaMalloc(&p_d, bytes_rows));
+	check(cudaMallocHost(&p_h, bytes_rows));
+
+#ifndef CUBLAS_NDEBUG
+	//======================================================//
+	// Rowewise multiplication initialization
+	const float value = 1.f;
+	// initialize vector with ones using CUDA (for force matrix multiplication)
+	check(cudaMalloc(&d_ones_force, bytes));
+
+	// initialize vector with ones using CUDA (for tracking matrix multiplication)
+	check(cudaMalloc(&d_ones_track, bytes));
+	int n_blocks_cols(div_up(N_cols, sqrt(threads_per_block)));
+	CUDA_GPU::initKernel << <n_blocks_cols, threads_per_block >> > (d_ones_track, value, N_cols);
+
+	cublascheck(cublasCreate(&handle)); // construct cublas handle
+
+	alpha = 1.f;
+	beta = 0.f;
+#endif
+
+}
+
+/*-----------------------------------------------------------*/
 /*              Repulsive force evaluation (GPU)             */
 /*-----------------------------------------------------------*/
-DLL_API void pairwise_gpu(Eigen::ArrayXf *force_x, Eigen::ArrayXf *force_y, Eigen::ArrayXf atoms_x, 
-	Eigen::ArrayXf atoms_y, float SD_factor, int threads_per_block)
+void CUDA_GPU::Kernels::pairwise_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms_y, float SD_factor)
 {
 
-	const int N(atoms_x.rows()); // number of elements
+	N_actual = atoms_x.rows(); // actual number of elements
 
 	//=======================================//
 	//          Transfer values....          //
 	//=======================================//
 
-	
-	size_t bytes = N * sizeof(float); // Size, in bytes, of each vector
-
-	float* atoms_x_h; // x vector (host)
-	check(cudaMallocHost(&atoms_x_h, bytes));
-
-	float* atoms_y_h; // y vector (host)
-	check(cudaMallocHost(&atoms_y_h, bytes));
-
 	Eigen::ArrayXf::Map(atoms_x_h, atoms_x.rows()) = atoms_x; // Map to x vector (host)
 	Eigen::ArrayXf::Map(atoms_y_h, atoms_y.rows()) = atoms_y; // Map to y vector (host)
-
-	float* atoms_x_d; // x vector (device)
-	check(cudaMalloc(&atoms_x_d, bytes));
-
-	float* atoms_y_d; // y vector (device)
-	check(cudaMalloc(&atoms_y_d, bytes));
 
 	check(cudaMemcpy(atoms_x_d, atoms_x_h, bytes, cudaMemcpyHostToDevice));
 	check(cudaMemcpy(atoms_y_d, atoms_y_h, bytes, cudaMemcpyHostToDevice));
 
 	//======================================================//
 	// Matrix grids
-	int n_blocks(div_up(N, sqrt(threads_per_block)));
+	int n_blocks(div_up(N_actual, sqrt(threads_per_block)));
 
 	dim3 blockSize = dim3(sqrt(threads_per_block), sqrt(threads_per_block));
 	dim3 gridSize = dim3(n_blocks, n_blocks);
 
 	//======================================================//
 	// Pairwise distance and difference calculation
-	float* diffs_x_d;
-	check(cudaMalloc(&diffs_x_d, N * bytes));
 
-	float* diffs_y_d;
-	check(cudaMalloc(&diffs_y_d, N * bytes));
-
-	calc_force_m << <gridSize, blockSize >> > (diffs_x_d, diffs_y_d, atoms_x_d, atoms_y_d, SD_factor, N);
+	CUDA_GPU::calc_force_m << <gridSize, blockSize >> > (diffs_x_d, diffs_y_d, atoms_x_d, atoms_y_d, SD_factor, N_actual);
 	//======================================================//
 	// Force calculation (rowise matrix reduction by CUBLAS)
 
-	float* force_x_d; // Force x vector (device)
-	check(cudaMalloc(&force_x_d, bytes));
 
-	float* force_y_d; // Force y vector (device)
-	check(cudaMalloc(&force_y_d, bytes));
-
-	float *d_ones; // vector of ones to multiply matrix with (device)
-	check(cudaMalloc((void **)&d_ones, bytes));
-	const float value = 1.f;
-	initKernel << <n_blocks, threads_per_block >> > (d_ones, value, N); // initialize vector with ones using CUDA
 #ifndef CUBLAS_NDEBUG
-	cublasHandle_t handle;
-	cublascheck(cublasCreate(&handle)); // construct cublas handle
+	//======================================================//
+	// Rowewise multiplication initialization
+	const float value = 1.f;
 
-	float alpha = 1.f;
-	float beta = 0.f;
-	cublascheck(cublasSgemv(handle, CUBLAS_OP_T, N, N, &alpha, thrust::raw_pointer_cast(diffs_x_d), N,
-		thrust::raw_pointer_cast(d_ones), 1, &beta, thrust::raw_pointer_cast(force_x_d), 1)); // rowwise multiplication x
-	cublascheck(cublasSgemv(handle, CUBLAS_OP_T, N, N, &alpha, thrust::raw_pointer_cast(diffs_y_d), N,
-		thrust::raw_pointer_cast(d_ones), 1, &beta, thrust::raw_pointer_cast(force_y_d), 1)); // rowwise multiplication y
+	// initialize vector with ones using CUDA (for force matrix multiplication)
+	int n_blocks_rows(div_up(N_actual, sqrt(threads_per_block)));
+	CUDA_GPU::initKernel << <n_blocks_rows, threads_per_block >> > (d_ones_force, value, N_actual);
 
-	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+	cublascheck(cublasSgemv(handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_x_d, N_actual,
+		d_ones_force, 1, &beta, thrust::raw_pointer_cast(force_x_d), 1)); // rowwise multiplication x
+	cublascheck(cublasSgemv(handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_y_d, N_actual,
+		d_ones_force, 1, &beta, force_y_d, 1)); // rowwise multiplication y
 #endif
 	//======================================================//
-
-	//=======================================//
-	//          Retrieve values....          //
-	//=======================================//
 
 	check(cudaPeekAtLastError());
 	check(cudaDeviceSynchronize());
 
-	float* force_x_h; // Force x vector (device)
-	check(cudaMallocHost(&force_x_h, bytes));
-
-	float* force_y_h; // Force y vector (device)
-	check(cudaMallocHost(&force_y_h, bytes));
-
-	check(cudaMemcpy(force_x_h, force_x_d, bytes, cudaMemcpyDeviceToHost)); // Copy forces x to device 
-	check(cudaMemcpy(force_y_h, force_y_d, bytes, cudaMemcpyDeviceToHost)); // Copy forces y to device
-
-	*force_x = Eigen::Map<Eigen::ArrayXf>(force_x_h, N); // Map forces x to Eigen array 
-	*force_y = Eigen::Map<Eigen::ArrayXf>(force_y_h, N); // Map forces y to Eigen array
-
-	/* Destroy all memory allocation pointers and free memory */
-	check(cudaFree(atoms_x_d));
-	check(cudaFreeHost(atoms_x_h));
-	check(cudaFree(atoms_y_d));
-	check(cudaFreeHost(atoms_y_h));
-
-	check(cudaFree(diffs_x_d));
-	check(cudaFree(diffs_y_d));
-
-	check(cudaFree(force_x_d));
-	check(cudaFreeHost(force_x_h));
-	check(cudaFree(force_y_d));
-	check(cudaFreeHost(force_y_h));
 }
 
 /*-----------------------------------------------------------*/
 /*              Repulsive force evaluation (GPU)             */
 /*-----------------------------------------------------------*/
-DLL_API void tracker_gpu(Eigen::ArrayXXf *G, Eigen::ArrayXf *p, Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms_y,
-	const int n_pop, const int n_grids, const int threads_per_block)
+void CUDA_GPU::Kernels::tracker_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms_y)
 {
-
-	const int N_rows(n_pop); // number of rows
-	const int N_cols(n_grids * n_grids); // number of rows
 
 	//=======================================//
 	//          Transfer values....          //
@@ -258,46 +269,12 @@ DLL_API void tracker_gpu(Eigen::ArrayXXf *G, Eigen::ArrayXf *p, Eigen::ArrayXf a
 
 	//======================================================//
 	// Copy position vectors to device
-	size_t bytes_rows = N_rows * sizeof(float); // Size, in bytes, of each vector
-	size_t bytes_cols = N_cols * sizeof(float); // Size, in bytes, of each vector
-
-	float* atoms_x_h; // x vector (host)
-	check(cudaMallocHost(&atoms_x_h, bytes_rows));
-
-	float* atoms_y_h; // y vector (host)
-	check(cudaMallocHost(&atoms_y_h, bytes_rows));
 
 	Eigen::ArrayXf::Map(atoms_x_h, atoms_x.rows()) = atoms_x; // Map to x vector (host)
 	Eigen::ArrayXf::Map(atoms_y_h, atoms_y.rows()) = atoms_y; // Map to y vector (host)
 
-	float* atoms_x_d; // x vector (device)
-	check(cudaMalloc(&atoms_x_d, bytes_rows));
-
-	float* atoms_y_d; // y vector (device)
-	check(cudaMalloc(&atoms_y_d, bytes_rows));
-
 	check(cudaMemcpy(atoms_x_d, atoms_x_h, bytes_rows, cudaMemcpyHostToDevice));
 	check(cudaMemcpy(atoms_y_d, atoms_y_h, bytes_rows, cudaMemcpyHostToDevice));
-
-	//======================================================//
-	// Copy ground covered matrix to device
-	float* G_h; // Force x vector (device)
-	check(cudaMallocHost(&G_h, N_rows * N_cols * sizeof(float)));
-	Eigen::Map<Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor > >(G_h, N_rows, N_cols) = *G;
-
-	//for (int i(0); i < N_rows; ++i) {
-	//	for (int j(0); j < N_cols; ++j) {
-	//		//cout << "(" << i << "," << j << "): " << G_h[i + N_cols * j] << ", ";
-	//		cout << G_h[j + N_cols * i] << ", ";
-	//	}
-	//	cout << endl;
-	//}
-	//cout << endl;
-
-	float* G_d;
-	check(cudaMalloc(&G_d, N_rows * N_cols * sizeof(float)));
-
-	check(cudaMemcpy(G_d, G_h, N_rows * N_cols * sizeof(float), cudaMemcpyHostToDevice)); // Copy tracking matrix to device 
 
 	//======================================================//
 	// Matrix grids
@@ -309,55 +286,70 @@ DLL_API void tracker_gpu(Eigen::ArrayXXf *G, Eigen::ArrayXf *p, Eigen::ArrayXf a
 
 	dim3 blockSize = dim3(h_t, w_t);
 	dim3 gridSize = dim3(n_blocks_h, n_blocks_w);
-	//dim3 blockSize = dim3(1, 1);
-	//dim3 gridSize = dim3(10, 9);
 
 	//======================================================//
 	// Pairwise distance and difference calculation
 
-	calc_tracking_matrix << <gridSize, blockSize >> > (G_d, atoms_x_d, atoms_y_d, n_pop, n_grids, N_rows, N_cols);
+	CUDA_GPU::calc_tracking_matrix << <gridSize, blockSize >> > (G_d, G_track_d, atoms_x_d, atoms_y_d, N_grids, N_rows, N_cols);
 
 	//======================================================//
 	// Percentage covered (rowise matrix reduction by CUBLAS)
 
-	float* p_d; // percentage vector (device)
-	check(cudaMalloc(&p_d, bytes_rows));
-
-	float *d_ones; // vector of ones to multiply matrix with (device)
-	check(cudaMalloc((void **)&d_ones, bytes_cols));
-	const float value = 1.f;
-
-	int n_blocks(div_up(N_cols, sqrt(threads_per_block)));
-	initKernel << <n_blocks, threads_per_block >> > (d_ones, value, N_cols); // initialize vector with ones using CUDA
 #ifndef CUBLAS_NDEBUG
-	cublasHandle_t handle;
-	cublascheck(cublasCreate(&handle)); // construct cublas handle
-
-	float alpha = 1.f;
-	float beta = 0.f;
-	cublascheck(cublasSgemv(handle, CUBLAS_OP_T, N_cols, N_rows, &alpha, thrust::raw_pointer_cast(G_d), N_cols,
-		thrust::raw_pointer_cast(d_ones), 1, &beta, thrust::raw_pointer_cast(p_d), 1)); // rowwise multiplication
-
-	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+	cublascheck(cublasSgemv(handle, CUBLAS_OP_N, N_rows, N_cols, &alpha, G_track_d, N_rows,
+		d_ones_track, 1, &beta, p_d, 1)); // rowwise multiplication
 #endif CUBLAS_NDEBUG
-	//=======================================//
-	//          Retrieve values....          //
-	//=======================================//
-
 	//======================================================//
-	// Copy percentage covered vector to host
-	float* p_h; // percentage vector (device)
-	check(cudaMallocHost(&p_h, bytes_rows));
 
-	check(cudaMemcpy(p_h, p_d, bytes_rows, cudaMemcpyDeviceToHost)); // Copy percentage to device 
-
-	*p = Eigen::Map<Eigen::ArrayXf>(p_h, N_rows); // Map percentage to Eigen array 
-
-	//======================================================//
-	// Copy ground covered matrix to host
 	check(cudaPeekAtLastError());
 	check(cudaDeviceSynchronize());
 
+}
+
+/*-----------------------------------------------------------*/
+/*					Force vectors (getter)				     */
+/*-----------------------------------------------------------*/
+void CUDA_GPU::Kernels::get_forces(Eigen::ArrayXf *force_x, Eigen::ArrayXf *force_y)
+{
+	check(cudaMemcpy(force_x_h, force_x_d, bytes, cudaMemcpyDeviceToHost)); // Copy forces x to device 
+	check(cudaMemcpy(force_y_h, force_y_d, bytes, cudaMemcpyDeviceToHost)); // Copy forces y to device
+
+	*force_x = Eigen::Map<Eigen::ArrayXf>(force_x_h, N_actual); // Map forces x to Eigen array 
+	*force_y = Eigen::Map<Eigen::ArrayXf>(force_y_h, N_actual); // Map forces y to Eigen array
+}
+
+/*-----------------------------------------------------------*/
+/*				 Percentage vector (getter)				     */
+/*-----------------------------------------------------------*/
+void CUDA_GPU::Kernels::get_p(Eigen::ArrayXf *p)
+{
+	//======================================================//
+	// Copy percentage covered vector to host
+	check(cudaMemcpy(p_h, p_d, bytes_rows, cudaMemcpyDeviceToHost)); // Copy percentage to device 
+
+	*p = Eigen::Map<Eigen::ArrayXf>(p_h, N_rows); // Map percentage to Eigen array 
+}
+
+/*-----------------------------------------------------------*/
+/*					 Tracking matrix (getter)			     */
+/*-----------------------------------------------------------*/
+void CUDA_GPU::Kernels::get_G(Eigen::ArrayXXf *G)
+{
+	//======================================================//
+	// Copy ground covered matrix to host
+	//Eigen::Map<Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor > >(G_h, N_rows, N_cols) = *G;
+
+	//for (int i(0); i < N_rows; ++i) {
+	//	for (int j(0); j < N_cols; ++j) {
+	//		//cout << "(" << i << "," << j << "): " << G_h[i + N_cols * j] << ", ";
+	//		cout << G_h[j + N_cols * i] << ", ";
+	//	}
+	//	cout << endl;
+	//}
+	//cout << endl;
+
+	//check(cudaMemcpy(G_d, G_h, N_rows * N_cols * sizeof(float), cudaMemcpyHostToDevice)); // Copy tracking matrix to device 
+	
 	check(cudaMemcpy(G_h, G_d, N_rows * N_cols * sizeof(float), cudaMemcpyDeviceToHost)); // Copy tracking matrix to device 
 
 	//for (int i(0); i < N_rows; ++i) {
@@ -370,7 +362,7 @@ DLL_API void tracker_gpu(Eigen::ArrayXXf *G, Eigen::ArrayXf *p, Eigen::ArrayXf a
 	//cout << endl;
 
 	// Map rowwise format
-	*G = Eigen::Map<Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor > >(G_h, N_rows, N_cols);
+	*G = Eigen::Map<Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor > >(G_h, N_rows, N_cols);
 
 	//for (int i(0); i < N_rows; ++i) {
 	//	for (int j(0); j < N_cols; ++j) {
@@ -379,16 +371,52 @@ DLL_API void tracker_gpu(Eigen::ArrayXXf *G, Eigen::ArrayXf *p, Eigen::ArrayXf a
 	//	}
 	//	cout << endl;
 	//}
+}
 
-	/* Destroy all memory allocation pointers and free memory */
-	check(cudaFree(atoms_x_d));
-	check(cudaFreeHost(atoms_x_h));
-	check(cudaFree(atoms_y_d));
-	check(cudaFreeHost(atoms_y_h));
+/*-----------------------------------------------------------*/
+/*					 Tracking matrix (getter)			     */
+/*-----------------------------------------------------------*/
+void CUDA_GPU::Kernels::get_G_trace(Eigen::ArrayXXf *G_track)
+{
 
-	check(cudaFree(G_d));
-	check(cudaFreeHost(G_h));
+	check(cudaMemcpy(G_track_h, G_track_d, N_rows * N_cols * sizeof(float), cudaMemcpyDeviceToHost)); // Copy tracking matrix to device 
 
-	check(cudaFree(p_d));
-	check(cudaFreeHost(p_h));
+	// Map rowwise format
+	*G_track = Eigen::Map<Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor > >(G_track_h, N_rows, N_cols);
+
+}
+
+
+/*-----------------------------------------------------------*/
+/*						  Destructor					     */
+/*-----------------------------------------------------------*/
+CUDA_GPU::Kernels::~Kernels() 
+{
+	//check(cudaPeekAtLastError());
+	//check(cudaDeviceReset());
+
+	///* Destroy all memory allocation pointers and free memory */
+	//check(cudaFree(atoms_x_d));
+	//check(cudaFreeHost(atoms_x_h));
+	//check(cudaFree(atoms_y_d));
+	//check(cudaFreeHost(atoms_y_h));
+
+	//check(cudaFree(diffs_x_d));
+	//check(cudaFree(diffs_y_d));
+
+	//check(cudaFree(force_x_d));
+	//check(cudaFreeHost(force_x_h));
+	//check(cudaFree(force_y_d));
+	//check(cudaFreeHost(force_y_h));
+
+	///* Destroy all memory allocation pointers and free memory */
+	//check(cudaFree(G_d));
+	//check(cudaFreeHost(G_h));
+
+	//check(cudaFree(p_d));
+	//check(cudaFreeHost(p_h));
+
+	//check(cudaFree(d_ones_force));
+	//check(cudaFree(d_ones_track));
+	//cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
 }

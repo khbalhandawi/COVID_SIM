@@ -13,4 +13,4 @@
 #endif
 
 //#define CUBLAS_NDEBUG
-#define RANDOM_DEBUG
+//#define RANDOM_DEBUG
