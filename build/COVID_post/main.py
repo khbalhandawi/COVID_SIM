@@ -45,7 +45,7 @@ def train_server(training_X, training_Y, bounds):
     Y = training_Y; S_n = scaling(training_X, lob, upb, 1)
     # fitting_names = ['KRIGING','LOWESS','KS','RBF','PRS','ENSEMBLE']
     # run_types = ['optimize hyperparameters','load hyperparameters'] (1 or 2)
-    fit_type = 1; run_type = 2 # optimize all hyperparameters
+    fit_type = 5; run_type = 1 # optimize all hyperparameters
     model,sgt_file = define_SGTE_model(fit_type,run_type)
     server = SGTE_server(model)
     server.sgtelib_server_start()
@@ -116,12 +116,12 @@ def main():
         std_gc_opts = pickle.load(fid)
 
     # Variables
-    n_samples_LH = 299 + 1
+    n_samples_LH = 51 + 1
     [lob_var, upb_var, points, points_us] = LHS_sampling(n_samples_LH,new_LHS=False)
 
-    # Opts
-    n_samples_opts = 8
-    [_, _, opts, opts_us] = LHS_sampling(n_samples_opts,base_name='points_opts',new_LHS=False)
+    # # Opts
+    # n_samples_opts = 8
+    # [_, _, opts, opts_us] = LHS_sampling(n_samples_opts,base_name='points_opts',new_LHS=False)
 
     # Design space
     training_X = points_us
@@ -148,10 +148,15 @@ def main():
     resolution = 20
     vis_output = 0
 
+    # visualize_surrogate(bounds,variable_lbls,server,training_X,
+    #                     training_Y,plt,threshold=0.9,
+    #                     resolution=resolution,output_lbls=output_lbls,
+    #                     opts=opts_us[0:8,:])
+
     visualize_surrogate(bounds,variable_lbls,server,training_X,
                         training_Y,plt,threshold=0.9,
                         resolution=resolution,output_lbls=output_lbls,
-                        opts=opts_us[0:8,:])
+                        opts=None)
 
     plt.show()
         

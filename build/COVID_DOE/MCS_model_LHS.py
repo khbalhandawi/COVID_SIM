@@ -65,13 +65,17 @@ if __name__ == '__main__':
     # LHS search
 
     # Model variables
-    bounds = np.array([[   16    , 101   ], # number of essential workers
-                       [   0.0001, 0.15  ], # Social distancing factor
-                       [   10    , 81    ]]) # Testing capacity
+    # bounds = np.array([[   16    , 101   ], # number of essential workers
+    #                    [   0.0001, 0.15  ], # Social distancing factor
+    #                    [   10    , 81    ]]) # Testing capacity
 
     # bounds = np.array([[   16    , 101   ], # number of essential workers
     #                    [   0.0001, 0.15  ], # Social distancing factor
     #                    [   10    , 51    ]]) # Testing capacity
+
+    bounds = np.array([[   10    , 51   ], # number of essential workers
+                       [   0.0001, 0.15  ], # Social distancing factor
+                       [   10    , 51    ]]) # Testing capacity
 
     fit_cond = False # Do not fit data
     color_mode = 'color' # Choose color mode (black_White)
@@ -85,7 +89,7 @@ if __name__ == '__main__':
     n_samples_LH = 300
 
     # LHS distribution
-    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=True)
+    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=False)
 
     labels = [None] * len(points)
     run = 0 # starting point
@@ -138,7 +142,7 @@ if __name__ == '__main__':
         test_capacity = int(point[2])
 
         # Model parameters
-        healthcare_capacity = 50
+        healthcare_capacity = 90
 
         if new_run:
 

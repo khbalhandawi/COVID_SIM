@@ -34,6 +34,7 @@ build/COVID_visualize/cpp_corona_simulation*
 build/COVID_visualize/configuration*
 build/COVID_visualize/data/*
 build/COVID_visualize/*.dll
+build/COVID_visualize/population/run*
 build/COVID_visualize/platforms/*.dll
 *.pdf
 *.sgt

@@ -125,7 +125,7 @@ if __name__ == '__main__':
         print('==============================================')
         run += 1
 
-    with open('data/MCS_data_stats.pkl','wb') as fid:
+    with open('data/LHS/MCS_data_stats.pkl','wb') as fid:
         pickle.dump(mean_i_runs,fid)
         pickle.dump(std_i_runs,fid)
         pickle.dump(rel_i_runs,fid)

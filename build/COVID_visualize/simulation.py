@@ -33,7 +33,8 @@ class Simulation():
         self.frame = 0
         self.time = 0
         #initialize default population
-        self.population_init()
+        if self.Config.visualise:
+            self.population_init()
         #initalise population tracker
         self.pop_tracker = Population_trackers(self.Config)
         
@@ -149,7 +150,7 @@ class Simulation():
             
 
         #report outcomes
-        if self.Config.verbose:
+        if self.Config.verbose and self.Config.visualise:
             print('\n-----stopping-----\n')
             print('total timesteps taken: %i' %self.frame)
             print('total dead: %i' %len(self.population[self.population[:,6] == 3]))
@@ -174,7 +175,7 @@ if __name__ == '__main__':
     #set visuals
     sim.Config.plot_style = 'default' #can also be dark
     sim.Config.plot_text_style = 'LaTeX' #can also be LaTeX
-    sim.Config.visualise = True
+    sim.Config.visualise = False
     sim.Config.visualise_every_n_frame = 100
     sim.Config.plot_last_tstep = True
     sim.Config.verbose = True

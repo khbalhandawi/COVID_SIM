@@ -88,7 +88,7 @@ def parallel_sampling(design_variables,parameters,output_file_base,n_samples):
     import subprocess
     
     # num_threads = int(multiprocessing.cpu_count()/2)
-    num_threads = 8
+    num_threads = 4
 
     # qout = multiprocessing.Queue()
     # processes = [multiprocessing.Process(target=processInput, args=(i, design_variables, parameters, output_file_base, qout)) for i in range(n_samples)]

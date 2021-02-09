@@ -69,8 +69,11 @@ class Population_trackers():
         self.distance_travelled = [0.0]
         self.total_distance = np.zeros(self.Config.pop_size) # distance travelled by individuals
         self.mean_perentage_covered = [0.0]
-        self.grid_coords = load_matrix('grid_coords', folder='population')
-        self.ground_covered = load_ground_covered(tstep=0, folder='population')
+
+        if self.Config.visualise:
+            self.grid_coords = load_matrix('grid_coords', folder='population')
+            self.ground_covered = load_ground_covered(tstep=0, folder='population')
+            
         self.perentage_covered = np.zeros(self.Config.pop_size) # portion of world covered by individuals
         #PLACEHOLDER - whether recovered individual can be reinfected
         self.reinfect = False 
