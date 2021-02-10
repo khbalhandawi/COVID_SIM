@@ -43,6 +43,7 @@ public:
 	// initialize pairwise distance matrix
 	Eigen::ArrayXXf dist;
 	// initalise destinations vector
+	vector<double> lb_environments, ub_environments;
 	Eigen::ArrayXXf destinations;
 	// initalise grid for tracking population positions
 	Eigen::ArrayXXf grid_coords;

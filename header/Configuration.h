@@ -288,13 +288,6 @@ public:
 	void set_lockdown(RandomDevice *my_rand, double lockdown_percentage_var = 0.1, double lockdown_compliance_var = 0.9);
 	
 	/*-----------------------------------------------------------*/
-	/*                  set self isolation ratio                 */
-	/*-----------------------------------------------------------*/
-	void set_self_isolation(int number_of_tests_var, double self_isolate_proportion_var = 0.9,
-		vector<double> isolation_bounds_var = { -0.28, 0.02, -0.02, 0.28 },
-		bool traveling_infects_var = false);
-
-	/*-----------------------------------------------------------*/
 	/*          set lower speed for reduced interaction          */
 	/*-----------------------------------------------------------*/
 	void set_reduced_interaction(double speed_var = 0.001);

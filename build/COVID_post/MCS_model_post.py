@@ -73,7 +73,7 @@ if __name__ == '__main__':
         test_capacity = int(point[2])
 
         # Model parameters
-        healthcare_capacity = 50
+        healthcare_capacity = 90
 
         with open('data/LHS/MCS_data_r%i.pkl' %run,'rb') as fid:
             infected_i = pickle.load(fid)

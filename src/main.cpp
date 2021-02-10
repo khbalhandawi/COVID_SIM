@@ -271,15 +271,7 @@ int main(int argc, char* argv[])
         Config.social_distance_factor = 1e-6 * SD * Config.force_scaling;
         Config.social_distance_violation = n_violators; // number of people
         Config.healthcare_capacity = healthcare_capacity;
-
-		if (test_capacity > 0) {
-			Config.testing_threshold_on = 15; // number of people 
-			Config.wander_factor_dest = 0.1;
-			Config.set_self_isolation(test_capacity, 1.0, { -0.26, 0.02, 0.0, 0.28 }, false);
-		}
-		else {
-			Config.number_of_tests = 0;
-		}
+		Config.number_of_tests = test_capacity;
 
 		/*-----------------------------------------------------------*/
 		/*                    Log blackbox outputs                   */

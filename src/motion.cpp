@@ -94,8 +94,7 @@ void update_velocities(Eigen::ArrayXXf &population_all, double max_speed, double
 
 	// update selectively
 	ArrayXXb cond(population_all.rows(), 2);
-	cond << (population_all.col(11) == 0), (population_all.col(12) == 1);
-	Eigen::ArrayXXf population = population_all(select_rows_any(cond), Eigen::all);
+	Eigen::ArrayXXf population = population_all(select_rows(population_all.col(12) == 1), Eigen::all);
 	
 	float epsilon = 1e-15;
 	// Apply force
@@ -110,7 +109,7 @@ void update_velocities(Eigen::ArrayXXf &population_all, double max_speed, double
 	population(Eigen::all, { 15,16 }) = 0.0;
 
 	// Update velocities
-	population_all(select_rows_any(cond), Eigen::all) = population;
+	population_all(select_rows(population_all.col(12) == 1), Eigen::all) = population;
 
 }
 
@@ -244,8 +243,8 @@ void update_repulsive_forces_cuda(Eigen::ArrayXXf &population_all, double social
 	*/
 
 	// update selectively
-	ArrayXXb cond(population_all.rows(), 2);
-	cond << (population_all.col(17) == 0), (population_all.col(11) == 0);
+	ArrayXXb cond(population_all.rows(), 3);
+	cond << (population_all.col(17) == 0), (population_all.col(11) == 0), (population_all.col(12) == 1);
 	vector<int> rows_cond = select_rows(cond);
 
 	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);
@@ -280,8 +279,8 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 	*/
 
 	// update selectively
-	ArrayXXb cond(population_all.rows(), 2);
-	cond << (population_all.col(17) == 0), (population_all.col(11) == 0);
+	ArrayXXb cond(population_all.rows(), 3);
+	cond << (population_all.col(17) == 0), (population_all.col(11) == 0), (population_all.col(12) == 1);
 	vector<int> rows_cond = select_rows(cond);
 
 	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);

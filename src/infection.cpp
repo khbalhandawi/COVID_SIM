@@ -154,7 +154,7 @@ void find_nearby(Eigen::ArrayXXf population, Eigen::ArrayXf person_center, doubl
 /*                      Test and isolate                     */
 /*-----------------------------------------------------------*/
 void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, RandomDevice *my_rand, 
-	 Eigen::ArrayXXf &destinations, vector<double> location_bounds, int location_no)
+	 Eigen::ArrayXXf &destinations, int location_no)
 {
 	ArrayXXb cond(Config.pop_size, 3);
 
@@ -188,7 +188,7 @@ void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, 
 		// hospitalize sick individuals
 		population(Choices, { 10 }) = 1;
 
-		go_to_location(Choices, population, destinations, location_bounds, location_no);
+		go_to_location(Choices, population, destinations, location_no);
 	}
 }
 
@@ -197,8 +197,7 @@ void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, 
 /*-----------------------------------------------------------*/
 void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, 
 	Configuration Config, int frame, RandomDevice *my_rand, bool send_to_location, 
-	vector<double> location_bounds, int location_no, double location_odds, bool test_flag, 
-	Eigen::ArrayXXf dist)
+	int location_no, bool test_flag, Eigen::ArrayXXf dist)
 {
 	/*finds new infections.
 
@@ -242,10 +241,6 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	location_no : int
 	the location number, used as index for destinations array if multiple possible
 	destinations are defined
-
-	location_odds : float
-	the odds that someone goes to a location or not.Can be used to simulate non - compliance
-	to for example self - isolation.
 
 	traveling_infects : bool
 	whether infected people heading to a destination can still infect others on the way there
@@ -395,7 +390,7 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	// new_infections = population(to_infect_rows, 0);
 
 	if ((send_to_location) && (test_flag)) {
-		test_isolate(population, Config, frame, my_rand, destinations, location_bounds, location_no);
+		test_isolate(population, Config, frame, my_rand, destinations, location_no);
 	}
 
 	population.col(18) = 0; // reset testing flag
@@ -408,7 +403,8 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 /*-----------------------------------------------------------*/
 /*                     Recover or die                        */
 /*-----------------------------------------------------------*/
-void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config, RandomDevice *my_rand)
+void recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, 
+	Configuration Config, int frame, RandomDevice *my_rand, int location_no)
 {
 	/*see whether to recover or die
 
@@ -476,9 +472,11 @@ void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config
 	for (int idx : indices) {
 	// check if we want risk to be age dependent
 	// if age_dependent_risk:
+		vector<int> person_id = select_rows(infected_people.col(0) == idx);
+
 		if (Config.age_dependent_risk) {
 
-			age = infected_people(select_rows(infected_people.col(0) == idx), { 7 })[0];
+			age = infected_people(person_id, { 7 })[0];
 
 			updated_mortality_chance = Config.mortality_chance;
 			compute_mortality(age, updated_mortality_chance, Config.risk_age, Config.critical_age,
@@ -488,28 +486,35 @@ void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config
 			updated_mortality_chance = Config.mortality_chance;
 		}
 		
-		if ((infected_people(select_rows(infected_people.col(0) == idx), 10)[0] == 0) && (Config.treatment_dependent_risk)) {
+		if ((infected_people(person_id[0], 10) == 0) && (Config.treatment_dependent_risk)) {
 			// if person is not in treatment, increase risk by no_treatment_factor
-			updated_mortality_chance = updated_mortality_chance * Config.no_treatment_factor;
+			updated_mortality_chance *= Config.no_treatment_factor;
 		}
-		else if ((infected_people(select_rows(infected_people.col(0) == idx)[0], 10) == 1) && (Config.treatment_dependent_risk)) {
+		else if ((infected_people(person_id[0], 10) == 1) && (Config.treatment_dependent_risk)) {
 			// if person is in treatment, decrease risk by 
-			updated_mortality_chance = updated_mortality_chance * Config.treatment_factor;
+			updated_mortality_chance *= Config.treatment_factor;
 		}
 
 		if (my_rand->rand() <= updated_mortality_chance) {
 			// die
-			infected_people(select_rows(infected_people.col(0) == idx)[0], 6) = 3;
-			infected_people(select_rows(infected_people.col(0) == idx)[0], 10) = 0;
-			infected_people(select_rows(infected_people.col(0) == idx)[0], 19) = frame; // time at which died
-			fatalities.push_back(select_rows(infected_people.col(0) == idx)[0]);
+			infected_people(person_id[0], 6) = 3;
+			infected_people(person_id[0], 10) = 0;
+			infected_people(person_id[0], 19) = frame; // time at which died
+			fatalities.push_back(person_id[0]);
 		}
 		else {
 			// recover(become immune)
-			infected_people(select_rows(infected_people.col(0) == idx)[0], 6) = 2;
-			infected_people(select_rows(infected_people.col(0) == idx)[0], 10) = 0;
-			infected_people(select_rows(infected_people.col(0) == idx)[0], 19) = frame; // time at which recovered
-			recovered.push_back(select_rows(infected_people.col(0) == idx)[0]);
+			infected_people(person_id[0], 6) = 2;
+			infected_people(person_id[0], 19) = frame; // time at which recovered
+			recovered.push_back(person_id[0]);
+
+			Eigen::VectorXi Choices(1);
+			Choices << person_id[0];
+			if (infected_people(person_id[0], 10) == 1) {
+				go_to_location(Choices, infected_people, destinations, location_no);
+				infected_people(person_id[0], 10) = 0;
+			}
+
 		}
 
 	}

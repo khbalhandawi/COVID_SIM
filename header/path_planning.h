@@ -11,7 +11,7 @@ using namespace std;
 /*-----------------------------------------------------------*/
 /*                  Send patient to location                 */
 /*-----------------------------------------------------------*/
-void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, vector<double> location_bounds, int dest_no = 1);
+void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, int dest_no = 1);
 
 /*-----------------------------------------------------------*/
 /*                Set population destination                 */
@@ -26,7 +26,9 @@ void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinati
 /*-----------------------------------------------------------*/
 /*            Keeps arrivals within wander range             */
 /*-----------------------------------------------------------*/
-void keep_at_destination(Eigen::ArrayXXf &population, vector<double> destination_bounds);
+void keep_at_destination(Eigen::ArrayXXf &population, 
+	vector<double> lb_environments, vector<double> ub_environments,
+	double wall_buffer, double bounce_buffer);
 
 /*-----------------------------------------------------------*/
 /*                 Clear destination markers                 */

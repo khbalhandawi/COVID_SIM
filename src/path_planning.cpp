@@ -44,7 +44,7 @@
 /*-----------------------------------------------------------*/
 /*                  Send patient to location                 */
 /*-----------------------------------------------------------*/
-void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, vector<double> location_bounds, int dest_no)
+void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, int dest_no)
 {
 	/*sends patient to defined location
 
@@ -53,15 +53,14 @@ void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::A
 
 	Keyword arguments
 	---------------- -
-	population : ndarray
+	Choices : int array
+	the array containing ids of people to send to destination
+
+	patients : ndarray
 	the array containing all the population information
 
 	destinations : ndarray
 	the array containing all destinations information
-
-	location_bounds : list or tuple
-	defines bounds for the location the patient will be roam in when sent
-	there.format : [xmin, ymin, xmax, ymax]
 
 	dest_no : int
 	the location number, used as index for destinations array if multiple possible
@@ -72,21 +71,16 @@ void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::A
 
 	*/
 
-	vector<double> outputs = get_motion_parameters(location_bounds[0], location_bounds[1], location_bounds[2], location_bounds[3]);
-	
-	double x_center, y_center, x_wander, y_wander;
-	x_center = outputs[0];
-	y_center = outputs[1];
-	x_wander = outputs[2];
-	y_wander = outputs[3];
+	for (int i = 0; i < Choices.size(); i++) {
+		int current_dest = patients(Choices[i], 11);
 
-	patients.col(13) = x_wander;
-	patients.col(14) = y_wander;
+		destinations(Choices[i], (current_dest) * 4) = patients(Choices[i], 1); // save last known location at current destination
+		destinations(Choices[i], ((current_dest) * 4) + 1) = patients(Choices[i], 2); // save last known location at current destination
 
-	destinations(Choices, { (dest_no - 1) * 2 }) = x_center;
-	destinations(Choices, { ((dest_no - 1) * 2) + 1 }) = y_center;
+	}
 
 	patients(Choices, { 11 }) = dest_no; // set destination active
+	patients(Choices, { 12 }) = 0; // set patient as travelling
 }
 
 /*-----------------------------------------------------------*/
@@ -109,7 +103,7 @@ void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, 
 	*/
 	float epsilon = 1e-15;
 	// how many destinations are active
-	Eigen::ArrayXf dests = population(select_rows(population.col(11) != 0), { 11 });
+	Eigen::ArrayXf dests = population.col(11);
 	vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
 	unique_elements(active_dests);
 
@@ -117,7 +111,7 @@ void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, 
 	for (int d : active_dests) {
 
 		// pick x and y columns for given d
-		Eigen::ArrayXXf to_destination = destinations(Eigen::all, { (d - 1) * 2, ((d - 1) * 2) + 1 }) - population(Eigen::all, { 1,2 });
+		Eigen::ArrayXXf to_destination = destinations(Eigen::all, { d * 4, (d * 4) + 1 }) - population(Eigen::all, { 1,2 });
 		Eigen::ArrayXf dist = to_destination.rowwise().norm().array();
 
 		Eigen::ArrayXf head_x = to_destination.col(0) / (dist + epsilon);
@@ -162,7 +156,7 @@ void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinati
 	*/
 
 	// how many destinations are active
-	Eigen::ArrayXf dests = population(select_rows(population.col(11) != 0), { 11 });
+	Eigen::ArrayXf dests = population.col(11);
 	vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
 	unique_elements(active_dests);
 
@@ -170,14 +164,14 @@ void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinati
 	for (int d : active_dests) {
 
 		// pick x and y columns for given d
-		Eigen::ArrayXf dest_x = destinations(Eigen::all, { (d - 1) * 2 });
-		Eigen::ArrayXf dest_y = destinations(Eigen::all, { ((d - 1) * 2) + 1 });
+		Eigen::ArrayXf dest_x = destinations(Eigen::all, { d * 4 });
+		Eigen::ArrayXf dest_y = destinations(Eigen::all, { (d * 4) + 1 });
 
 		// see who arrived at destination and filter out who already was there
-		ArrayXXb cond(population.rows(), 3);
-		cond << ((population.col(1) - dest_x).abs() < (population.col(13) * wander_factor)),
-				((population.col(2) - dest_y).abs() < (population.col(14) * wander_factor)),
-				(population.col(12) == 0);
+		ArrayXXb cond(population.rows(), 4);
+		cond << ((population.col(1) - dest_x).abs() < (wander_factor)),
+				((population.col(2) - dest_y).abs() < (wander_factor)),
+				(population.col(12) == 0), (population.col(11) == d);
 
 		Eigen::ArrayXXf at_dest = population(select_rows(cond), Eigen::all);
 
@@ -192,7 +186,9 @@ void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinati
 /*-----------------------------------------------------------*/
 /*            Keeps arrivals within wander range             */
 /*-----------------------------------------------------------*/
-void keep_at_destination(Eigen::ArrayXXf &population, vector<double> destination_bounds)
+void keep_at_destination(Eigen::ArrayXXf &population, 
+	vector<double> lb_environments, vector<double> ub_environments, 
+	double wall_buffer, double bounce_buffer)
 {
 	/*keeps those who have arrived, within wander range
 
@@ -210,7 +206,7 @@ void keep_at_destination(Eigen::ArrayXXf &population, vector<double> destination
 	*/ 
 
 	// how many destinations are active
-	Eigen::ArrayXf dests = population(select_rows(population.col(11) != 0), { 11 });
+	Eigen::ArrayXf dests = population.col(11);
 	vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
 	unique_elements(active_dests);
 
@@ -223,8 +219,8 @@ void keep_at_destination(Eigen::ArrayXXf &population, vector<double> destination
 		Eigen::ArrayXf ids = arrived.col(0); // find unique IDs of arrived persons
 
 		// check if there are those out of bounds
-		double i_xlower = destination_bounds[0]; double i_xupper = destination_bounds[2];
-		double i_ylower = destination_bounds[1]; double i_yupper = destination_bounds[3];
+		double i_xlower = lb_environments[(2 * d)]; double i_xupper = ub_environments[(2 * d)];
+		double i_ylower = lb_environments[(2 * d) + 1]; double i_yupper = ub_environments[(2 * d) + 1];
 
 		Eigen::ArrayXXf _xbounds(arrived.rows(), 2), _ybounds(arrived.rows(), 2);
 		double buffer = 0.0;
@@ -235,7 +231,7 @@ void keep_at_destination(Eigen::ArrayXXf &population, vector<double> destination
 		_ybounds << Eigen::ArrayXf::Ones(arrived.rows(), 1) * (i_ylower + buffer),
 					Eigen::ArrayXf::Ones(arrived.rows(), 1) * (i_yupper - buffer);
 
-		arrived = update_wall_forces(arrived, _xbounds, _ybounds);
+		arrived = update_wall_forces(arrived, _xbounds, _ybounds, wall_buffer, bounce_buffer);
 
 		// reinsert into population
 		population(select_rows(cond), Eigen::all) = arrived;

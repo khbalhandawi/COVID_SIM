@@ -59,7 +59,9 @@ void simulation::initialize_simulation()
 	population_init();
 	
 	// initialize destinations vector
-	destinations = initialize_destination_matrix(Config.pop_size, 1);
+	lb_environments = { Config.xbounds[0], Config.ybounds[0], Config.isolation_bounds[0], Config.isolation_bounds[1] };
+	ub_environments = { Config.xbounds[1], Config.ybounds[1], Config.isolation_bounds[2], Config.isolation_bounds[3] };
+	destinations = initialize_destination_matrix(Config.pop_size, 2, lb_environments, ub_environments); // main world and quarantine world
 
 	// initialize grid for tracking population positions
 	initialize_ground_covered_matrix(grid_coords, ground_covered, Config.pop_size, Config.n_gridpoints, Config.xbounds, Config.ybounds);
@@ -87,14 +89,14 @@ void simulation::tstep()
 	// check destinations if active
 	// define motion vectors if destinations active and not everybody is at destination
 
-	if ((outside_world.rows() > 0) && (travelling_pop.rows() > 0)) {
+	if (travelling_pop.rows() > 0) {
 		set_destination(population, destinations);
 		check_at_destination(population, destinations, Config.wander_factor_dest);
 	}
 
-	if ((outside_world.rows() > 0) && (at_destination.rows() > 0)) {
+	if (at_destination.rows() > 0) {
 		//keep them at destination
-		keep_at_destination(population, Config.isolation_bounds);
+		keep_at_destination(population, lb_environments, ub_environments, Config.wall_buffer, Config.bounce_buffer);
 	}
 	//======================================================================================//
 	//gravity wells
@@ -109,10 +111,10 @@ void simulation::tstep()
 	if (!(above_act_thresh) && (Config.social_distance_threshold_on > 0)) {
 		// If not previously above infection threshold activate when threshold reached
 		if (Config.thresh_type == "hospitalized") {
-			above_act_thresh = population(select_rows(population.col(11) == 1), { 11 }).rows() >= Config.social_distance_threshold_on;
+			above_act_thresh = select_rows(population.col(11) == 1).size() >= Config.social_distance_threshold_on;
 		}
 		else if (Config.thresh_type == "infected") {
-			above_act_thresh = population(select_rows(population.col(6) == 1), { 11 }).rows() >= Config.social_distance_threshold_on;
+			above_act_thresh = select_rows(population.col(6) == 1).size() >= Config.social_distance_threshold_on;
 		}
 			
 	}
@@ -147,34 +149,7 @@ void simulation::tstep()
 #else
 		update_repulsive_forces(population, Config.social_distance_factor, dist);
 #endif // GPU_ACC
-
-		if (population.col(15).isNaN().any()) {
-			cout << "Infinite repulsive forces!" << endl;
-			throw "Infinite repulsive forces!";
-		}
 	
-	}
-
-	//======================================================================================//
-	//out of bounds
-	//define bounds arrays, excluding those who are marked as having a custom destination
-	if (inside_world.rows() > 0) {
-		Eigen::ArrayXXf _xbounds(inside_world.rows(), 2), _ybounds(inside_world.rows(), 2);
-		double buffer = 0.0;
-
-		_xbounds << Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.xbounds[0] + buffer),
-					Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.xbounds[1] - buffer);
-
-		_ybounds << Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.ybounds[0] + buffer),
-					Eigen::ArrayXf::Ones(inside_world.rows(), 1) * (Config.ybounds[1] - buffer);
-
-		population(select_rows(population.col(11) == 0), Eigen::all) = update_wall_forces(population(select_rows(population.col(11) == 0), Eigen::all),
-																				  		  _xbounds, _ybounds, Config.wall_buffer, Config.bounce_buffer);
-
-		if (population.col(15).isNaN().any()) {
-			cout << "Infinite wall forces!" << endl;
-			throw "Infinite wall forces!";
-		}
 	}
 
 	if (population.col(1).isNaN().any()) {
@@ -213,17 +188,10 @@ void simulation::tstep()
 	bool act_testing = (above_test_thresh) && (pop_infected.rows() > 0);
 
 	// Find infections and send to hospital if applicable
-	infect(population, destinations, Config, frame, &my_rand, Config.self_isolate,
-		   Config.isolation_bounds, 1, Config.self_isolate_proportion, act_testing);
+	infect(population, destinations, Config, frame, &my_rand, Config.self_isolate, 1, act_testing);
 
 	// recover and die
-	recover_or_die(population, frame, Config, &my_rand);
-
-	//======================================================================================//
-	//send cured back to population if self isolation active
-	//perhaps put in recover or die class
-	//send cured back to population
-	population(select_rows(population.col(6) == 2), { 11 }) = 0;
+	recover_or_die(population, destinations, Config, frame, &my_rand, 0);
 
 	//======================================================================================//
 	//update population statistics

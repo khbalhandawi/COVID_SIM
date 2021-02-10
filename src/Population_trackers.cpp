@@ -85,10 +85,13 @@ void Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int fra
 
 	// Total distance travelled
 	if (Config.track_position) {
-		Eigen::ArrayXXf speed_vector = population(select_rows(population.col(11) == 0), { 3,4 }); // speed of individuals within world
+		ArrayXXb cond(population.rows(), 2);
+		cond << (population.col(11) == 0), (population.col(12) == 1);
+
+		Eigen::ArrayXXf speed_vector = population(select_rows(cond), { 3,4 }); // speed of individuals within world
 		Eigen::ArrayXf distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
 
-		total_distance(select_rows(population.col(11) == 0), all) += distance_individuals; // cumulative distance travelled
+		total_distance(select_rows(cond), all) += distance_individuals; // cumulative distance travelled
 		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumulative distance
 	}
 	else {
@@ -99,12 +102,15 @@ void Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int fra
 	if (Config.track_GC) {
 		if (frame % Config.update_every_n_frame == 0) {
 
+			ArrayXXb cond(population.rows(), 2);
+			cond << (population.col(11) != 0), (population.col(12) == 0);
+
 			// Track ground covered
 			Eigen::ArrayXf p(Config.pop_size); // Initialize percentage arrays
 			Eigen::ArrayXf x_normalized = (population.col(1) - Config.xbounds[0]) / (Config.xbounds[1] - Config.xbounds[0]);
 			Eigen::ArrayXf y_normalized = (population.col(2) - Config.ybounds[0]) / (Config.ybounds[1] - Config.ybounds[0]);
-			x_normalized(select_rows(population.col(11) != 0)) = -1.0;
-			y_normalized(select_rows(population.col(11) != 0)) = -1.0;
+			x_normalized(select_rows_any(cond)) = -1.0;
+			y_normalized(select_rows_any(cond)) = -1.0;
 
 			ABM_cuda->tracker_gpu(x_normalized, y_normalized);
 			ABM_cuda->get_p(&p);
@@ -179,12 +185,16 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 	recovered.push_back(n_recovered);
 	fatalities.push_back(n_fatalities);
 
+	ArrayXXb cond(population.rows(), 2);
+	cond << (population.col(11) == 0), (population.col(12) == 1);
+
 	// Total distance travelled
 	if (Config.track_position) {
-		Eigen::ArrayXXf speed_vector = population(select_rows(population.col(11) == 0), { 3,4 }); // speed of individuals within world
+
+		Eigen::ArrayXXf speed_vector = population(select_rows(cond), { 3,4 }); // speed of individuals within world
 		Eigen::ArrayXf distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
 
-		total_distance(select_rows(population.col(11) == 0), all) += distance_individuals; // cumulative distance travelled
+		total_distance(select_rows(cond), all) += distance_individuals; // cumulative distance travelled
 		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumulative distance
 	}
 	else {
@@ -196,9 +206,9 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 		if (frame % Config.update_every_n_frame == 0) {
 
 			// Track ground covered
-			int n_inside_world = (population.col(11) == 0).count();
-			Eigen::ArrayXXf position_vector = population(select_rows(population.col(11) == 0), { 1,2 }); // position of individuals within world
-			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(population.col(11) == 0), all);
+			int n_inside_world = (cond).count();
+			Eigen::ArrayXXf position_vector = population(select_rows(cond), { 1,2 }); // position of individuals within world
+			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(cond), all);
 
 			// 1D
 			Eigen::ArrayXf pos_vector_x = position_vector.col(0);
@@ -217,7 +227,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			ArrayXXb conds = (l_x > 0) && (u_x > 0) && (l_y > 0) && (u_y > 0);
 
 			GC_matrix += conds.cast<float>();
-			ground_covered(select_rows(population.col(11) == 0), all) = GC_matrix;
+			ground_covered(select_rows(cond), all) = GC_matrix;
 
 			// count number of non-zeros rowwise
 			perentage_covered = (ground_covered != 0).rowwise().count().cast<float>() / grid_coords.rows();
@@ -301,8 +311,8 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 	10 : in treatment
 	11 : active destination(0 = random wander, 1, .. = destination matrix index)
 	12 : at destination : whether arrived at destination(0 = traveling, 1 = arrived)
-	13 : wander_range_x : wander ranges on x axis for those who are confined to a location
-	14 : wander_range_y : wander ranges on y axis for those who are confined to a location
+	13 : wander_range_x : wander ranges on x axis for those who are confined to a location (UNUSED)
+	14 : wander_range_y : wander ranges on y axis for those who are confined to a location (UNUSED)
 	15 : total force x
 	16 : total force y
 	17 : violator(0: compliant 1 : violator)
@@ -353,6 +363,9 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 	//// Randomly place people outside (comment when not debugging)
 	//population.col(11) = my_rand->Random_choice_prob(Config.pop_size, 0.5);
 	
+	// Set all individuals as arrived within their destinations
+	population.col(12) = 1;
+
 	// Randomly select social distancing violators
 	Eigen::VectorXi Choices = my_rand->Random_choice(population.col(0), Config.social_distance_violation);
 	population(Choices, { 17 }) = 1;
@@ -363,7 +376,8 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 /*-----------------------------------------------------------*/
 /*                 initialize destinations                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinations)
+Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinations, 
+	vector<double> destination_lower_bounds, vector<double> destination_upper_bounds)
 {
 	/*initializes the destination matrix
 
@@ -378,9 +392,33 @@ Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinatio
 	total_destinations : int
 	the number of destinations to maintain in the matrix.Set to more than
 	one if for example people can go to work, supermarket, home, etc.
+
+	the destination matrix for this simulation has the following columns :
+
+	0 : x_center of destination 0
+	1 : y_center of destination 0
+	2 : x_range of destination 0
+	3 : y_range of destination 0
+	4 : x_center of destination 1
+	5 : y_center of destination 1
+	6 : x_range of destination 0
+	7 : y_range of destination 0
+
 	*/
 
-	Eigen::ArrayXXf destinations = Eigen::ArrayXXf::Zero(pop_size, total_destinations * 2);
+	Eigen::ArrayXXf destinations = Eigen::ArrayXXf::Zero(pop_size, total_destinations * 4);
+
+	for ( int i = 0; i < total_destinations; i++ ) {
+		destinations.col(4 * i) = (destination_lower_bounds[2 * i] + destination_upper_bounds[2 * i]) / 2;
+		destinations.col((4 * i) + 1) = (destination_lower_bounds[(2 * i) + 1] + destination_upper_bounds[(2 * i) + 1]) / 2;
+
+		assert((destination_upper_bounds[2 * i] - destination_lower_bounds[2 * i]) > 0); // make sure value is positive
+		assert((destination_upper_bounds[(2 * i) + 1] - destination_lower_bounds[(2 * i) + 1]) > 0); // make sure value is positive
+
+		destinations.col((4 * i) + 2) = (destination_upper_bounds[2 * i] - destination_lower_bounds[2 * i]) / 2;
+		destinations.col((4 * i) + 3) = (destination_upper_bounds[(2 * i) + 1] - destination_lower_bounds[(2 * i) + 1]) / 2;;
+
+	}
 
 	return destinations;
 }
@@ -427,65 +465,6 @@ void initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::Array
 	ground_covered = Eigen::ArrayXXf::Zero(pop_size, pow((n_gridpoints - 1),2) );
 
 	// return { grid_coords, ground_covered };
-}
-
-/*-----------------------------------------------------------*/
-/*                   destination bounds                      */
-/*-----------------------------------------------------------*/
-void set_destination_bounds(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, double xmin, double ymin,
-	double xmax, double ymax, RandomDevice *my_rand, int dest_no, bool teleport)
-{
-	/*teleports all persons within limits
-
-	Function that takes the population and coordinates,
-	teleports everyone there, sets destination active and
-	destination as reached
-
-	Keyword arguments
-	---------------- -
-	population : ndarray
-	the array containing all the population information
-
-	destinations : ndarray
-	the array containing all the destination information
-
-	xmin, ymin, xmax, ymax : int or float
-	define the bounds on both axes where the individual can roam within
-	after reaching the defined area
-
-	dest_no : int
-	the destination number to set as active(if more than one)
-
-	teleport : bool
-	whether to instantly teleport individuals to the defined locations
-	*/
-
-	// teleport TODO: return to original location in main world
-	if (teleport) {
-		population.col(1) = my_rand->uniform_dist(xmin, xmax, population.rows(), 1);
-		population.col(2) = my_rand->uniform_dist(ymin, ymax, population.rows(), 1);
-	}
-
-	// get parameters
-	double x_center, y_center, x_wander, y_wander;
-	vector<double> outputs = get_motion_parameters(xmin, ymin, xmax, ymax);
-
-	x_center = outputs[0];
-	y_center = outputs[1];
-	x_wander = outputs[2];
-	y_wander = outputs[3];
-
-	// set destination centers
-	destinations.col( (dest_no - 1) * 2 ) = x_center;
-	destinations.col( ( (dest_no - 1) * 2 ) + 1 ) = y_center;
-
-	// set wander bounds
-	population.col(13) = x_wander;
-	population.col(14) = y_wander;
-
-	population.col(11) = dest_no; //set destination active
-	population.col(12) = 1; // set destination reached
-
 }
 
 /*-----------------------------------------------------------*/

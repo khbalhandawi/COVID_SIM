@@ -116,7 +116,7 @@ def main():
         std_gc_opts = pickle.load(fid)
 
     # Variables
-    n_samples_LH = 51 + 1
+    n_samples_LH = 299 + 1
     [lob_var, upb_var, points, points_us] = LHS_sampling(n_samples_LH,new_LHS=False)
 
     # # Opts

@@ -128,8 +128,8 @@ Configuration::Configuration()
 	social_distance_violation = 0; social_distance_violation_in = "0"; //  number of people
 	SD_act_onset = false; SD_act_onset_in = "false";
 
-	wall_buffer = 0.01; wall_buffer_in = "0.01"; // wall repulsion zone
-	bounce_buffer = 0.005; bounce_buffer_in = "0.005";  // maximum overshoot outside wall
+	wall_buffer = 0.001; wall_buffer_in = "0.001"; // wall repulsion zone
+	bounce_buffer = 0.0005; bounce_buffer_in = "0.0005";  // maximum overshoot outside wall
 
 	// when people have an active destination, the wander range defines the area
 	// surrounding the destination they will wander upon arriving
@@ -241,29 +241,6 @@ void Configuration::set_lockdown(RandomDevice *my_rand, double lockdown_percenta
 
 	//lockdown vector is 1 for those not complying
 	lockdown_vector = my_rand->Random_choice_prob(pop_size, lockdown_compliance_var);
-
-}
-
-/*-----------------------------------------------------------*/
-/*                  set self isolation ratio                 */
-/*-----------------------------------------------------------*/
-void Configuration::set_self_isolation(int number_of_tests_var, double self_isolate_proportion_var,
-	vector<double> isolation_bounds_set, bool traveling_infects_var) 
-{
-	/*sets self-isolation scenario to active*/
-
-	self_isolate = true;
-	isolation_bounds = isolation_bounds_set;
-	self_isolate_proportion = self_isolate_proportion_var;
-	number_of_tests = number_of_tests_var; // careful not to confuse with objects ending in _in
-	//set roaming bounds to outside isolated area
-	xbounds = { 0.02, 0.98 };
-	ybounds = { 0.02, 0.98 };
-	//update plot bounds everything is shown
-	x_plot = { isolation_bounds_set[0] - 0.02, 1 };
-	y_plot = { 0, 1 };
-	//update whether traveling agents also infect
-	traveling_infects = traveling_infects_var;
 
 }
 

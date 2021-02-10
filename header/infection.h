@@ -24,19 +24,20 @@ void find_nearby(Eigen::ArrayXXf population, Eigen::ArrayXf person_center, doubl
 /*                      Test and isolate                     */
 /*-----------------------------------------------------------*/
 void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, RandomDevice *my_rand, 
-	 Eigen::ArrayXXf &destinations, vector<double> location_bounds = {}, int location_no = 1);
+	 Eigen::ArrayXXf &destinations, int location_no = 1);
 
 /*-----------------------------------------------------------*/
 /*           Find new infections (within radius)             */
 /*-----------------------------------------------------------*/
 void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, Configuration Config, int frame,
-	RandomDevice *my_rand, bool send_to_location = false, vector<double> location_bounds = {}, 
-	int location_no = 1, double location_odds = 1.0, bool test_flag = false, Eigen::ArrayXXf dist = {});
+	RandomDevice *my_rand, bool send_to_location = false, int location_no = 1, 
+	bool test_flag = false, Eigen::ArrayXXf dist = {});
 	
 /*-----------------------------------------------------------*/
 /*                     Recover or die                        */
 /*-----------------------------------------------------------*/
-void recover_or_die(Eigen::ArrayXXf &population, int frame, Configuration Config, RandomDevice *my_rand);
+void recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, 
+	Configuration Config, int frame, RandomDevice *my_rand, int location_no);
 
 /*-----------------------------------------------------------*/
 /*                     Compute mortality                     */
