@@ -31,6 +31,23 @@ def scaling(x,l,u,operation):
     return x_out
 
 #==============================================================================#
+# Load an output array from COVID application
+def load_matrix(filename, folder='data_tstep'):
+    '''loads tracking grid coordinates from disk
+
+    Function that loads the tracking grid coordinates from specific files on the disk.
+    Loads the state of the grid_coords matrix
+
+    Keyword arguments
+    -----------------
+
+    tstep : int
+        the timestep that will be saved
+    ''' 
+    matrix = np.loadtxt('%s/%s.bin' %(folder,filename))
+    return matrix
+
+#==============================================================================#
 # Execute system commands and return output to console
 def system_command(command):
 
@@ -123,7 +140,7 @@ def parallel_sampling(design_variables,parameters,output_file_base,n_samples):
 def serial_sampling(design_variables, parameters, output_file_base, n_samples):
 
     infected_i = []; fatalities_i = []; GC_i = []; distance_i = []
-
+    process_I = []; process_F = []; process_R = []; process_M = []; process_R0 = []
     for i in range(n_samples):  
         [infected, fatalities, mean_GC, mean_distance] = processInput(i, design_variables, parameters, output_file_base)
 
@@ -132,7 +149,14 @@ def serial_sampling(design_variables, parameters, output_file_base, n_samples):
         GC_i += [mean_GC]
         distance_i += [mean_distance]
 
-    return infected_i, fatalities_i, GC_i, distance_i
+        run_data = load_matrix('SIRF_data', folder='population')
+        run_data_M = load_matrix('mean_GC_data', folder='population')
+        run_data_R0 = load_matrix('mean_R0_data', folder='population')
+        I = run_data[:,2]; R = run_data[:,3]; F = run_data[:,4]; M = [x * 100 for x in run_data_M[:,1]]
+
+        process_I += [I]; process_F += [F]; process_R += [R]; process_M += [M]; process_R0 += [run_data_R0]
+
+    return infected_i, fatalities_i, GC_i, distance_i, process_I, process_F, process_R, process_M, process_R0
 
 #==============================================================================#
 # Create models from data
@@ -388,37 +412,29 @@ if __name__ == '__main__':
     # Model variables
     bounds = np.array([[   16    , 101   ], # number of essential workers
                        [   0.0001, 0.15  ], # Social distancing factor
-                       [   10    , 81    ]]) # Testing capacity
-
-    # bounds = np.array([[   16    , 101   ], # number of essential workers
-    #                    [   0.0001, 0.15  ], # Social distancing factor
-    #                    [   10    , 51    ]]) # Testing capacity
+                       [   10    , 51    ]]) # Testing capacity
 
     run = 0 # starting point
 
-    # # Points to plot
-    # # Run opt 1
-    # opts = np.array([[0.910569989 , 0.800558656 , 0.745847484 ],
-    #                  [0.5546875   , 0.8203125   , 0.74609375  ],
-    #                  [0.49218546  , 0.863279802 , 0.710941315 ],
-    #                  [0.375       , 0.26563     , 0.76563     ],
-    #                  [0.1875      , 0.6875      , 0.375       ]])
+    # Points to plot
+    # Demo points
+    # opts = np.array([[0.164705882 , 0.666444296 , 0.000000000 ],
+    #                  [0.517647058 , 0.666444296 , 0.000000000 ],
+    #                  [0.164705882 , 0.833222148 , 0.000000000 ],
+    #                  [0.164705882 , 0.666444296 , 0.243902439 ]])
 
     # Points to plot
-    # Run opt 2
     # StoMADS V2
+    # opts = np.array([[0.6203810000, 0.2954270000, 0.9158810000],
+    #                  [0.6164750000, 0.2946950000, 0.9184600000],
+    #                  [0.6360060000, 0.3064140000, 0.9809600000],
+    #                  [0.6277050000, 0.3103200000, 0.9299350000],
+    #                  [0.6194040000, 0.3039720000, 0.9028350000],
+    #                  [0.6438180000, 0.3571950000, 0.8989290000],
+    #                  [0.8664750000, 0.4196950000, 0.9809600000]])
 
-    opts = np.array([[0.7517850000, 0.2591500000, 0.9448890000],
-                     [0.8299100000, 0.2354680000, 0.9180330000],
-                     [0.7998810000, 0.2279000000, 0.9204750000],
-                     [0.3371230000, 0.1621820000, 0.7942850000],
-                     [0.8142670000, 0.2432810000, 0.9292320000],
-                     [0.0357630000, 0.1758740000, 0.7217580000],
-                     [0.9451740000, 0.2089350000, 0.7092820000]])
-
-    # StoMADS V1
-    # opts = np.array([[ 0.375 , 0.26563, 0.76563 ],
-    #                  [ 0.1875, 0.6875 , 0.375   ]])
+    # NOMAD
+    opts = np.array([[ 0.998976, 0.0899023, 0.970503 ]])
 
     opts_unscaled = scaling(opts, bounds[:3,0], bounds[:3,1], 2)
 
@@ -438,17 +454,8 @@ if __name__ == '__main__':
         pickle.dump(opts_unscaled, fid)
 
     #===================================================================#
-    # n_samples = 1000
-    # n_bins = 30 # for continuous distributions
-    # min_bin_width_i = 15 # for discrete distributions
-    # min_bin_width_f = 5 # for discrete distributions
-
-    n_samples = 500
-    n_bins = 30 # for continuous distributions
-    min_bin_width_i = 15 # for discrete distributions
-    min_bin_width_f = 5 # for discrete distributions
-
-    new_run = False
+    n_samples = 100
+    new_run = True
 
     #===================================================================#
     # Initialize
@@ -481,7 +488,7 @@ if __name__ == '__main__':
             test_capacity = int(point[2])
 
             # Model parameters
-            healthcare_capacity = 50
+            healthcare_capacity = 150
 
             #=====================================================================#
             # Design variables
@@ -490,8 +497,21 @@ if __name__ == '__main__':
 
             #=====================================================================#
             output_file_base = 'MCS_data_r%i' %run
-            [infected_i,fatalities_i,GC_i,distance_i] = parallel_sampling(design_variables,parameters,output_file_base,n_samples)
-            # [infected_i,fatalities_i,GC_i,distance_i] = serial_sampling(design_variables,parameters,output_file_base,n_samples)
+            # [infected_i,fatalities_i,GC_i,distance_i] = parallel_sampling(design_variables,parameters,output_file_base,n_samples)
+            [infected_i,fatalities_i,GC_i,distance_i,process_I,process_F,process_R,process_M,process_R0] = serial_sampling(design_variables,parameters,output_file_base,n_samples)
+
+            # wipe log files
+            for f in os.listdir(job_dir):
+                dirname = os.path.join(job_dir, f)
+                if dirname.endswith(".log"):
+                    os.remove(dirname)
+
+            with open('data/MCS_process_data_r%i.pkl' %run,'wb') as fid:
+                pickle.dump(process_I,fid)
+                pickle.dump(process_F,fid)
+                pickle.dump(process_R,fid)
+                pickle.dump(process_M,fid)
+                pickle.dump(process_R0,fid)
 
             with open('data/MCS_data_r%i.pkl' %run,'wb') as fid:
                 pickle.dump(infected_i,fid)

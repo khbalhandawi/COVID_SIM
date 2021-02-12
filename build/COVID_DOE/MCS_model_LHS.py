@@ -89,7 +89,7 @@ if __name__ == '__main__':
     n_samples_LH = 300
 
     # LHS distribution
-    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=True)
+    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=False)
 
     labels = [None] * len(points)
     run = 0 # starting point
@@ -123,10 +123,10 @@ if __name__ == '__main__':
             if dirname.endswith(".log"):
                 os.remove(dirname)
 
-    # # Resume MCS
-    # run = 46
-    # points = points[run:]
-    # labels = labels[run:]
+    # Resume MCS
+    run = 65
+    points = points[run:]
+    labels = labels[run:]
 
     # # terminate MCS
     # run = 3
@@ -155,6 +155,12 @@ if __name__ == '__main__':
             output_file_base = 'MCS_data_r%i' %run
             [infected_i,fatalities_i,GC_i,distance_i] = parallel_sampling(design_variables,parameters,output_file_base,n_samples)
             # [infected_i,fatalities_i,GC_i,distance_i] = serial_sampling(design_variables,parameters,output_file_base,n_samples)
+
+            # wipe log files
+            for f in os.listdir(job_dir):
+                dirname = os.path.join(job_dir, f)
+                if dirname.endswith(".log"):
+                    os.remove(dirname)
 
             with open('data/MCS_data_r%i.pkl' %run,'wb') as fid:
                 pickle.dump(infected_i,fid)

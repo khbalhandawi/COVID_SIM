@@ -191,11 +191,11 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
         data_cstr = [d - constraint for d in data]
         rel_data = sum(map(lambda x : x < 0, data_cstr)) / len(data_cstr)
         mean_data = np.mean(data_cstr)
-        std_data = np.std(data_cstr)
+        std_data = np.std(data_cstr,ddof=1)
     else:
         rel_data = 0.0
         mean_data = np.mean(data)
-        std_data = np.std(data)
+        std_data = np.std(data,ddof=1)
 
     # Plot raw data
     fig0 = plt.figure(figsize=(6,5))
@@ -208,12 +208,12 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
         bins = np.arange(left_of_first_bin, right_of_last_bin + d, d)
 
         # plt.hist(data, bins, alpha=0.5, density=True)
-        plt.hist(data, bins = n_bins, facecolor=color, 
-                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
+        plt.hist(data, bins = n_bins, facecolor=color, alpha=0.5,
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True, linewidth=0.3)
     else:
         # plt.hist(data, bins = n_bins, alpha=0.5, density=True)
-        plt.hist(data, bins = n_bins, facecolor=color, 
-                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
+        plt.hist(data, bins = n_bins, facecolor=color, alpha=0.5,
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True, linewidth=0.3)
 
     ax = fig0.gca()
 
@@ -253,6 +253,12 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     
     ax2 = fig2.gca()
 
+    # plot constraint limits
+    if constraint is not None:
+        print("Healthcare capacity: %f" %constraint)
+        a_cstr = ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='k')
+        handles += [a_cstr]; labels += ['Healthcare capacity $H_{\mathrm{max}}$']
+
     if discrete:
         data_bins = bins
     else:
@@ -281,16 +287,13 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     if discrete:
         # discrete bin numbers
         # ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
-        ax2.hist(data, bins, linewidth=2, facecolor=color, 
+        ax2.hist(data, bins, linewidth=0.5, facecolor=color, alpha=0.5,
                  hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
     else:
         # ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
-        ax2.hist(data, bins = n_bins, facecolor=color, 
+        ax2.hist(data, bins = n_bins, linewidth=0.5, facecolor=color, alpha=0.5, 
                  hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
     
-    # plot constraint limits
-    if constraint is not None:
-        ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='r')
     # Save plot limits
     if dataYLim is None and dataXLim is None:
         dataYLim = ax2.get_ylim()
@@ -302,7 +305,7 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
 
     ax2.tick_params(axis='both', which='major', labelsize=14) 
     ax2.set_xlabel(label_name, fontsize=14)
-    ax2.set_ylabel('Probability density', fontsize=14)
+    ax2.set_ylabel('Relative frequency', fontsize=14)
 
     fig0.savefig('data/%i_RAW_%s.pdf' %(run,fun_name), 
         format='pdf', dpi=100,bbox_inches='tight')

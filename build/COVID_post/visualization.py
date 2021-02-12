@@ -133,7 +133,8 @@ def define_SGTE_model(fit_type,run_type):
 #==============================================================================#
 # Define number of 2D projections needed based on n_dims
 def hyperplane_SGTE_vis_norm(server,training_X,bounds,variable_lbls,nominal,training_Y,nn,fig,plt,threshold=None,
-							 output_label="$\hat{f}(\mathbf{x})$",constraint_label="$\hat{g}(\mathbf{x})$",opts=None):
+							 output_label="$\hat{f}(\mathbf{x})$",constraint_label="$\hat{g}(\mathbf{x})$",opts=None,
+							 cmax = None, cmin = None):
 	
 	import numpy as np
 	from scipy.special import comb
@@ -183,7 +184,7 @@ def hyperplane_SGTE_vis_norm(server,training_X,bounds,variable_lbls,nominal,trai
 		plot_countour_code(q,bounds,bounds_n,lob,upb,d,nominal,nn,
 						   training_X,server,variable_lbls,gs,plt,fig,
 						   threshold=threshold,output_label=output_label,constraint_label=constraint_label,
-						   opts=opts)
+						   opts=opts, cmax = cmax, cmin = cmin)
 	#===========================================================================
 	# copyfile(sgt_file, os.path.join(os.getcwd(),'SGTE_matlab_server',sgt_file)) # backup hyperparameters
 	#===========================================================================
@@ -192,7 +193,7 @@ def hyperplane_SGTE_vis_norm(server,training_X,bounds,variable_lbls,nominal,trai
 # Plot design space using 2D projections
 def plot_countour_code(q,bounds,bounds_n,lob,upb,d,nominal,nn,training_X,server,variable_lbls,gs,plt,fig,
 					   output_label="$\hat{f}(\mathbf{x})$",constraint_label="$\hat{g}(\mathbf{x})$",
-					   threshold=None,n_rand=0,opts=None):
+					   threshold=None,n_rand=0,opts=None, cmax = None, cmin = None):
 	
 	from main import scaling
 	import matplotlib.patches as patches
@@ -238,8 +239,6 @@ def plot_countour_code(q,bounds,bounds_n,lob,upb,d,nominal,nn,training_X,server,
 		X2 = scaling(X2_norm, lob[i[1]], upb[i[1]], 2) # Scale up plot variable
 		YX_obj = np.reshape(YX_obj, np.shape(X1))
 		
-		cmax = 6; cmin = 1 # set colorbar limits
-		
 		ax = fig.add_subplot(gs[iteraton]) # subplot
 		cf = ax.contourf( X1, X2, YX_obj, cmap=plt.cm.jet) # plot contour
 		# cf = ax.contourf( X1, X2, YX_obj, vmin = cmin, vmax = cmax, cmap=plt.cm.jet); # plot contour
@@ -248,9 +247,14 @@ def plot_countour_code(q,bounds,bounds_n,lob,upb,d,nominal,nn,training_X,server,
 		cbar = plt.cm.ScalarMappable(cmap=plt.cm.jet)
 		cbar.set_array(YX_obj)
 
-		boundaries = np.linspace(cmin, cmax, 51)
-		cbar_h = fig.colorbar(cbar, boundaries=boundaries)
-		cbar_h.set_label(output_label, rotation=90, labelpad=3)
+		if cmax is not None and cmin is not None:
+			cmax = cmax; cmin = cmin # set colorbar limits
+			boundaries = np.linspace(cmin, cmax, 51)
+			cbar_h = fig.colorbar(cbar, boundaries=boundaries)
+			cbar_h.set_label(output_label, rotation=90, labelpad=3)
+		else:
+			cbar_h = fig.colorbar(cbar)
+			cbar_h.set_label(output_label, rotation=90, labelpad=3)
 
 		artists, labels = cf.legend_elements()
 		af = artists[0]
@@ -274,8 +278,8 @@ def plot_countour_code(q,bounds,bounds_n,lob,upb,d,nominal,nn,training_X,server,
 		import matplotlib.lines as mlines
 
 		if opts is not None:
-			ax.plot(opts[:,i[0]],opts[:,i[1]],'xr', markersize = 6) # plot STOMADS points for surrogate
-			a_opts = mlines.Line2D([], [], color='red', marker='x', markersize=7, linestyle='')
+			ax.plot(opts[:,i[0]],opts[:,i[1]],'*m', markersize = 10) # plot STOMADS points for surrogate
+			a_opts = mlines.Line2D([], [], color='magenta', marker='*', markersize=7, linestyle='')
 
 			handles += [a_opts]
 			labels += ["StoMADS result"] # for presentation	

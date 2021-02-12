@@ -23,11 +23,11 @@ def statistics(data, constraint = None,):
         data_cstr = [d - constraint for d in data]
         rel_data = sum(map(lambda x : x < 0, data_cstr)) / len(data_cstr)
         mean_data = np.mean(data_cstr)
-        std_data = np.std(data_cstr)
+        std_data = np.std(data_cstr,ddof=1)
     else:
         rel_data = 0.0
         mean_data = np.mean(data)
-        std_data = np.std(data)
+        std_data = np.std(data,ddof=1)
 
     return mean_data, std_data, rel_data
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     # terminate MCS
     run = 0
-    run_end = 299 + 1
+    run_end = 60 + 1
     points = points[run:run_end]
 
     for point in points:
