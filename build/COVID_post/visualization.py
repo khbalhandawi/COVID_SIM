@@ -108,22 +108,22 @@ def define_SGTE_model(fit_type,run_type):
 	if run_type == 1: # optimize fitting parameters
 		if fit_type == fitting_types[0]:
 				model = ("TYPE KRIGING RIDGE OPTIM DISTANCE_TYPE OPTIM METRIC "
-						 "OECV BUDGET %i OUTPUT %s" %(budget, out_file))
+						 "RMSECV BUDGET %i OUTPUT %s" %(budget, out_file))
 		elif fit_type == fitting_types[1]:
 				model = ("TYPE LOWESS DEGREE OPTIM RIDGE OPTIM "
 						 "KERNEL_TYPE OPTIM KERNEL_COEF OPTIM "
-						 "DISTANCE_TYPE OPTIM METRIC OECV BUDGET %i OUTPUT %s" %(budget, out_file))
+						 "DISTANCE_TYPE OPTIM METRIC RMSECV BUDGET %i OUTPUT %s" %(budget, out_file))
 		elif fit_type == fitting_types[2]:
 				model = ("TYPE KS KERNEL_TYPE OPTIM KERNEL_COEF OPTIM "
-						 "DISTANCE_TYPE OPTIM METRIC OECV BUDGET %i OUTPUT %s" %(budget, out_file))
+						 "DISTANCE_TYPE OPTIM METRIC RMSECV BUDGET %i OUTPUT %s" %(budget, out_file))
 		elif fit_type == fitting_types[3]:
 				model = ("TYPE RBF KERNEL_TYPE OPTIM KERNEL_COEF OPTIM "
-						 "DISTANCE_TYPE OPTIM RIDGE OPTIM METRIC OECV BUDGET %i OUTPUT %s" %(budget, out_file))
+						 "DISTANCE_TYPE OPTIM RIDGE OPTIM METRIC RMSECV BUDGET %i OUTPUT %s" %(budget, out_file))
 		elif fit_type == fitting_types[4]:
 				model = ("TYPE PRS DEGREE OPTIM RIDGE OPTIM "
-						 "METRIC OECV BUDGET %i OUTPUT %s" %(budget, out_file))
+						 "METRIC RMSECV BUDGET %i OUTPUT %s" %(budget, out_file))
 		elif fit_type == fitting_types[5]:
-				model = ("TYPE ENSEMBLE WEIGHT OPTIM METRIC OECV "
+				model = ("TYPE ENSEMBLE WEIGHT OPTIM METRIC RMSECV "
 						 "DISTANCE_TYPE OPTIM BUDGET %i OUTPUT %s" %(budget, out_file))
 	elif run_type == 2: # Run existing SGTE model
 		model = get_SGTE_model(out_file)

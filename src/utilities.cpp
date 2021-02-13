@@ -39,13 +39,16 @@
  \see    utilities.h
  */
 
+
 #include "utilities.h"
+
+#include <direct.h>
 #include <windows.h>
 
 /*-----------------------------------------------------------*/
 /*                    Select block of data                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf Select_block(Eigen::ArrayXXf input, std::vector<int> cols, int n_rows, Eigen::ArrayXf cond_vector, int cond_value, string cond_type)
+Eigen::ArrayXXf COVID_SIM::Select_block(Eigen::ArrayXXf input, std::vector<int> cols, int n_rows, Eigen::ArrayXf cond_vector, int cond_value, std::string cond_type)
 {
 	Eigen::ArrayXf zero_vector = Eigen::ArrayXf::Zero(n_rows, 1);
 	Eigen::ArrayXXf output(n_rows, cols.size());
@@ -68,11 +71,11 @@ Eigen::ArrayXXf Select_block(Eigen::ArrayXXf input, std::vector<int> cols, int n
 /*-----------------------------------------------------------*/
 /*                    Select rows of data                    */
 /*-----------------------------------------------------------*/
-vector<int> select_rows(ArrayXXb cond)
+std::vector<int> COVID_SIM::select_rows(ArrayXXb cond)
 {	
 
 	int n_rows = cond.rows();
-	vector<int> keep_rows;
+	std::vector<int> keep_rows;
 
 	for (int i = 0; i < n_rows; ++i) {
 
@@ -87,11 +90,11 @@ vector<int> select_rows(ArrayXXb cond)
 /*-----------------------------------------------------------*/
 /*                 Select rows of data (any)                 */
 /*-----------------------------------------------------------*/
-vector<int> select_rows_any(ArrayXXb cond)
+std::vector<int> COVID_SIM::select_rows_any(ArrayXXb cond)
 {
 
 	int n_rows = cond.rows();
-	vector<int> keep_rows;
+	std::vector<int> keep_rows;
 
 	for (int i = 0; i < n_rows; ++i) {
 
@@ -106,13 +109,13 @@ vector<int> select_rows_any(ArrayXXb cond)
 /*-----------------------------------------------------------*/
 /*                  Select elements of data                  */
 /*-----------------------------------------------------------*/
-tuple<vector<int>, vector<int>> select_rows_cols(ArrayXXb conds)
+std::tuple<std::vector<int>, std::vector<int>> COVID_SIM::select_rows_cols(ArrayXXb conds)
 {
 
 	int n_rows = conds.rows();
 	int n_cols = conds.cols();
-	vector<int> keep_rows;
-	vector<int> keep_cols;
+	std::vector<int> keep_rows;
+	std::vector<int> keep_cols;
 
 	for (int i = 0; i < n_rows; ++i) {
 
@@ -132,7 +135,7 @@ tuple<vector<int>, vector<int>> select_rows_cols(ArrayXXb conds)
 /*-----------------------------------------------------------*/
 /*              Function for repeating a vector              */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXf repeat(Eigen::ArrayXf A, int n_times)
+Eigen::ArrayXf COVID_SIM::repeat(Eigen::ArrayXf A, int n_times)
 {
 	Eigen::ArrayXf B(A.rows()*(n_times));
 
@@ -152,9 +155,9 @@ Eigen::ArrayXf repeat(Eigen::ArrayXf A, int n_times)
 /*        Function for generating a linspaced vector         */
 /*-----------------------------------------------------------*/
 // Create a vector of evenly spaced numbers.
-vector<double> range(double min, double max, size_t N)
+std::vector<double> COVID_SIM::range(double min, double max, size_t N)
 {
-	vector<double> range;
+	std::vector<double> range;
 	double delta = (max - min) / double(N - 1);
 
 	for (int i = 0; i < N; i++) {
@@ -167,9 +170,9 @@ vector<double> range(double min, double max, size_t N)
 /*-----------------------------------------------------------*/
 /*      Function for generating a sequence of integers       */
 /*-----------------------------------------------------------*/
-vector<int> sequence(int min, int max, int skip)
+std::vector<int> COVID_SIM::sequence(int min, int max, int skip)
 {
-	vector<int> sequence;
+	std::vector<int> sequence;
 	int e = min;
 	int i = 0;
 
@@ -185,11 +188,11 @@ vector<int> sequence(int min, int max, int skip)
 /*-----------------------------------------------------------*/
 /*    Function for creating a directory if non-existent      */
 /*-----------------------------------------------------------*/
-void check_folder(string folder)
+void COVID_SIM::check_folder(std::string folder)
 {
 	/*check if folder exists, make if not present*/
 
-	string dir = folder + "\\";
+	std::string dir = folder + "\\";
 
 	DWORD const ftyp = GetFileAttributesA(folder.c_str());
 
@@ -205,7 +208,7 @@ void check_folder(string folder)
 /*-----------------------------------------------------------*/
 /*    Function for computing the pairwise norm of a vector   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf pairwise_dist(Eigen::ArrayXXf a)
+Eigen::ArrayXXf COVID_SIM::pairwise_dist(Eigen::ArrayXXf a)
 {
 	Eigen::ArrayXf D2 = a.rowwise().squaredNorm(); // hurts precision
 	Eigen::ArrayXXf dist = D2.rowwise().replicate(a.rows()) + D2.transpose().colwise().replicate(a.rows());
@@ -218,7 +221,7 @@ Eigen::ArrayXXf pairwise_dist(Eigen::ArrayXXf a)
 /*-----------------------------------------------------------*/
 /* Function for computing the pairwise difference of a vector*/
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf pairwise_diff(Eigen::ArrayXf a)
+Eigen::ArrayXXf COVID_SIM::pairwise_diff(Eigen::ArrayXf a)
 {
 	Eigen::ArrayXXf dist = a.transpose().colwise().replicate(a.rows()) - a.rowwise().replicate(a.rows());
 	return dist;
@@ -228,7 +231,7 @@ Eigen::ArrayXXf pairwise_diff(Eigen::ArrayXf a)
 /*                 Fast inverse square-root                  */
 /*-----------------------------------------------------------*/
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
-double invSqrt(double x)
+double COVID_SIM::invSqrt(double x)
 {
 	double halfx = 0.5 * x;
 	double y = x;
@@ -244,10 +247,10 @@ double invSqrt(double x)
 /*-----------------------------------------------------------*/
 /*      Function for mapping Eigen Array to std::vector      */
 /*-----------------------------------------------------------*/
-vector<double> to_std_vector(Eigen::MatrixXd a)
+std::vector<double> COVID_SIM::to_std_vector(Eigen::MatrixXd a)
 {
 
-	vector<double> out_i;
+	std::vector<double> out_i;
 
 	for (int j = 0; j < a.rows(); j++) {
 		out_i.push_back(a.row(j)[0]);
@@ -260,19 +263,19 @@ vector<double> to_std_vector(Eigen::MatrixXd a)
 /*-----------------------------------------------------------*/
 /*                     Slice a std::vector                   */
 /*-----------------------------------------------------------*/
-vector<int> slice_u(vector<int> const &v, int m, int n)
+std::vector<int> COVID_SIM::slice_u(std::vector<int> const &v, int m, int n)
 {
 	auto first = v.cbegin() + m;
 	auto last = v.cbegin() + n;
 	
-	vector<int> vec(first, last);
+	std::vector<int> vec(first, last);
 	return vec;
 }
 
 /*-----------------------------------------------------------*/
 /*               Unique elements of std::vector              */
 /*-----------------------------------------------------------*/
-void unique_elements(vector<float> &v)
+void COVID_SIM::unique_elements(std::vector<float> &v)
 {
 	// remove consecutive (adjacent) duplicates
 	auto last = unique(v.begin(), v.end());

@@ -40,14 +40,17 @@
  */
 
 #include "motion.h"
+
+#include "utilities.h"
+#include "RandomDevice.h"
 #ifdef GPU_ACC
-	#include "CUDA_functions.h"
+#include "CUDA_functions.h"
 #endif // GPU_ACC
 
  /*-----------------------------------------------------------*/
  /*                      Update positions                     */
  /*-----------------------------------------------------------*/
-void update_positions(Eigen::ArrayXXf &population, double dt)
+void COVID_SIM::update_positions(Eigen::ArrayXXf &population, double dt)
 {
 	/*update positions of all people
 
@@ -73,7 +76,7 @@ void update_positions(Eigen::ArrayXXf &population, double dt)
 /*-----------------------------------------------------------*/
 /*                      Update velocities                    */
 /*-----------------------------------------------------------*/
-void update_velocities(Eigen::ArrayXXf &population_all, double max_speed, double dt)
+void COVID_SIM::update_velocities(Eigen::ArrayXXf &population_all, double max_speed, double dt)
 {
 	/*update positions of all people
 
@@ -116,7 +119,7 @@ void update_velocities(Eigen::ArrayXXf &population_all, double max_speed, double
 /*-----------------------------------------------------------*/
 /*                      Update wall forces                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf xbounds, Eigen::ArrayXXf ybounds,
+Eigen::ArrayXXf COVID_SIM::update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf xbounds, Eigen::ArrayXXf ybounds,
 	double wall_buffer, double bounce_buffer)
 {
 	/*checks which people are about to go out of bounds and corrects
@@ -227,7 +230,7 @@ Eigen::ArrayXXf update_wall_forces(Eigen::ArrayXXf population, Eigen::ArrayXXf x
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
-void update_repulsive_forces_cuda(Eigen::ArrayXXf &population_all, double social_distance_factor, CUDA_GPU::Kernels *ABM_cuda)
+void COVID_SIM::update_repulsive_forces_cuda(Eigen::ArrayXXf &population_all, double social_distance_factor, CUDA_GPU::Kernels *ABM_cuda)
 {
 	/*calculated repulsive forces between individuals
 
@@ -245,7 +248,7 @@ void update_repulsive_forces_cuda(Eigen::ArrayXXf &population_all, double social
 	// update selectively
 	ArrayXXb cond(population_all.rows(), 3);
 	cond << (population_all.col(17) == 0), (population_all.col(11) == 0), (population_all.col(12) == 1);
-	vector<int> rows_cond = select_rows(cond);
+	std::vector<int> rows_cond = select_rows(cond);
 
 	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);
 	int pop_size = population.rows();
@@ -263,7 +266,7 @@ void update_repulsive_forces_cuda(Eigen::ArrayXXf &population_all, double social
 /*-----------------------------------------------------------*/
 /*                   Update repulsive forces                 */
 /*-----------------------------------------------------------*/
-void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor, Eigen::ArrayXXf &dist_all, bool compute_dist_all)
+void COVID_SIM::update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_distance_factor, Eigen::ArrayXXf &dist_all, bool compute_dist_all)
 {
 	/*calculated repulsive forces between individuals
 
@@ -281,7 +284,7 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 	// update selectively
 	ArrayXXb cond(population_all.rows(), 3);
 	cond << (population_all.col(17) == 0), (population_all.col(11) == 0), (population_all.col(12) == 1);
-	vector<int> rows_cond = select_rows(cond);
+	std::vector<int> rows_cond = select_rows(cond);
 
 	Eigen::ArrayXXf population = population_all(rows_cond, Eigen::all);
 	int pop_size = population.rows();
@@ -318,7 +321,7 @@ void update_repulsive_forces(Eigen::ArrayXXf &population_all, double social_dist
 /*-----------------------------------------------------------*/
 /*                    Update gravity forces                  */
 /*-----------------------------------------------------------*/
-void update_gravity_forces(Eigen::ArrayXXf &population, double time, double &last_step_change, RandomDevice *my_rand, double wander_step_size,
+void COVID_SIM::update_gravity_forces(Eigen::ArrayXXf &population, double time, double &last_step_change, RandomDevice *my_rand, double wander_step_size,
 	double gravity_strength, double wander_step_duration)
 {
 	/*updates random perturbation in forces near individuals to cause random motion
@@ -365,30 +368,4 @@ void update_gravity_forces(Eigen::ArrayXXf &population, double time, double &las
 
 	}
 
-}
-
-/*-----------------------------------------------------------*/
-/*                  Get motion parameters                    */
-/*-----------------------------------------------------------*/
-vector<double> get_motion_parameters(double xmin, double ymin, double xmax, double ymax)
-{
-
-	/*gets destination center and wander ranges
-
-	Function that returns geometric parameters of the destination
-	that the population members have set.
-
-	Keyword arguments :
-------------------
-	xmin, ymin, xmax, ymax : int or float
-	lower and upper bounds of the destination area set.
-	*/
-
-	double x_center = xmin + ((xmax - xmin) / 2.0);
-	double y_center = ymin + ((ymax - ymin) / 2.0);
-
-	double x_wander = (xmax - xmin) / 2.0;
-	double y_wander = (ymax - ymin) / 2.0;
-
-	return { x_center, y_center, x_wander, y_wander };
 }

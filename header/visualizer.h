@@ -1,32 +1,29 @@
 #pragma once
 
-#include "utilities.h"
-#include "RandomDevice.h"
+#include "mainwindow.h"
+
 #include "Configuration.h"
 #include "Population_trackers.h"
-#include <algorithm>
-#include <thread>
-#ifndef _N_QT
+
 #include <QApplication>
-#include "mainwindow.h"
-#endif _N_QT
-using namespace std;
+
+#ifndef VISUALIZER_H_H
+#define VISUALIZER_H_H
 
 class visualizer
 {
 public:
-#ifndef _N_QT
 	 /*-----------------------------------------------------------*/
 	 /*                    Start a Qt thread                      */
 	 /*-----------------------------------------------------------*/
-	 std::unique_ptr<MainWindow> visualizer::start_qt(Configuration Config);
+	 std::unique_ptr<MainWindow> visualizer::start_qt(COVID_SIM::Configuration Config);
 
 	/*-----------------------------------------------------------*/
 	/*                     Update Qt window                      */
 	/*-----------------------------------------------------------*/
 	void visualizer::update_qt(Eigen::ArrayXXf population, 
-		int frame, double computation_time, std::unique_ptr<MainWindow> &mainWindow, Population_trackers *pop_tracker, Configuration *Config);
-#endif _N_QT
+		int frame, double computation_time, std::unique_ptr<MainWindow> &mainWindow, COVID_SIM::Population_trackers *pop_tracker, COVID_SIM::Configuration *Config);
+
 	/*-----------------------------------------------------------*/
 	/*                        Constructor                        */
 	/*-----------------------------------------------------------*/
@@ -37,3 +34,5 @@ public:
 	/*-----------------------------------------------------------*/
 	~visualizer();
 };
+
+#endif // VISUALIZER_H_H

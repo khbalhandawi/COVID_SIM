@@ -1,5 +1,5 @@
 {
-    "solution": "${workspaceRoot}/cpp_corona_simulation.sln",
+    "solution": "${workspaceRoot}/COVID_SIM_UI.sln",
     "variables": {
         "MSBUILD": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/MSBuild/15.0/Bin/MSBuild.exe",
         "DEVENV": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/devenv.com"
@@ -32,7 +32,7 @@
         {
             "name": "test",
             "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/build/cpp_corona_simulation.exe",
+            "program": "${workspaceRoot}/build/COVID_SIM_UI.exe",
             "args": ["0", "16", "0.175", "0", "50", "MCS_data_r0_0.log"]
         }
     ]

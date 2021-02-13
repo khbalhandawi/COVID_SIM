@@ -52,7 +52,7 @@ def system_command(command):
 def cpp_application( i, design_variables, parameters, output_file_n, debug = False ):
     design_variables_str = ' '.join(map(str,design_variables)) # print variables as space delimited string
     parameters_str = ' '.join(map(str,parameters)) # print parameters as space delimited string
-    command = "cpp_corona_simulation %i %s %s %s" %(i, design_variables_str, parameters_str, output_file_n)
+    command = "COVID_SIM_UI %i %s %s %s" %(i, design_variables_str, parameters_str, output_file_n)
     
     print(command)
     if not debug:

@@ -39,14 +39,16 @@
 **                                                                                                         **
 *************************************************************************************************************/
 
-#ifndef _N_QT
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "simulation.h"
+
 #include <QMainWindow>
 #include <QTimer>
+#include <QThread>
+
 #include "qcustomplot.h" // the header file of QCustomPlot. Don't forget to add it to your project, if you use an IDE, so it gets compiled.
-#include "Configuration.h"
 
 namespace Ui {
 class MainWindow;
@@ -55,21 +57,20 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
-  
+		QThread workerThread;
 public:
-	explicit MainWindow(Configuration *Config_init, QWidget *parent = 0);
+	explicit MainWindow(COVID_SIM::simulation *sim_init, QWidget *parent = 0);
 	~MainWindow();
 
-	Configuration *Config;
-	double SD_max, IC_max, TC_max;
-	double SD_min, IC_min, TC_min;
+	COVID_SIM::simulation *sim;
+
 	double IC_0, SD_0;
 	int TC_0;
-	bool pause_action, run_action, flag_busy;
+
 	int frame_count;
 
-	void setupDemo(int demoIndex, Configuration *Config);
-	void setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration *Config);
+	void setupDemo(int demoIndex);
+	void setupRealtimeScatterDemo(QCustomPlot *customPlot);
 	void pdfrender();
   
 public slots:
@@ -82,20 +83,11 @@ public slots:
 		QVector<double> x_lower, QVector<double> y_lower,
 		QVector<double> x_upper, QVector<double> y_upper);
 
-	void setICValue(int IC);
-	void setSDValue(int SD);
-	void setTCValue(int TC);
 	void screenShot();
+	void iterate_time();
 
 signals:
-	void arrivedsignal(QVector<double> x0, QVector<double> y0,
-		QVector<double> x1, QVector<double> y1,
-		QVector<double> x2, QVector<double> y2,
-		QVector<double> x3, QVector<double> y3,
-		QVector<double> x4, QVector<double> y4,
-		int frame, float R0, float computation_time,
-		QVector<double> x_lower, QVector<double> y_lower,
-		QVector<double> x_upper, QVector<double> y_upper);
+	void launch_next_step();
 
 private:
 	Ui::MainWindow *ui;
@@ -109,4 +101,3 @@ private slots:
 };
 
 #endif // MAINWINDOW_H
-#endif // _N_QT

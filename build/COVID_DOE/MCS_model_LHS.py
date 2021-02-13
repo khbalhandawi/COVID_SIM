@@ -89,7 +89,7 @@ if __name__ == '__main__':
     n_samples_LH = 300
 
     # LHS distribution
-    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=False)
+    [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=True)
 
     labels = [None] * len(points)
     run = 0 # starting point
@@ -123,14 +123,14 @@ if __name__ == '__main__':
             if dirname.endswith(".log"):
                 os.remove(dirname)
 
-    # Resume MCS
-    run = 65
-    points = points[run:]
-    labels = labels[run:]
+    # # Resume MCS
+    # run = 0
+    # points = points[run:]
+    # labels = labels[run:]
 
     # # terminate MCS
-    # run = 3
-    # run_end = 3 + 1
+    # run = 0
+    # run_end = 299 + 1
     # points = points[run:run_end]
     # labels = labels[run:run_end]
 

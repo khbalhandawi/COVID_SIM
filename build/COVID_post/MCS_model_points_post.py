@@ -100,7 +100,8 @@ if __name__ == '__main__':
         colors = ['#FFFFFF'] * 300
 
     # terminate
-    select_indices = [0,1,2,3,4,5,6]
+    # select_indices = [0,1,2,3,4,5,6]
+    select_indices = [0,5,6]
     opts_unscaled = [opts_unscaled[index] for index in select_indices]
     runs = select_indices
 

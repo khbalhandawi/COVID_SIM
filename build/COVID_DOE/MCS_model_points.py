@@ -70,7 +70,7 @@ def system_command(command):
 def cpp_application( i, design_variables, parameters, output_file_n, debug = False ):
     design_variables_str = ' '.join(map(str,design_variables)) # print variables as space delimited string
     parameters_str = ' '.join(map(str,parameters)) # print parameters as space delimited string
-    command = "cpp_corona_simulation %i %s %s %s" %(i, design_variables_str, parameters_str, output_file_n)
+    command = "COVID_SIM_UI %i %s %s %s" %(i, design_variables_str, parameters_str, output_file_n)
     
     print(command)
     if not debug:
@@ -105,7 +105,7 @@ def parallel_sampling(design_variables,parameters,output_file_base,n_samples):
     import subprocess
     
     # num_threads = int(multiprocessing.cpu_count()/2)
-    num_threads = 4
+    num_threads = 6
 
     # qout = multiprocessing.Queue()
     # processes = [multiprocessing.Process(target=processInput, args=(i, design_variables, parameters, output_file_base, qout)) for i in range(n_samples)]
@@ -425,16 +425,16 @@ if __name__ == '__main__':
 
     # Points to plot
     # StoMADS V2
-    # opts = np.array([[0.6203810000, 0.2954270000, 0.9158810000],
-    #                  [0.6164750000, 0.2946950000, 0.9184600000],
-    #                  [0.6360060000, 0.3064140000, 0.9809600000],
-    #                  [0.6277050000, 0.3103200000, 0.9299350000],
-    #                  [0.6194040000, 0.3039720000, 0.9028350000],
-    #                  [0.6438180000, 0.3571950000, 0.8989290000],
-    #                  [0.8664750000, 0.4196950000, 0.9809600000]])
+    opts = np.array([[0.6203810000, 0.2954270000, 0.9158810000],
+                     [0.6164750000, 0.2946950000, 0.9184600000],
+                     [0.6360060000, 0.3064140000, 0.9809600000],
+                     [0.6277050000, 0.3103200000, 0.9299350000],
+                     [0.6194040000, 0.3039720000, 0.9028350000],
+                     [0.6438180000, 0.3571950000, 0.8989290000],
+                     [0.8664750000, 0.4196950000, 0.9809600000]])
 
-    # NOMAD
-    opts = np.array([[ 0.998976, 0.0899023, 0.970503 ]])
+    # # NOMAD
+    # opts = np.array([[ 0.998976, 0.0899023, 0.970503 ]])
 
     opts_unscaled = scaling(opts, bounds[:3,0], bounds[:3,1], 2)
 
@@ -454,7 +454,7 @@ if __name__ == '__main__':
         pickle.dump(opts_unscaled, fid)
 
     #===================================================================#
-    n_samples = 100
+    n_samples = 500
     new_run = True
 
     #===================================================================#
@@ -471,9 +471,9 @@ if __name__ == '__main__':
             if dirname.endswith(".log"):
                 os.remove(dirname)
 
-        # # Resume MCS
-        # run = 5
-        # opts_unscaled = opts_unscaled[run:]
+        # Resume MCS
+        run = 2
+        opts_unscaled = opts_unscaled[run:]
 
         # # terminate MCS
         # run = 3

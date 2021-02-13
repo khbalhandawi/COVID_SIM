@@ -40,69 +40,59 @@
 *************************************************************************************************************/
 
 #include "mainwindow.h"
-#ifndef _N_QT
 #include "ui_mainwindow.h"
+#include "Worker.h"
+
 #include <QDebug>
 #include <QDesktopWidget>
 #include <QScreen>
 #include <QMessageBox>
 #include <QMetaEnum>
 
-MainWindow::MainWindow(Configuration *Config_init, QWidget *parent) :
-  QMainWindow(parent),
-  ui(new Ui::MainWindow)
-{
-  
-	Config = Config_init;
+#include <vector>
+#include <string>
 
+MainWindow::MainWindow(COVID_SIM::simulation *sim_init, QWidget *parent) :
+	QMainWindow(parent),
+	ui(new Ui::MainWindow)
+{
+
+	sim = sim_init;
 	ui->setupUi(this);
 
-	// Connect data signal to updator slot
-	connect(this, SIGNAL(arrivedsignal(QVector<double>, QVector<double>,
-				QVector<double>, QVector<double>,
-				QVector<double>, QVector<double>,
-				QVector<double>, QVector<double>, 			   
-				QVector<double>, QVector<double>,
-				int, float, float, 
-				QVector<double>, QVector<double>, 
-				QVector<double>, QVector<double>)),
-			this, SLOT(realtimeDataInputSlot(QVector<double>, QVector<double>,						 
-				QVector<double>, QVector<double>,
-				QVector<double>, QVector<double>,
-				QVector<double>, QVector<double>,
-				QVector<double>, QVector<double>,
-				int, float, float, 
-				QVector<double>, QVector<double>, 
-				QVector<double>, QVector<double>)));
+	Worker *worker = new Worker(sim);
+	worker->moveToThread(&workerThread);
+		
+	connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+	connect(this, &MainWindow::launch_next_step, worker, &Worker::doWork);
+	connect(ui->ICslider, SIGNAL(valueChanged(int)), worker, SLOT(setICValue(int)));
+	connect(ui->SDslider, SIGNAL(valueChanged(int)), worker, SLOT(setSDValue(int)));
+	connect(ui->TCslider, SIGNAL(valueChanged(int)), worker, SLOT(setTCValue(int)));
 
-	double distance_scaling = Config->distance_scaling;
-	double force_scaling = Config->force_scaling;
+	connect(worker, &Worker::resultReady, this, &MainWindow::realtimeDataInputSlot);
+	connect(worker, &Worker::time_step_finished, this, &MainWindow::iterate_time);
+	connect(ui->run_button, &QPushButton::clicked, this, &MainWindow::iterate_time); // invoke first time step slot
 
-	IC_0 = Config->infection_chance; // initialize slider to current IC value
-	IC_max = 0.5; // maximum slider position
-	IC_min = 0.1; // minimum slider position
-	SD_0 = Config->social_distance_factor / (1e-6 * force_scaling); // initialize slider to current SD value
-	SD_max = 0.3; // maximum slider position
-	SD_min = 0.0; // minimum slider position
-	TC_0 = Config->number_of_tests; // initialize slider to current TC value
-	TC_max = 40; // maximum slider position
-	TC_min = 0; // minimum slider position
-	run_action = false;
-	pause_action = true;
+	workerThread.start();
+
+	IC_0 = sim->Config.infection_chance; // initialize slider to current IC value
+	SD_0 = sim->Config.social_distance_factor / (1e-6 * sim->Config.force_scaling); // initialize slider to current SD value
+	TC_0 = sim->Config.number_of_tests; // initialize slider to current TC value
+
 	frame_count = 0;
-	setupDemo(0, Config);
-  
+	setupDemo(0);
+
+
 	// for making screenshots of the current demo or all demos (for website screenshots):
 	//QTimer::singleShot(1500, this, SLOT(allScreenShots()));
 	//QTimer::singleShot(4000, this, SLOT(screenShot()));
 }
 
-void MainWindow::setupDemo(int demoIndex, Configuration *Config)
+void MainWindow::setupDemo(int demoIndex)
 {
-	flag_busy = true;
 	switch (demoIndex)
 	{
-		case 0: setupRealtimeScatterDemo(ui->customPlot, Config); break;
+		case 0: setupRealtimeScatterDemo(ui->customPlot); break;
 	}
 	setWindowTitle(demoName);
 	setWindowIcon(QIcon("covid.png"));
@@ -111,15 +101,14 @@ void MainWindow::setupDemo(int demoIndex, Configuration *Config)
 	currentDemoIndex = demoIndex;
 	ui->customPlot->replot();
 
-	if ((Config->save_plot) && (Config->n_plots == 1)) {
-		if (Config->self_isolate)  ui->customPlot->setMaximumSize(650, 500); 
+	if ((sim->Config.save_plot) && (sim->Config.n_plots == 1)) {
+		if (sim->Config.self_isolate)  ui->customPlot->setMaximumSize(650, 500); 
 		else ui->customPlot->setMaximumSize(580, 500);
 	}
 
-	flag_busy = false;
 }
 
-void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration *Config)
+void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot)
 {
 
 	// configure axis rect:
@@ -143,7 +132,7 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	customPlot->plotLayout()->setMargins(QMargins(5, 5, 5, 5));
 
 	// get color palettes
-	vector<string> palette = Config->get_palette();
+	std::vector<std::string> palette = sim->Config.get_palette();
 
 	// Define colors from palette
 	QColor S_color, I_color, R_color, F_color, T_color;
@@ -168,7 +157,7 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	ABMLegend->setLayer("legend");
 	ABMLegend->setVisible(true);
 
-	if (Config->save_plot) ABMLegend->setFont(QFont("Century Gothic", 10)); 
+	if (sim->Config.save_plot) ABMLegend->setFont(QFont("Century Gothic", 10)); 
 	else ABMLegend->setFont(QFont("Century Gothic", 14));
 
 	ABMLegend->setRowSpacing(-3);
@@ -216,7 +205,7 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	f_points->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 4));
 	f_points->setName("fatalities");
 
-	if (Config->trace_path) {
+	if ((sim->Config.trace_path) && (sim->Config.track_GC)) {
 		ABMLegend->addItem(new QCPPlottableLegendItem(ABMLegend, t_points)); // fatalities dots
 		t_points->setPen(QPen(T_color));
 		t_points->setLineStyle(QCPGraph::lsNone);
@@ -235,34 +224,34 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 	ABMAxisRect->axis(QCPAxis::atBottom, 0)->grid()->setVisible(false); // xAxis
 	ABMAxisRect->axis(QCPAxis::atLeft, 0)->grid()->setVisible(false); // yAxis
 
-	if (!Config->self_isolate) {
+	if (!sim->Config.self_isolate) {
 		ABMAxisRect->setMinimumSize(480, 450); // make ABM axis rect size fixed
-		ABMAxisRect->axis(QCPAxis::atBottom, 0)->setRange(Config->xbounds[0] - 0.02, Config->xbounds[1] + 0.02); // xAxis
-		ABMAxisRect->axis(QCPAxis::atLeft, 0)->setRange(Config->ybounds[0] - 0.02, Config->ybounds[1] + 0.02); // yAxis
+		ABMAxisRect->axis(QCPAxis::atBottom, 0)->setRange(sim->Config.xbounds[0] - 0.02, sim->Config.xbounds[1] + 0.02); // xAxis
+		ABMAxisRect->axis(QCPAxis::atLeft, 0)->setRange(sim->Config.ybounds[0] - 0.02, sim->Config.ybounds[1] + 0.02); // yAxis
 	}
-	else if (Config->self_isolate) {
+	else if (sim->Config.self_isolate) {
 		ABMAxisRect->setMinimumSize(600, 450); // make ABM axis rect size fixed
-		ABMAxisRect->axis(QCPAxis::atBottom, 0)->setRange(Config->isolation_bounds[0] - 0.02, Config->xbounds[1] + 0.02); // xAxis
-		ABMAxisRect->axis(QCPAxis::atLeft, 0)->setRange(Config->ybounds[0] - 0.02, Config->ybounds[1] + 0.02); // yAxis
+		ABMAxisRect->axis(QCPAxis::atBottom, 0)->setRange(sim->Config.isolation_bounds[0] - 0.02, sim->Config.xbounds[1] + 0.02); // xAxis
+		ABMAxisRect->axis(QCPAxis::atLeft, 0)->setRange(sim->Config.ybounds[0] - 0.02, sim->Config.ybounds[1] + 0.02); // yAxis
 	}
 
 	// draw a rectangle
 	QCPItemRect* rect = new QCPItemRect(customPlot);
 	rect->setPen(QPen(Qt::black));
 
-	QPointF topLeft_coor = QPointF(Config->xbounds[0], Config->ybounds[1]);
-	QPointF bottomRight_coor = QPointF(Config->xbounds[1], Config->ybounds[0]);
+	QPointF topLeft_coor = QPointF(sim->Config.xbounds[0], sim->Config.ybounds[1]);
+	QPointF bottomRight_coor = QPointF(sim->Config.xbounds[1], sim->Config.ybounds[0]);
 
 	rect->topLeft->setCoords(topLeft_coor);
 	rect->bottomRight->setCoords(bottomRight_coor);
 
-	if (Config->self_isolate) {
+	if (sim->Config.self_isolate) {
 		// draw hospital rectangle
 		QCPItemRect* rect_host = new QCPItemRect(customPlot);
 		rect_host->setPen(QPen(Qt::black));
 
-		QPointF topLeft_coor_h = QPointF(Config->isolation_bounds[0], Config->isolation_bounds[3]);
-		QPointF bottomRight_coor_h = QPointF(Config->isolation_bounds[2], Config->isolation_bounds[1]);
+		QPointF topLeft_coor_h = QPointF(sim->Config.isolation_bounds[0], sim->Config.isolation_bounds[3]);
+		QPointF bottomRight_coor_h = QPointF(sim->Config.isolation_bounds[2], sim->Config.isolation_bounds[1]);
 
 		rect_host->topLeft->setCoords(topLeft_coor_h);
 		rect_host->bottomRight->setCoords(bottomRight_coor_h);
@@ -270,7 +259,7 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 
 	//=============================================================================//
 	// Set up SIR plot second
-	if (Config->n_plots == 2) {
+	if (sim->Config.n_plots == 2) {
 
 		QCPAxisRect *SIRAxisRect = new QCPAxisRect(customPlot); // SIR axis object
 		customPlot->plotLayout()->addElement(1, 1, SIRAxisRect); // insert axis rect in second column
@@ -326,8 +315,8 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 		f_graph->setChannelFillGraph(r_graph); // fill between F and R graphs
 
 		SIRAxisRect->setMinimumSize(480, 450); // make ABM axis rect size fixed
-		//SIRAxisRect->axis(QCPAxis::atBottom, 0)->setRange(Config->xbounds[0] - 0.02, Config->xbounds[1] + 0.02); // xAxis
-		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setRange(0, Config->pop_size); // yAxis
+		//SIRAxisRect->axis(QCPAxis::atBottom, 0)->setRange(sim->Config.xbounds[0] - 0.02, sim->Config.xbounds[1] + 0.02); // xAxis
+		SIRAxisRect->axis(QCPAxis::atLeft, 0)->setRange(0, sim->Config.pop_size); // yAxis
 
 		// Axis labels
 		SIRAxisRect->axis(QCPAxis::atBottom, 0)->setLabel("Simulation steps"); // xAxis
@@ -359,24 +348,19 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot, Configuration
 
 	// Essential workers slider
 	ui->ICslider->setGeometry(10, 520, 300, 10);
-	ui->ICslider->setValue(int(((IC_0 - IC_min) / (IC_max - IC_min)) * 100));
-	ui->ICslider->setSliderPosition(int(((IC_0 - IC_min) / (IC_max - IC_min)) * 100));
-
-	connect(ui->ICslider, SIGNAL(valueChanged(int)), this, SLOT(setICValue(int)));
+	ui->ICslider->setValue(int(((IC_0 - sim->Config.IC_min) / (sim->Config.IC_max - sim->Config.IC_min)) * 100));
+	ui->ICslider->setSliderPosition(int(((IC_0 - sim->Config.IC_min) / (sim->Config.IC_max - sim->Config.IC_min)) * 100));
 
 	// social distancing slider
 	ui->SDslider->setGeometry(10, 550, 300, 10);
-	ui->SDslider->setValue(int(((SD_0 - SD_min) / (SD_max - SD_min)) * 100));
-	ui->SDslider->setSliderPosition(int(((SD_0 - SD_min) / (SD_max - SD_min)) * 100));
-
-	connect(ui->SDslider, SIGNAL(valueChanged(int)), this, SLOT(setSDValue(int)));
+	ui->SDslider->setValue(int(((SD_0 - sim->Config.SD_min) / (sim->Config.SD_max - sim->Config.SD_min)) * 100));
+	ui->SDslider->setSliderPosition(int(((SD_0 - sim->Config.SD_min) / (sim->Config.SD_max - sim->Config.SD_min)) * 100));
 
 	// Number of tests slider
 	ui->TCslider->setGeometry(10, 580, 300, 10);
-	ui->TCslider->setValue(int(((TC_0 - TC_min) / (TC_max - TC_min)) * 100));
-	ui->TCslider->setSliderPosition(int(((TC_0 - TC_min) / (TC_max - TC_min)) * 100));
+	ui->TCslider->setValue(int(((TC_0 - sim->Config.TC_min) / (sim->Config.TC_max - sim->Config.TC_min)) * 100));
+	ui->TCslider->setSliderPosition(int(((TC_0 - sim->Config.TC_min) / (sim->Config.TC_max - sim->Config.TC_min)) * 100));
 
-	connect(ui->TCslider, SIGNAL(valueChanged(int)), this, SLOT(setTCValue(int)));
 
 	//=============================================================================//
 	// Set up R0 display
@@ -393,7 +377,6 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 									   QVector<double> x_lower, QVector<double> y_lower, 
 									   QVector<double> x_upper, QVector<double> y_upper)
 {
-	flag_busy = true;
 	static QTime time(QTime::currentTime());
 	// calculate two new data points:
 	double key = time.elapsed() / 1000.0; // time elapsed since start of demo, in seconds
@@ -408,18 +391,18 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 		ui->customPlot->axisRects()[0]->graphs()[1]->data()->clear();
 		ui->customPlot->axisRects()[0]->graphs()[2]->data()->clear();
 		ui->customPlot->axisRects()[0]->graphs()[3]->data()->clear();
-		if (Config->trace_path) ui->customPlot->axisRects()[0]->graphs()[4]->data()->clear();
+		if ((sim->Config.trace_path) && (sim->Config.track_GC)) ui->customPlot->axisRects()[0]->graphs()[4]->data()->clear();
 		
 		// add data to lines:
 		ui->customPlot->axisRects()[0]->graphs()[0]->addData(x0, y0);
 		ui->customPlot->axisRects()[0]->graphs()[1]->addData(x1, y1);
 		ui->customPlot->axisRects()[0]->graphs()[2]->addData(x2, y2);
 		ui->customPlot->axisRects()[0]->graphs()[3]->addData(x3, y3);
-		if (Config->trace_path) ui->customPlot->axisRects()[0]->graphs()[4]->addData(x4, y4);
+		if ((sim->Config.trace_path) && (sim->Config.track_GC)) ui->customPlot->axisRects()[0]->graphs()[4]->addData(x4, y4);
 
 		//=============================================================================//
 		// Operate on SIR plot next
-		if (Config->n_plots == 2) {
+		if (sim->Config.n_plots == 2) {
 			ui->customPlot->axisRects()[1]->graphs()[0]->addData(frame, x0.size() + x1.size());
 			ui->customPlot->axisRects()[1]->graphs()[1]->addData(frame, x1.size());
 			ui->customPlot->axisRects()[1]->graphs()[2]->addData(frame, x0.size() + x1.size() + x2.size());
@@ -435,7 +418,7 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 		lastPointKey = key;
 	}
 
-	if ((Config->trace_path) && (Config->track_GC)) {
+	if ((sim->Config.trace_path) && (sim->Config.track_GC)) {
 
 		for (int i = 0; i < x_lower.size(); i++) {
 			// draw a rectangle around an individual
@@ -452,7 +435,7 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 	}
 
 	ui->customPlot->replot();
-	if (Config->n_plots == 2) {
+	if (sim->Config.n_plots == 2) {
 		// make axis range scroll with the data (at a constant range size of 8):
 		ui->customPlot->axisRects()[1]->axis(QCPAxis::atBottom, 0)->setRange(0, frame + 1);
 	}
@@ -474,47 +457,28 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 	frame_count = frame;
 
 	// take a screenshot
-	if ((Config->save_plot) && ((frame % Config->save_pop_freq) == 0)) {
+	if ((sim->Config.save_plot) && ((frame % sim->Config.save_pop_freq) == 0)) {
 		//QTimer::singleShot(4000, this, SLOT(screenShot()));
 		pdfrender(); // only works in debug mode
 	}
 
 	int sleep_time = (1000 / 60) - computation_time - (time.elapsed() - key); // target frame rate = 60 FPS
 	if (sleep_time > 0) {
-		// Block the calling thread for x milliseconds // http://www.cplusplus.com/reference/thread/this_thread/sleep_for/
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+		// Block the calling thread for x milliseconds
+		QThread::msleep(sleep_time);
 	}
 
-	flag_busy = false;
-
-}
-
-void MainWindow::setICValue(int IC_new)
-{
-	IC_0 = ((IC_max - IC_min) * (IC_new / 99.0)) + IC_min;
-}
-
-void MainWindow::setSDValue(int SD_new)
-{
-	SD_0 = ((SD_max - SD_min) * (SD_new/99.0)) + SD_min;
-}
-
-void MainWindow::setTCValue(int TC_new)
-{
-	TC_0 = int(((TC_max - TC_min) * (TC_new / 99.0)) + TC_min);
 }
 
 void MainWindow::on_run_button_clicked()
 {
-	if (pause_action) {
-		run_action = true;
-		pause_action = false;
-		ui->run_button->setText("pause");
-}
-	else if (run_action) {
-		run_action = false;
-		pause_action = true;
+	bool run_action = ui->run_button->isChecked();
+
+	if (run_action) {
 		ui->run_button->setText("run");
+	}
+	else {
+		ui->run_button->setText("pause");
 	}
 }
 
@@ -532,16 +496,23 @@ void MainWindow::screenShot()
 	pm.save("./screenshots/"+fileName);
 }
 
+void MainWindow::iterate_time()
+{
+	if (ui->run_button->isChecked()) {
+		emit launch_next_step();
+	}
+}
+
 void MainWindow::pdfrender()
 {
-	QString folder = QString::fromStdString(Config->plot_path);
+	QString folder = QString::fromStdString(sim->Config.plot_path);
 	QString fileName = "./" + folder + "/sim_" + QString::number(frame_count) + ".pdf";
 	ui->customPlot->savePdf(fileName);
 }
 
 MainWindow::~MainWindow()
 {
+	workerThread.quit();
+	workerThread.wait();
 	delete ui;
 }
-
-#endif // _N_QT

@@ -6,8 +6,8 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>$(QmlDebug)0 50 0.1 40 50 MCS_data_r0.log</LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>$(ProjectDir)build\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments>$(QmlDebug)0 30 0.1 10 150 data/MCS_data_r0.log</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)build\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
 </Project>

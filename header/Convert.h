@@ -1,6 +1,8 @@
 #ifndef CONVERT_H_
 #define CONVERT_H_
 
+#include "TypeDefs.h"
+
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -8,8 +10,6 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-
-#include "TypeDefs.h"
 
 using namespace std;
 namespace IOFile
@@ -21,4 +21,4 @@ bool writeTofile(Eigen::MatrixXd matrix, const string file);
 
 } //namesapce IMU
 
-#endif
+#endif // CONVERT_H_

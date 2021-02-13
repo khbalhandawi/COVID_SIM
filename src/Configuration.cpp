@@ -40,12 +40,17 @@
  */
 
 #include "Configuration.h"
-#include "Population_trackers.h"
+#include "RandomDevice.h"
+
+#include <sstream>
+#include <map>
+
+//using namespace std;
 
 /*-----------------------------------------------------------*/
 /*                       Constructor                         */
 /*-----------------------------------------------------------*/
-Configuration::Configuration()
+COVID_SIM::Configuration::Configuration()
 {
 	// simulation variables
 	simulation_steps = 10000; simulation_steps_in = "10000"; // total simulation steps performed
@@ -163,15 +168,28 @@ Configuration::Configuration()
 
 	// random generator
 	constant_seed = false; constant_seed_in = "false"; // whether user specifies a constant seed file or not
+
+	// Export settings
+	log_file = "data/opt_run.log"; log_file_in = "data/opt_run.log"; // blackbox history file
+	run_i = 0;  run_i_in = "0"; // blackbox run ID
+
+	// UI settings
+	IC_max = 0.5; ; IC_max_in = "0.5";// maximum slider position
+	IC_min = 0.1; IC_min_in = "0.1"; // minimum slider position
+	SD_max = 0.3; SD_max_in = "0.3";// maximum slider position
+	SD_min = 0.0; SD_min_in = "0.0"; // minimum slider position
+	TC_max = 40; TC_max_in = "40"; // maximum slider position
+	TC_min = 0; TC_min_in = "0"; // minimum slider position
+
 };
 
 /*-----------------------------------------------------------*/
 /*                      Throw exception                      */
 /*-----------------------------------------------------------*/
-void Configuration::config_error::throw_error(string key) 
+void COVID_SIM::Configuration::config_error::throw_error(std::string key)
 {
 
-	string s = "key " + key + " not present in config";
+	std::string s = "key " + key + " not present in config";
 	throw s;
 
 }
@@ -179,7 +197,7 @@ void Configuration::config_error::throw_error(string key)
 /*-----------------------------------------------------------*/
 /*                        color palette                      */
 /*-----------------------------------------------------------*/
-vector<string> Configuration::get_palette() 
+std::vector<std::string> COVID_SIM::Configuration::get_palette()
 {
 
 	/*returns appropriate color palette
@@ -195,12 +213,12 @@ vector<string> Configuration::get_palette()
 
 	// palette colors are : [healthy, infected, immune, dead]
 
-	map< string, map<string, vector<string>> > palettes;
+	std::map< std::string, std::map<std::string, std::vector<std::string>> > palettes;
 
-	map < string, vector<string> > regular;
-	map < string, vector<string> > deuteranopia;
-	map < string, vector<string> > protanopia;
-	map < string, vector<string> > tritanopia;
+	std::map < std::string, std::vector<std::string> > regular;
+	std::map < std::string, std::vector<std::string> > deuteranopia;
+	std::map < std::string, std::vector<std::string> > protanopia;
+	std::map < std::string, std::vector<std::string> > tritanopia;
 
 	regular["dark"] = { "#1C758A", "#CF5044", "#BBBBBB", "#444444", "#FFA500" };
 	regular["default"] = { "#1C758A", "#CF5044", "#BBBBBB", "#444444", "#FFA500" };
@@ -231,7 +249,7 @@ vector<string> Configuration::get_palette()
 /*-----------------------------------------------------------*/
 /*                        set lockdown                       */
 /*-----------------------------------------------------------*/
-void Configuration::set_lockdown(RandomDevice *my_rand, double lockdown_percentage_var, double lockdown_compliance_var) 
+void COVID_SIM::Configuration::set_lockdown(RandomDevice *my_rand, double lockdown_percentage_var, double lockdown_compliance_var)
 {
 	/*sets lockdown to active*/
 	
@@ -247,7 +265,7 @@ void Configuration::set_lockdown(RandomDevice *my_rand, double lockdown_percenta
 /*-----------------------------------------------------------*/
 /*          set lower speed for reduced interaction          */
 /*-----------------------------------------------------------*/
-void Configuration::set_reduced_interaction(double speed_var) 
+void COVID_SIM::Configuration::set_reduced_interaction(double speed_var)
 {
 	/*sets reduced interaction scenario to active*/
 
@@ -258,15 +276,15 @@ void Configuration::set_reduced_interaction(double speed_var)
 /*-----------------------------------------------------------*/
 /*            Split delimited string into vector            */
 /*-----------------------------------------------------------*/
-vector<double> Configuration::split_string(string line) 
+std::vector<double> COVID_SIM::Configuration::split_string(std::string line)
 {
-	string input = line;
-	istringstream ss(input);
-	string value;
+	std::string input = line;
+	std::istringstream ss(input);
+	std::string value;
 	double value_db;
 
-	vector<double> split_vector;
-	while (getline(ss, value, ','))
+	std::vector<double> split_vector;
+	while (std::getline(ss, value, ','))
 	{
 		value_db = atof(value.c_str()); // convert to float
 		split_vector.push_back(value_db); // Vector of floats
@@ -275,7 +293,7 @@ vector<double> Configuration::split_string(string line)
 
 
 	size_t n_cols = split_vector.size();
-	vector<double> output;
+	std::vector<double> output;
 	for (size_t col_i = 0; col_i < n_cols; col_i++) {
 		output.push_back(split_vector[col_i]);
 	}
@@ -286,7 +304,7 @@ vector<double> Configuration::split_string(string line)
 /*-----------------------------------------------------------*/
 /*          Set config values using external file            */
 /*-----------------------------------------------------------*/
-void Configuration::set_from_file() 
+void COVID_SIM::Configuration::set_from_file()
 {
 	pop_size = stoi(pop_size_in); // obtain pop_size first
 
@@ -420,6 +438,6 @@ void Configuration::set_from_file()
 /*-----------------------------------------------------------*/
 /*                        Destructor                         */
 /*-----------------------------------------------------------*/
-Configuration::~Configuration()
+COVID_SIM::Configuration::~Configuration()
 {
 }

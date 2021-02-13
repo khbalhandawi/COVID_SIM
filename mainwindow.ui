@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
+    <width>1219</width>
     <height>536</height>
    </rect>
   </property>
@@ -521,10 +521,10 @@ QSlider::handle:horizontal {
          </font>
         </property>
         <property name="text">
-         <string>Run</string>
+         <string>run</string>
         </property>
         <property name="checkable">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -659,7 +659,7 @@ QSlider::handle:horizontal {
            <x>20</x>
            <y>10</y>
            <width>160</width>
-           <height>37</height>
+           <height>47</height>
           </rect>
          </property>
          <layout class="QHBoxLayout" name="hlayout_R0">

@@ -360,7 +360,7 @@ if __name__ == '__main__':
     fig_4, _, ax1_4 = build_fig_SIR(pop_size = pop_size)
     draw_SIR_compare(data_M, lb_data_M, ub_data_M, fig_4, ax1_4, labels=labels, palette = palette, 
         pop_size = pop_size, save_name = 'M_compare', xlim = 350, leg_location = 'lower right', 
-        y_label = 'Socio-economic impact $M^k$')
+        y_label = 'Mobility $M^k$')
 
     fig_5, _, ax1_5 = build_fig_SIR(pop_size = pop_size)
     draw_R0_compare(data_R0, R0_time_data, lb_data_R0, ub_data_R0, fig_5, ax1_5, labels=labels, palette = palette, 

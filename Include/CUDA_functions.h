@@ -4,7 +4,7 @@
 namespace CUDA_GPU {
 
 
-	class DLL_API Kernels {
+	class CUDA_DLL_API Kernels {
 
 
 	public:

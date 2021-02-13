@@ -40,11 +40,15 @@
  */
 
 #include "RandomDevice.h"
+#include "utilities.h"
+
+#include <iostream>
+#include <fstream>
 
 /*-----------------------------------------------------------*/
 /*                 Random device Constructor                 */
 /*-----------------------------------------------------------*/
-RandomDevice::RandomDevice(unsigned long n) : rand_seed(n), engine(n) { }
+COVID_SIM::RandomDevice::RandomDevice(unsigned long n) : rand_seed(n), engine(n) { }
 
 ///*-----------------------------------------------------------*/
 ///*                 Random device Constructor                 */
@@ -58,31 +62,31 @@ RandomDevice::RandomDevice(unsigned long n) : rand_seed(n), engine(n) { }
 /*-----------------------------------------------------------*/
 /*              Uniform distribtuion generator               */
 /*-----------------------------------------------------------*/
-double RandomDevice::randUniform(double low, double high) {
-	uniform_real_distribution<float> distribution_ur(low, high);
+double COVID_SIM::RandomDevice::randUniform(double low, double high) {
+	std::uniform_real_distribution<float> distribution_ur(low, high);
 	return distribution_ur(engine);
 }
 
 /*-----------------------------------------------------------*/
 /*               Uniform integer distribtuion                */
 /*-----------------------------------------------------------*/
-int RandomDevice::randUniformInt(int low, int high) {
-	uniform_int_distribution<int> distribution_ui(low, high);
+int COVID_SIM::RandomDevice::randUniformInt(int low, int high) {
+	std::uniform_int_distribution<int> distribution_ui(low, high);
 	return distribution_ui(engine);
 }
 
 /*-----------------------------------------------------------*/
 /*              Normal distribtuion generator               */
 /*-----------------------------------------------------------*/
-double RandomDevice::randNormal(double mean, double std) {
-	normal_distribution<float> distribution_norm(mean, std);
+double COVID_SIM::RandomDevice::randNormal(double mean, double std) {
+	std::normal_distribution<float> distribution_norm(mean, std);
 	return distribution_norm(engine);
 }
 
 /*-----------------------------------------------------------*/
 /*      Random uniform distribution for a population         */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf RandomDevice::uniform_dist(double low, double high, int size_x, int size_y)
+Eigen::ArrayXXf COVID_SIM::RandomDevice::uniform_dist(double low, double high, int size_x, int size_y)
 {
 
 	// uniform distribution with low = low, high = high (using NullaryExpr)
@@ -107,7 +111,7 @@ Eigen::ArrayXXf RandomDevice::uniform_dist(double low, double high, int size_x, 
 /*-----------------------------------------------------------*/
 /*      Normal uniform distribution for a population         */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf RandomDevice::normal_dist(double mean, double std, int size_x, int size_y)
+Eigen::ArrayXXf COVID_SIM::RandomDevice::normal_dist(double mean, double std, int size_x, int size_y)
 {
 	// normal distribution with mean = mean, stdev = std (using NullaryExpr)
 	//default_random_engine generator;
@@ -130,7 +134,7 @@ Eigen::ArrayXXf RandomDevice::normal_dist(double mean, double std, int size_x, i
 /*-----------------------------------------------------------*/
 /*      Randomly select population members (probability)     */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXf RandomDevice::Random_choice_prob(int pop_size, double percentage_pop) {
+Eigen::ArrayXf COVID_SIM::RandomDevice::Random_choice_prob(int pop_size, double percentage_pop) {
 	//fraction of the population that will obey the lockdown
 	Eigen::ArrayXf initial_vector = Eigen::ArrayXf::Zero(pop_size, 1);
 
@@ -145,7 +149,7 @@ Eigen::ArrayXf RandomDevice::Random_choice_prob(int pop_size, double percentage_
 /*-----------------------------------------------------------*/
 /*       Randomly select population members (shuffle)        */
 /*-----------------------------------------------------------*/
-Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices) {
+Eigen::VectorXi COVID_SIM::RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices) {
 	//fraction of the population that will obey the lockdown
 
 	//auto distribution = [&](int) {return randUniformInt(0, input.rows()); }; // generate a random integer
@@ -153,7 +157,7 @@ Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices)
 	//Eigen::VectorXi indices = Eigen::VectorXi::LinSpaced(input.rows(), 0, input.rows());
 	//indices = indices.topRows(n_choices);
 
-	vector<int> indices = sequence(0, input.rows(), 1);
+	std::vector<int> indices = sequence(0, input.rows(), 1);
 	shuffle(indices.begin(), indices.end(), engine);
 	indices = slice_u(indices, 0, n_choices);
 
@@ -178,7 +182,7 @@ Eigen::VectorXi RandomDevice::Random_choice(Eigen::ArrayXf input, int n_choices)
 /*-----------------------------------------------------------*/
 /*                Randomly generate a number                 */
 /*-----------------------------------------------------------*/
-double RandomDevice::rand() {
+double COVID_SIM::RandomDevice::rand() {
 	//fraction of the population that will obey the lockdown
 	return randUniform(0.0, 1.0);
 }
@@ -186,7 +190,7 @@ double RandomDevice::rand() {
 /*-----------------------------------------------------------*/
 /*               Save random generator state                 */
 /*-----------------------------------------------------------*/
-void RandomDevice::save_state() {
+void COVID_SIM::RandomDevice::save_state() {
 	// save state
 	std::cout << std::endl << "Saving state...\n";
 	{
@@ -208,7 +212,7 @@ void RandomDevice::save_state() {
 /*-----------------------------------------------------------*/
 /*               Load random generator state                 */
 /*-----------------------------------------------------------*/
-void RandomDevice::load_state() {
+void COVID_SIM::RandomDevice::load_state() {
 	// load state
 	std::cout << std::endl << "Loading...\n";
 	{
@@ -230,6 +234,6 @@ void RandomDevice::load_state() {
 /*-----------------------------------------------------------*/
 /*                  Random device Destructor                 */
 /*-----------------------------------------------------------*/
-RandomDevice::~RandomDevice()
+COVID_SIM::RandomDevice::~RandomDevice()
 {
 }

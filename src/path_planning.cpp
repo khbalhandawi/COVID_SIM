@@ -40,11 +40,13 @@
  */
 
 #include "path_planning.h"
+#include "utilities.h"
+#include "motion.h"
 
 /*-----------------------------------------------------------*/
 /*                  Send patient to location                 */
 /*-----------------------------------------------------------*/
-void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, int dest_no)
+void COVID_SIM::go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, int dest_no)
 {
 	/*sends patient to defined location
 
@@ -86,7 +88,7 @@ void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::A
 /*-----------------------------------------------------------*/
 /*                Set population destination                 */
 /*-----------------------------------------------------------*/
-void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double travel_speed)
+void COVID_SIM::set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double travel_speed)
 {
 	/*sets destination of population
 
@@ -104,7 +106,7 @@ void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, 
 	float epsilon = 1e-15;
 	// how many destinations are active
 	Eigen::ArrayXf dests = population.col(11);
-	vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
+	std::vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
 	unique_elements(active_dests);
 
 	// set destination
@@ -134,7 +136,7 @@ void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, 
 /*-----------------------------------------------------------*/
 /*                Check who is at destination                */
 /*-----------------------------------------------------------*/
-void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double wander_factor)
+void COVID_SIM::check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double wander_factor)
 {
 	/*check who is at their destination already
 
@@ -157,7 +159,7 @@ void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinati
 
 	// how many destinations are active
 	Eigen::ArrayXf dests = population.col(11);
-	vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
+	std::vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
 	unique_elements(active_dests);
 
 	// see who is at destination
@@ -186,8 +188,8 @@ void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinati
 /*-----------------------------------------------------------*/
 /*            Keeps arrivals within wander range             */
 /*-----------------------------------------------------------*/
-void keep_at_destination(Eigen::ArrayXXf &population, 
-	vector<double> lb_environments, vector<double> ub_environments, 
+void COVID_SIM::keep_at_destination(Eigen::ArrayXXf &population,
+	std::vector<double> lb_environments, std::vector<double> ub_environments,
 	double wall_buffer, double bounce_buffer)
 {
 	/*keeps those who have arrived, within wander range
@@ -207,7 +209,7 @@ void keep_at_destination(Eigen::ArrayXXf &population,
 
 	// how many destinations are active
 	Eigen::ArrayXf dests = population.col(11);
-	vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
+	std::vector<float> active_dests(dests.rows()); Eigen::Map<Eigen::ArrayXf>(&active_dests[0], dests.rows(), 1) = dests;
 	unique_elements(active_dests);
 
 	for (int d : active_dests) {
@@ -242,7 +244,7 @@ void keep_at_destination(Eigen::ArrayXXf &population,
 /*-----------------------------------------------------------*/
 /*                 Clear destination markers                 */
 /*-----------------------------------------------------------*/
-void reset_destinations(Eigen::ArrayXXf &population, vector<int> Ids)
+void COVID_SIM::reset_destinations(Eigen::ArrayXXf &population, std::vector<int> Ids)
 {
 	/*clears destination markers
 

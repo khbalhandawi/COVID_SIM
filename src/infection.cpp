@@ -40,12 +40,16 @@
  */
 
 #include "infection.h"
+#include "utilities.h"
+#include "path_planning.h"
+#include "Configuration.h"
+#include "RandomDevice.h"
 
  /*-----------------------------------------------------------*/
  /*                     Finds nearby IDs                      */
  /*-----------------------------------------------------------*/
-void find_nearby(Eigen::ArrayXXf population, Eigen::ArrayXf person_center, double infection_range, 
-	Eigen::ArrayXf &indices, int &infected_number, bool traveling_infects, string kind, string shape, Eigen::ArrayXXf infected_previous_step)
+void COVID_SIM::find_nearby(Eigen::ArrayXXf population, Eigen::ArrayXf person_center, double infection_range,
+	Eigen::ArrayXf &indices, int &infected_number, bool traveling_infects, std::string kind, std::string shape, Eigen::ArrayXXf infected_previous_step)
 {
 	/*finds nearby IDs
 
@@ -153,14 +157,14 @@ void find_nearby(Eigen::ArrayXXf population, Eigen::ArrayXf person_center, doubl
 /*-----------------------------------------------------------*/
 /*                      Test and isolate                     */
 /*-----------------------------------------------------------*/
-void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, RandomDevice *my_rand, 
+void COVID_SIM::test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, RandomDevice *my_rand,
 	 Eigen::ArrayXXf &destinations, int location_no)
 {
 	ArrayXXb cond(Config.pop_size, 3);
 
 	// randomly pick individuals for testing
 	Eigen::ArrayXXf inside_world = population(select_rows(population.col(11) == 0), Eigen::all);
-	int n_samples = min(Config.number_of_tests, int(inside_world.rows()));
+	int n_samples = std::min(Config.number_of_tests, int(inside_world.rows()));
 
 	// flag these individuals for testing
 	Eigen::VectorXi Choices = my_rand->Random_choice(inside_world.col(0), n_samples);
@@ -179,7 +183,7 @@ void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, 
 		Eigen::ArrayXXf hospitalized_pop = population(select_rows(population.col(10) == 1), Eigen::all);
 
 		int room_left = (Config.healthcare_capacity - hospitalized_pop.rows());
-		n_samples = min(int(tested_pop.rows()), room_left);
+		n_samples = std::min(int(tested_pop.rows()), room_left);
 
 		// flag these individuals for hospitalization following testing
 		Choices = my_rand->Random_choice(tested_pop.col(0), n_samples);
@@ -195,7 +199,7 @@ void test_isolate(Eigen::ArrayXXf &population, Configuration Config, int frame, 
 /*-----------------------------------------------------------*/
 /*                    Find new infections                    */
 /*-----------------------------------------------------------*/
-void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, 
+void COVID_SIM::infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	Configuration Config, int frame, RandomDevice *my_rand, bool send_to_location, 
 	int location_no, bool test_flag, Eigen::ArrayXXf dist)
 {
@@ -252,17 +256,17 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	// mark those already infected and inside world (not travelling)
 	ArrayXXb cond_infected(population.rows(),2);
 	cond_infected << (population.col(6) == 1), (population.col(11) == 0);
-	vector<int> infected_rows = select_rows(cond_infected);
+	std::vector<int> infected_rows = select_rows(cond_infected);
 	Eigen::ArrayXXf infected_previous_step = population(infected_rows, Eigen::all);
 
 	// mark those already who are healthy
 	ArrayXXb cond_healthy(population.rows(),2);
 	cond_healthy << (population.col(6) == 0), (population.col(11) == 0);
-	vector<int> healthy_rows = select_rows(cond_healthy);
+	std::vector<int> healthy_rows = select_rows(cond_healthy);
 	Eigen::ArrayXXf healthy_previous_step = population(healthy_rows, Eigen::all);
 
 	// Find infected people (slice method)
-	vector<int> new_infections;
+	std::vector<int> new_infections;
 	Eigen::ArrayXf patient, person;
 	Eigen::ArrayXf person_center;
 	Eigen::ArrayXf indices;
@@ -403,7 +407,7 @@ void infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 /*-----------------------------------------------------------*/
 /*                     Recover or die                        */
 /*-----------------------------------------------------------*/
-void recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations, 
+void COVID_SIM::recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	Configuration Config, int frame, RandomDevice *my_rand, int location_no)
 {
 	/*see whether to recover or die
@@ -463,8 +467,8 @@ void recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	// update states of sick people
 	Eigen::ArrayXf indices = infected_people(select_rows(recovery_odds_vector >= infected_people.col(9)), { 0 });
 
-	vector<int> recovered;
-	vector<int> fatalities;
+	std::vector<int> recovered;
+	std::vector<int> fatalities;
 	int age;
 	double updated_mortality_chance;
 
@@ -472,7 +476,7 @@ void recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 	for (int idx : indices) {
 	// check if we want risk to be age dependent
 	// if age_dependent_risk:
-		vector<int> person_id = select_rows(infected_people.col(0) == idx);
+		std::vector<int> person_id = select_rows(infected_people.col(0) == idx);
 
 		if (Config.age_dependent_risk) {
 
@@ -535,9 +539,9 @@ void recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destinations,
 /*-----------------------------------------------------------*/
 /*                     Compute mortality                     */
 /*-----------------------------------------------------------*/
-void compute_mortality(int age, double &mortality_chance, int risk_age,
+void COVID_SIM::compute_mortality(int age, double &mortality_chance, int risk_age,
 	int critical_age, double critical_mortality_chance,
-	string risk_increase)
+	std::string risk_increase)
 {
 	/*compute mortality based on age
 
@@ -604,7 +608,7 @@ void compute_mortality(int age, double &mortality_chance, int risk_age,
 /*-----------------------------------------------------------*/
 /*              healthcare population infection              */
 /*-----------------------------------------------------------*/
-void healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor)
+void COVID_SIM::healthcare_infection_correction(Eigen::ArrayXXf worker_population, RandomDevice *my_rand, double healthcare_risk_factor)
 {
 	/*corrects infection to healthcare population.
 

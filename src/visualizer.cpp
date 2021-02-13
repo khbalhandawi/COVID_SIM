@@ -39,8 +39,12 @@
  \see    visualizer.h
  */
 
-#ifndef _N_QT
 #include "visualizer.h"
+#include "utilities.h"
+#include "RandomDevice.h"
+
+#include <vector>
+
  /*-----------------------------------------------------------*/
  /*                       Constructor                         */
  /*-----------------------------------------------------------*/
@@ -51,7 +55,7 @@ visualizer::visualizer()
  /*-----------------------------------------------------------*/
  /*                    Start a Qt thread                      */
  /*-----------------------------------------------------------*/
-std::unique_ptr<MainWindow> visualizer::start_qt(Configuration Config)
+std::unique_ptr<MainWindow> visualizer::start_qt(COVID_SIM::Configuration Config)
 {
 
 	int argc = 0;
@@ -81,7 +85,7 @@ std::unique_ptr<MainWindow> visualizer::start_qt(Configuration Config)
 /*                     Update Qt window                      */
 /*-----------------------------------------------------------*/
 void visualizer::update_qt(Eigen::ArrayXXf population,
-	int frame, double computation_time, std::unique_ptr<MainWindow> &mainWindow, Population_trackers *pop_tracker, Configuration *Config)
+	int frame, double computation_time, std::unique_ptr<MainWindow> &mainWindow, COVID_SIM::Population_trackers *pop_tracker, COVID_SIM::Configuration *Config)
 {
 
 	// Initialize Qt Vectors
@@ -95,29 +99,29 @@ void visualizer::update_qt(Eigen::ArrayXXf population,
 
 	/*--------------------------------------------------*/
 	// plot population segments
-	Eigen::ArrayXXd susceptible = population(select_rows(population.col(6) == 0), { 1,2 }).cast<double>();
-	Eigen::ArrayXXd infected = population(select_rows(population.col(6) == 1), { 1,2 }).cast<double>();
-	Eigen::ArrayXXd recovered = population(select_rows(population.col(6) == 2), { 1,2 }).cast<double>();
-	Eigen::ArrayXXd fatalities = population(select_rows(population.col(6) == 3), { 1,2 }).cast<double>();
+	Eigen::ArrayXXd susceptible = population(COVID_SIM::select_rows(population.col(6) == 0), { 1,2 }).cast<double>();
+	Eigen::ArrayXXd infected = population(COVID_SIM::select_rows(population.col(6) == 1), { 1,2 }).cast<double>();
+	Eigen::ArrayXXd recovered = population(COVID_SIM::select_rows(population.col(6) == 2), { 1,2 }).cast<double>();
+	Eigen::ArrayXXd fatalities = population(COVID_SIM::select_rows(population.col(6) == 3), { 1,2 }).cast<double>();
 
 	if (susceptible.rows() > 0) { // to avoid assertion errors
-		susceptible_x.resize(susceptible.rows()); Map<ArrayXd>(&susceptible_x[0], susceptible.rows(), 1) = susceptible.col(0);
-		susceptible_y.resize(susceptible.rows()); Map<ArrayXd>(&susceptible_y[0], susceptible.rows(), 1) = susceptible.col(1);
+		susceptible_x.resize(susceptible.rows()); Eigen::Map<Eigen::ArrayXd>(&susceptible_x[0], susceptible.rows(), 1) = susceptible.col(0);
+		susceptible_y.resize(susceptible.rows()); Eigen::Map<Eigen::ArrayXd>(&susceptible_y[0], susceptible.rows(), 1) = susceptible.col(1);
 	}
 
 	if (infected.rows() > 0) { // to avoid assertion errors
-		infected_x.resize(infected.rows()); Map<ArrayXd>(&infected_x[0], infected.rows(), 1) = infected.col(0);
-		infected_y.resize(infected.rows()); Map<ArrayXd>(&infected_y[0], infected.rows(), 1) = infected.col(1);
+		infected_x.resize(infected.rows()); Eigen::Map<Eigen::ArrayXd>(&infected_x[0], infected.rows(), 1) = infected.col(0);
+		infected_y.resize(infected.rows()); Eigen::Map<Eigen::ArrayXd>(&infected_y[0], infected.rows(), 1) = infected.col(1);
 	}
 
 	if (recovered.rows() > 0) { // to avoid assertion errors
-		recovered_x.resize(recovered.rows()); Map<ArrayXd>(&recovered_x[0], recovered.rows(), 1) = recovered.col(0);
-		recovered_y.resize(recovered.rows()); Map<ArrayXd>(&recovered_y[0], recovered.rows(), 1) = recovered.col(1);
+		recovered_x.resize(recovered.rows()); Eigen::Map<Eigen::ArrayXd>(&recovered_x[0], recovered.rows(), 1) = recovered.col(0);
+		recovered_y.resize(recovered.rows()); Eigen::Map<Eigen::ArrayXd>(&recovered_y[0], recovered.rows(), 1) = recovered.col(1);
 	}
 
 	if (fatalities.rows() > 0) { // to avoid assertion errors
-		fatalities_x.resize(fatalities.rows()); Map<ArrayXd>(&fatalities_x[0], fatalities.rows(), 1) = fatalities.col(0);
-		fatalities_y.resize(fatalities.rows()); Map<ArrayXd>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
+		fatalities_x.resize(fatalities.rows()); Eigen::Map<Eigen::ArrayXd>(&fatalities_x[0], fatalities.rows(), 1) = fatalities.col(0);
+		fatalities_y.resize(fatalities.rows()); Eigen::Map<Eigen::ArrayXd>(&fatalities_y[0], fatalities.rows(), 1) = fatalities.col(1);
 	}
 
 	float R0 = pop_tracker->mean_R0.back();
@@ -125,18 +129,18 @@ void visualizer::update_qt(Eigen::ArrayXXf population,
 	// Trace path of random individual
 	if (Config->trace_path) {
 
-		tracked_x.resize(1); Map<ArrayXd>(&tracked_x[0], 1, 1) = population.block<1, 1>(0, 1).cast<double>();
-		tracked_y.resize(1); Map<ArrayXd>(&tracked_y[0], 1, 1) = population.block<1, 1>(0, 2).cast<double>();
+		tracked_x.resize(1); Eigen::Map<Eigen::ArrayXd>(&tracked_x[0], 1, 1) = population.block<1, 1>(0, 1).cast<double>();
+		tracked_y.resize(1); Eigen::Map<Eigen::ArrayXd>(&tracked_y[0], 1, 1) = population.block<1, 1>(0, 2).cast<double>();
 
 		if ((pop_tracker->ground_covered.row(0) == 1).any()) {
-			vector<int> rows = select_rows(pop_tracker->ground_covered.row(0).transpose() == 1);
+			std::vector<int> rows = COVID_SIM::select_rows(pop_tracker->ground_covered.row(0).transpose() == 1);
 			Eigen::ArrayXXf grid = pop_tracker->grid_coords(rows, Eigen::all);
 
 			if (grid.rows() > 0) { // to avoid assertion errors
-				x_lower.resize(grid.rows()); Map<ArrayXd>(&x_lower[0], grid.rows(), 1) = grid.col(0).cast<double>();
-				y_lower.resize(grid.rows()); Map<ArrayXd>(&y_lower[0], grid.rows(), 1) = grid.col(1).cast<double>();
-				x_upper.resize(grid.rows()); Map<ArrayXd>(&x_upper[0], grid.rows(), 1) = grid.col(2).cast<double>();
-				y_upper.resize(grid.rows()); Map<ArrayXd>(&y_upper[0], grid.rows(), 1) = grid.col(3).cast<double>();
+				x_lower.resize(grid.rows()); Eigen::Map<Eigen::ArrayXd>(&x_lower[0], grid.rows(), 1) = grid.col(0).cast<double>();
+				y_lower.resize(grid.rows()); Eigen::Map<Eigen::ArrayXd>(&y_lower[0], grid.rows(), 1) = grid.col(1).cast<double>();
+				x_upper.resize(grid.rows()); Eigen::Map<Eigen::ArrayXd>(&x_upper[0], grid.rows(), 1) = grid.col(2).cast<double>();
+				y_upper.resize(grid.rows()); Eigen::Map<Eigen::ArrayXd>(&y_upper[0], grid.rows(), 1) = grid.col(3).cast<double>();
 			}
 
 		}
@@ -160,5 +164,3 @@ void visualizer::update_qt(Eigen::ArrayXXf population,
 visualizer::~visualizer()
 {
 }
-
-#endif

@@ -1,11 +1,17 @@
 #include "simulation.h"
+#include "utilities.h"
+#include "motion.h"
+#include "infection.h"
+#include "path_planning.h"
+
+#include <iostream>
 
 #ifdef GPU_ACC
-simulation::simulation(Configuration Config_init, unsigned long seed) :
+COVID_SIM::simulation::simulation(Configuration Config_init, unsigned long seed) :
 	Population_trackers(Config_init), RandomDevice(seed), CUDA_GPU::Kernels(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024),
 	pop_tracker(Config_init), my_rand(seed), ABM_cuda(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024)
 #else
-simulation::simulation(Configuration Config_init, unsigned long seed) :
+COVID_SIM::simulation::simulation(Configuration Config_init, unsigned long seed) :
 	Population_trackers(Config_init), RandomDevice(seed), 
 	pop_tracker(Config_init), my_rand(seed)
 #endif
@@ -14,14 +20,11 @@ simulation::simulation(Configuration Config_init, unsigned long seed) :
 	Config = Config_init;
 	// initialize simulation
 	frame = 0;
-#ifndef _N_QT
-	// load visualizer
-	vis = visualizer();
-#endif
+
 	// If user specified seed should be used
 	if (Config.constant_seed) {
 		my_rand.load_state();
-		cout << "random_check: " << my_rand.rand() << endl;
+		std::cout << "random_check: " << my_rand.rand() << std::endl;
 	}
 
 	// Initialize base classes
@@ -33,7 +36,7 @@ simulation::simulation(Configuration Config_init, unsigned long seed) :
 /*-----------------------------------------------------------*/
 /*                 (Re)initialize population                 */
 /*-----------------------------------------------------------*/
-void simulation::population_init()
+void COVID_SIM::simulation::population_init()
 {
 	/* (re-)initializes population */
 	population = initialize_population(Config, &my_rand, Config.mean_age, Config.max_age, Config.xbounds, Config.ybounds);
@@ -42,7 +45,7 @@ void simulation::population_init()
 /*-----------------------------------------------------------*/
 /*                   Initialize simulation                   */
 /*-----------------------------------------------------------*/
-void simulation::initialize_simulation()
+void COVID_SIM::simulation::initialize_simulation()
 {
 	/* initializes simulation */
 
@@ -72,7 +75,7 @@ void simulation::initialize_simulation()
 /*-----------------------------------------------------------*/
 /*                         Time step                         */
 /*-----------------------------------------------------------*/
-void simulation::tstep()
+void COVID_SIM::simulation::tstep()
 {
 	/*
 	takes a time step in the simulation
@@ -153,11 +156,11 @@ void simulation::tstep()
 	}
 
 	if (population.col(1).isNaN().any()) {
-		cout << "================================" << endl;
-		cout << "Saving random seed state" << endl;
+		std::cout << "================================" << std::endl;
+		std::cout << "Saving random seed state" << std::endl;
 		my_rand.save_state();
-		cout << "random_check: " << my_rand.rand() << endl;
-		cout << "Division by zero condition!" << endl;
+		std::cout << "random_check: " << my_rand.rand() << std::endl;
+		std::cout << "Division by zero condition!" << std::endl;
 		throw "Division by zero condition!";
 	}
 
@@ -205,24 +208,24 @@ void simulation::tstep()
 	//======================================================================================//
 	//report stuff to console
 	if ((Config.verbose) && ((frame % Config.report_freq) == 0)) {
-		cout << frame;
-		cout << ": S: " << pop_tracker.susceptible.back();
-		cout << ": I: " << pop_tracker.infectious.back();
-		cout << ": R: " << pop_tracker.recovered.back();
-		cout << ": in treatment: " << pop_hospitalized.rows();
-		cout << ": F: " << pop_tracker.fatalities.back();
-		cout << ": of total: " << Config.pop_size;
+		std::cout << frame;
+		std::cout << ": S: " << pop_tracker.susceptible.back();
+		std::cout << ": I: " << pop_tracker.infectious.back();
+		std::cout << ": R: " << pop_tracker.recovered.back();
+		std::cout << ": in treatment: " << pop_hospitalized.rows();
+		std::cout << ": F: " << pop_tracker.fatalities.back();
+		std::cout << ": of total: " << Config.pop_size;
 		if (Config.track_position) {
-			cout << ": D: " << pop_tracker.distance_travelled.back()*100;
+			std::cout << ": D: " << pop_tracker.distance_travelled.back()*100;
 		}
 		if (Config.track_GC) {
-			cout << ": GC: " << pop_tracker.mean_perentage_covered.back()*100;
+			std::cout << ": GC: " << pop_tracker.mean_perentage_covered.back()*100;
 		}
 		if (Config.track_R0) {
-			cout << ": R0: " << pop_tracker.mean_R0.back();
+			std::cout << ": R0: " << pop_tracker.mean_R0.back();
 		}
-		cout << " time: " << tc.toc() << " ms";
-		cout << endl;
+		std::cout << " time: " << tc.toc() << " ms";
+		std::cout << std::endl;
 	}
 
 	//save popdata if required
@@ -248,7 +251,7 @@ void simulation::tstep()
 /*-----------------------------------------------------------*/
 /*                   Placeholder function                    */
 /*-----------------------------------------------------------*/
-void simulation::callback()
+void COVID_SIM::simulation::callback()
 {
 	/*placeholder function that can be overwritten.
 
@@ -257,7 +260,7 @@ void simulation::callback()
 	*/
 
 	if (frame == 50) {
-		cout << "infecting person (Patient Zero)" << endl;
+		std::cout << "infecting person (Patient Zero)" << std::endl;
 
 		if (Config.patient_Z_loc == "random") {
 			population(0, 6) = 1;
@@ -275,7 +278,7 @@ void simulation::callback()
 			Eigen::ArrayXf dist = to_center.rowwise().norm().array();
 
 			// infect nearest individual to center
-			ArrayXXf::Index minRow;
+			Eigen::ArrayXXf::Index minRow;
 			dist.minCoeff(&minRow);
 
 			population(minRow, 6) = 1;
@@ -290,42 +293,9 @@ void simulation::callback()
 /*-----------------------------------------------------------*/
 /*                       Run simulation                      */
 /*-----------------------------------------------------------*/
-void simulation::run()
+void COVID_SIM::simulation::run()
 {
 	/* run simulation */
-#ifndef _N_QT
-	//========================================================//
-	// Start a Qt thread for visualization
-	std::unique_ptr<MainWindow> mainWindow = nullptr; // initialize null pointer to Qt mainwindow
-
-	int argc = 0;
-	char **argv = NULL;
-
-	// Start the Qt realtime plot demo in a worker thread
-	std::thread myThread
-	(
-		[&] {
-		if ((Config.platform == "Qt") && (Config.visualise)) {
-			QApplication application(argc, argv);
-			//application.setStyleSheet(CSS);
-			mainWindow = std::make_unique<MainWindow>(&Config); // lambda capture by reference
-			mainWindow->show();
-
-			return application.exec();
-		}
-	}
-	);
-	qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
-	qRegisterMetaType<int>("int"); // register "double" for queued connection type
-	qRegisterMetaType<float>("float"); // register "double" for queued connection type
-	// connect(mainWindow, &MainWindow::SDvalueChanged, slider_values, &Counter::setValue);
-
-	//std::unique_ptr<MainWindow> mainWindow = vis.start_qt(Config);
-	if (Config.visualise == false) {
-		myThread.join(); // terminate visualizer thread
-	}
-	//========================================================//
-#endif
 	//save grid_coords if required
 	if (Config.save_ground_covered) {
 		save_grid_coords(pop_tracker.grid_coords, Config.save_pop_folder);
@@ -336,59 +306,31 @@ void simulation::run()
 	ArrayXXb cond(Config.pop_size, 2);
 
 	while (i < Config.simulation_steps) {
-#ifndef _N_QT
-		// wait for mainwindow thread to start
-		if ((mainWindow) || (Config.visualise == false)) { 
 
-			if (mainWindow) {
-				if ((mainWindow->pause_action == true) && (Config.platform == "Qt") && (Config.visualise)) // run/pause animation
-				{
-					continue; //skip the rest of the loop
-				}
-			}
-#endif
-			try
-			{
-				tstep(); // code that could cause exception
-#ifndef _N_QT
-				if ((Config.platform == "Qt") && (Config.visualise)) {
-					// Update QVectors for scatter plot
-					if (mainWindow) {
-						Config.infection_chance = mainWindow->IC_0; // Set simulation infection_chance from slider
-						Config.social_distance_factor = 1e-6 * mainWindow->SD_0 * Config.force_scaling; // Set simulation SD_factor from slider
-						Config.number_of_tests = mainWindow->TC_0; // Set simulation number_of_tests from slider
-						vis.update_qt(population, frame, computation_time, mainWindow, &pop_tracker, &Config);
+		try
+		{
+			tstep(); // code that could cause exception
 
-						// wait for Qt window to finish updating plots
-						while (mainWindow->flag_busy) {
-							std::this_thread::sleep_for(std::chrono::milliseconds(5));
-						}
-					}
-				}
-#endif
-			}
-			catch (const exception &exc)
-			{
-				// catch anything thrown within try block that derives from std::exception
-				cerr << exc.what();
-			}
-
-			// check whether to end if no infectious persons remain.
-			// check if frame is above some threshold to prevent early breaking when simulation
-			// starts initially with no infections.
-			if ((Config.endif_no_infections) && (frame >= 300)) {
-
-				cond << (population.col(6) == 1), (population.col(6) == 4);
-				if (population(select_rows_any(cond), Eigen::all).rows() == 0) {
-					i = Config.simulation_steps;
-				}
-			}
-			else {
-				i += 1;
-			}
-#ifndef _N_QT
 		}
-#endif
+		catch (const std::exception &exc)
+		{
+			// catch anything thrown within try block that derives from std::exception
+			std::cerr << exc.what();
+		}
+
+		// check whether to end if no infectious persons remain.
+		// check if frame is above some threshold to prevent early breaking when simulation
+		// starts initially with no infections.
+		if ((Config.endif_no_infections) && (frame >= 300)) {
+
+			cond << (population.col(6) == 1), (population.col(6) == 4);
+			if (population(select_rows_any(cond), Eigen::all).rows() == 0) {
+				i = Config.simulation_steps;
+			}
+		}
+		else {
+			i += 1;
+		}
 	}
 
 	if (Config.save_data) {
@@ -407,30 +349,26 @@ void simulation::run()
 		Eigen::ArrayXXf pop_infectious = population(select_rows_any(cond), Eigen::all); // infectious individuals
 
 
-		cout << "\n\n" << "-----stopping-----" << endl;
-		cout << "total timesteps taken: " << to_string(frame) << endl;
-		cout << "total fatalities: " << to_string(pop_fatality.rows()) << endl;
-		cout << "total recovered: " << to_string(pop_recovered.rows()) << endl;
-		cout << "total infected: " << to_string(pop_infected.rows()) << endl;
-		cout << "total infectious: " << to_string(pop_infectious.rows()) << endl;
-		cout << "total unaffected: " << to_string(pop_susceptible.rows()) << endl;
+		std::cout << "\n\n" << "-----stopping-----" << std::endl;
+		std::cout << "total timesteps taken: " << std::to_string(frame) << std::endl;
+		std::cout << "total fatalities: " << std::to_string(pop_fatality.rows()) << std::endl;
+		std::cout << "total recovered: " << std::to_string(pop_recovered.rows()) << std::endl;
+		std::cout << "total infected: " << std::to_string(pop_infected.rows()) << std::endl;
+		std::cout << "total infectious: " << std::to_string(pop_infectious.rows()) << std::endl;
+		std::cout << "total unaffected: " << std::to_string(pop_susceptible.rows()) << std::endl;
 		if (Config.track_GC) {
-			cout << "Mean % explored: " << pop_tracker.mean_perentage_covered.back()*100 << endl;
+			std::cout << "Mean % explored: " << pop_tracker.mean_perentage_covered.back()*100 << std::endl;
 		}
 		if (Config.track_R0) {
-			cout << "Max R0: " << *max_element(pop_tracker.mean_R0.begin(), pop_tracker.mean_R0.end()) << endl;
+			std::cout << "Max R0: " << *max_element(pop_tracker.mean_R0.begin(), pop_tracker.mean_R0.end()) << std::endl;
 		}
 	}
-#ifndef _N_QT
-	if (Config.visualise == true) {
-		myThread.join(); // terminate visualizer thread
-	}
-#endif
+
 }
 
 /*-----------------------------------------------------------*/
 /*                        Destructor                         */
 /*-----------------------------------------------------------*/
-simulation::~simulation()
+COVID_SIM::simulation::~simulation()
 {
 }

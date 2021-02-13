@@ -3,20 +3,32 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.1300
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cpp_corona_simulation", "cpp_corona_simulation_NQt.vcxproj", "{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "COVID_sim_lib", "COVID_sim_lib.vcxproj", "{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_dll|x64 = Debug_dll|x64
+		Debug_dll|x86 = Debug_dll|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release_dll|x64 = Release_dll|x64
+		Release_dll|x86 = Release_dll|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug_dll|x64.ActiveCfg = Debug_dll|x64
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug_dll|x64.Build.0 = Debug_dll|x64
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug_dll|x86.ActiveCfg = Debug_dll|Win32
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug_dll|x86.Build.0 = Debug_dll|Win32
 		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug|x64.ActiveCfg = Debug|x64
 		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug|x64.Build.0 = Debug|x64
 		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug|x86.ActiveCfg = Debug|Win32
 		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Debug|x86.Build.0 = Debug|Win32
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Release_dll|x64.ActiveCfg = Release_dll|x64
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Release_dll|x64.Build.0 = Release_dll|x64
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Release_dll|x86.ActiveCfg = Release_dll|Win32
+		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Release_dll|x86.Build.0 = Release_dll|Win32
 		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Release|x64.ActiveCfg = Release|x64
 		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Release|x64.Build.0 = Release|x64
 		{14ED564B-B2A9-4FDC-B92B-69E532F2FBFE}.Release|x86.ActiveCfg = Release|Win32
@@ -26,6 +38,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {4F4380B4-38FA-4F2E-99B6-40C848EC0121}
+		SolutionGuid = {31CDF523-EEF5-4905-8E3C-06BF1D21A8A6}
 	EndGlobalSection
 EndGlobal

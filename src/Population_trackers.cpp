@@ -40,6 +40,10 @@
  */
 
 #include "Population_trackers.h"
+#include "RandomDevice.h"
+#include "Configuration.h"
+#include "utilities.h"
+#include "motion.h"
 #include "Convert.h"
 #ifdef GPU_ACC
 #include "CUDA_functions.h"
@@ -48,7 +52,7 @@
 /*-----------------------------------------------------------*/
 /*                       Constructor                         */
 /*-----------------------------------------------------------*/
-Population_trackers::Population_trackers(Configuration Config_init)
+COVID_SIM::Population_trackers::Population_trackers(Configuration Config_init)
 {
 	susceptible = { };
 	infectious = { };
@@ -68,7 +72,7 @@ Population_trackers::Population_trackers(Configuration Config_init)
 /*-----------------------------------------------------------*/
 /*                   Update counts (CUDA)                    */
 /*-----------------------------------------------------------*/
-void Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int frame, CUDA_GPU::Kernels *ABM_cuda)
+void COVID_SIM::Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int frame, CUDA_GPU::Kernels *ABM_cuda)
 {
 
 	/*docstring
@@ -91,7 +95,7 @@ void Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int fra
 		Eigen::ArrayXXf speed_vector = population(select_rows(cond), { 3,4 }); // speed of individuals within world
 		Eigen::ArrayXf distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
 
-		total_distance(select_rows(cond), all) += distance_individuals; // cumulative distance travelled
+		total_distance(select_rows(cond), Eigen::all) += distance_individuals; // cumulative distance travelled
 		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumulative distance
 	}
 	else {
@@ -131,13 +135,13 @@ void Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int fra
 		if (frame % Config.update_R0_every_n_frame == 0) {
 			double mean_infection_time = (Config.recovery_duration[0] + Config.recovery_duration[1]) / 2; // how many ticks it may take to recover from the illness
 
-			vector<int> rows_IRF = select_rows(population.col(6) != 0);
+			std::vector<int> rows_IRF = select_rows(population.col(6) != 0);
 			// If there are non-healthy people present
 			if (rows_IRF.size() > 0) {
 				Eigen::ArrayXXf pop_IRF = population(rows_IRF, Eigen::all);
 				Eigen::ArrayXf prop = (frame - pop_IRF.col(8)) / (pop_IRF.col(19) != 0.0).select(mean_infection_time, frame - pop_IRF.col(19));
 
-				vector<int> R0_rows = select_rows(prop >= 0.1);
+				std::vector<int> R0_rows = select_rows(prop >= 0.1);
 				// if prop values above threshold for computing R0
 				if (R0_rows.size() > 0) {
 					Eigen::ArrayXf R0_values = pop_IRF(R0_rows, { 20 }) / prop(R0_rows);
@@ -170,7 +174,7 @@ void Population_trackers::update_counts_cuda(Eigen::ArrayXXf population, int fra
 /*-----------------------------------------------------------*/
 /*                      Update counts                        */
 /*-----------------------------------------------------------*/
-void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
+void COVID_SIM::Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 {
 
 	/*docstring
@@ -194,7 +198,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 		Eigen::ArrayXXf speed_vector = population(select_rows(cond), { 3,4 }); // speed of individuals within world
 		Eigen::ArrayXf distance_individuals = speed_vector.rowwise().norm() * Config.dt; // current distance travelled
 
-		total_distance(select_rows(cond), all) += distance_individuals; // cumulative distance travelled
+		total_distance(select_rows(cond), Eigen::all) += distance_individuals; // cumulative distance travelled
 		distance_travelled.insert(distance_travelled.end(), total_distance.mean()); // mean cumulative distance
 	}
 	else {
@@ -208,7 +212,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			// Track ground covered
 			int n_inside_world = select_rows(cond).size();
 			Eigen::ArrayXXf position_vector = population(select_rows(cond), { 1,2 }); // position of individuals within world
-			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(cond), all);
+			Eigen::ArrayXXf GC_matrix = ground_covered(select_rows(cond), Eigen::all);
 
 			// 1D
 			Eigen::ArrayXf pos_vector_x = position_vector.col(0);
@@ -227,7 +231,7 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 			ArrayXXb conds = (l_x > 0) && (u_x > 0) && (l_y > 0) && (u_y > 0);
 
 			GC_matrix += conds.cast<float>();
-			ground_covered(select_rows(cond), all) = GC_matrix;
+			ground_covered(select_rows(cond), Eigen::all) = GC_matrix;
 
 			// count number of non-zeros rowwise
 			perentage_covered = (ground_covered != 0).rowwise().count().cast<float>() / grid_coords.rows();
@@ -244,13 +248,13 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 		if (frame % Config.update_R0_every_n_frame == 0) {
 			double mean_infection_time = (Config.recovery_duration[0] + Config.recovery_duration[1]) / 2; // how many ticks it may take to recover from the illness
 
-			vector<int> rows_IRF = select_rows(population.col(6) != 0);
+			std::vector<int> rows_IRF = select_rows(population.col(6) != 0);
 			// If there are non-healthy people present
 			if (rows_IRF.size() > 0) {
 				Eigen::ArrayXXf pop_IRF = population(rows_IRF, Eigen::all);
 				Eigen::ArrayXf prop = (frame - pop_IRF.col(8)) / (pop_IRF.col(19) != 0.0).select(mean_infection_time, frame - pop_IRF.col(19));
 
-				vector<int> R0_rows = select_rows(prop >= 0.1);
+				std::vector<int> R0_rows = select_rows(prop >= 0.1);
 				// if prop values above threshold for computing R0
 				if (R0_rows.size() > 0) {
 					Eigen::ArrayXf R0_values = pop_IRF(R0_rows, { 20 }) / prop(R0_rows);
@@ -284,15 +288,15 @@ void Population_trackers::update_counts(Eigen::ArrayXXf population, int frame)
 /*-----------------------------------------------------------*/
 /*                        Destructor                         */
 /*-----------------------------------------------------------*/
-Population_trackers::~Population_trackers()
+COVID_SIM::Population_trackers::~Population_trackers()
 {
 }
 
 /*-----------------------------------------------------------*/
 /*                  initialize population                    */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_rand, int mean_age, int max_age,
-	vector<double> xbounds, vector<double> ybounds)
+Eigen::ArrayXXf COVID_SIM::initialize_population(Configuration Config, RandomDevice *my_rand, int mean_age, int max_age,
+	std::vector<double> xbounds, std::vector<double> ybounds)
 {
 	/*initialized the population for the simulation
 
@@ -376,8 +380,8 @@ Eigen::ArrayXXf initialize_population(Configuration Config, RandomDevice *my_ran
 /*-----------------------------------------------------------*/
 /*                 initialize destinations                   */
 /*-----------------------------------------------------------*/
-Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinations, 
-	vector<double> destination_lower_bounds, vector<double> destination_upper_bounds)
+Eigen::ArrayXXf COVID_SIM::initialize_destination_matrix(int pop_size, int total_destinations,
+	std::vector<double> destination_lower_bounds, std::vector<double> destination_upper_bounds)
 {
 	/*initializes the destination matrix
 
@@ -427,8 +431,8 @@ Eigen::ArrayXXf initialize_destination_matrix(int pop_size, int total_destinatio
 /*-----------------------------------------------------------*/
 /*                initialize ground covered                  */
 /*-----------------------------------------------------------*/
-void initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::ArrayXXf &ground_covered, int pop_size, int n_gridpoints, vector<double> xbounds,
-	vector<double> ybounds)
+void COVID_SIM::initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::ArrayXXf &ground_covered, int pop_size, int n_gridpoints, std::vector<double> xbounds,
+	std::vector<double> ybounds)
 {
 	/*initializes the destination matrix
 
@@ -454,10 +458,10 @@ void initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::Array
 	Eigen::ArrayXf y = Eigen::ArrayXf::LinSpaced(n_gridpoints, ybounds[0], ybounds[1]);
 
 	// create list of grid points and their bounding boxes
-	Eigen::ArrayXf grid_coords_xlb = x(seq(0, last - 1)).replicate(n_gridpoints - 1, 1);
-	Eigen::ArrayXf grid_coords_ylb = repeat(y(seq(0, last - 1)), n_gridpoints - 1);
-	Eigen::ArrayXf grid_coords_xub = x(seq(1, last)).replicate(n_gridpoints - 1, 1);
-	Eigen::ArrayXf grid_coords_yub = repeat(y(seq(1, last)), n_gridpoints - 1);
+	Eigen::ArrayXf grid_coords_xlb = x(Eigen::seq(0, Eigen::last - 1)).replicate(n_gridpoints - 1, 1);
+	Eigen::ArrayXf grid_coords_ylb = repeat(y(Eigen::seq(0, Eigen::last - 1)), n_gridpoints - 1);
+	Eigen::ArrayXf grid_coords_xub = x(Eigen::seq(1, Eigen::last)).replicate(n_gridpoints - 1, 1);
+	Eigen::ArrayXf grid_coords_yub = repeat(y(Eigen::seq(1, Eigen::last)), n_gridpoints - 1);
 
 	grid_coords.resize(grid_coords_xlb.rows(), grid_coords_xlb.cols()*4);
 	grid_coords << grid_coords_xlb, grid_coords_ylb, grid_coords_xub, grid_coords_yub;
@@ -470,7 +474,7 @@ void initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::Array
 /*-----------------------------------------------------------*/
 /*                   save population data                    */
 /*-----------------------------------------------------------*/
-void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Configuration Config, int frame, string folder)
+void COVID_SIM::save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Configuration Config, int frame, std::string folder)
 {
 	/*dumps simulation data to disk
 
@@ -492,15 +496,15 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Conf
 
 	check_folder(folder);
 
-	vector<int> *s = &pop_tracker.susceptible;
-	vector<int> *i = &pop_tracker.infectious;
-	vector<int> *r = &pop_tracker.recovered;
-	vector<int> *f = &pop_tracker.fatalities;
-	vector<int> t = sequence(0, (frame + 1), 1);
+	std::vector<int> *s = &pop_tracker.susceptible;
+	std::vector<int> *i = &pop_tracker.infectious;
+	std::vector<int> *r = &pop_tracker.recovered;
+	std::vector<int> *f = &pop_tracker.fatalities;
+	std::vector<int> t = sequence(0, (frame + 1), 1);
 
-	vector<double> *d = &pop_tracker.distance_travelled;
-	vector<double> *GC = &pop_tracker.mean_perentage_covered;
-	vector<double> *R0 = &pop_tracker.mean_R0;
+	std::vector<double> *d = &pop_tracker.distance_travelled;
+	std::vector<double> *GC = &pop_tracker.mean_perentage_covered;
+	std::vector<double> *R0 = &pop_tracker.mean_R0;
 
 	Eigen::Map<Eigen::MatrixXi> susceptible(s->data(), s->size(), 1);
 	Eigen::Map<Eigen::MatrixXi> infectious(i->data(), i->size(), 1);
@@ -516,7 +520,7 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Conf
 	if (Config.track_position) {
 		Eigen::Map<Eigen::MatrixXd> distance_travelled(d->data(), d->size(), 1);
 
-		vector<int> t = sequence(0, (frame + 1), 1);
+		std::vector<int> t = sequence(0, (frame + 1), 1);
 		Eigen::Map<Eigen::MatrixXi> time(t.data(), t.size(), 1);
 
 		Eigen::MatrixXd time_series(distance_travelled.rows(),2);
@@ -527,7 +531,7 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Conf
 	if (Config.track_GC) {
 		Eigen::Map<Eigen::MatrixXd> mean_perentage_covered(GC->data(), GC->size(), 1);
 
-		vector<int> t = sequence(0, (frame + 1), Config.update_every_n_frame);
+		std::vector<int> t = sequence(0, (frame + 1), Config.update_every_n_frame);
 		Eigen::Map<Eigen::MatrixXi> time(t.data(), t.size(), 1);
 
 		Eigen::MatrixXd time_series(mean_perentage_covered.rows(),2);
@@ -538,7 +542,7 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Conf
 	if (Config.track_R0) {
 		Eigen::Map<Eigen::MatrixXd> mean_R0(R0->data(), R0->size(), 1);
 
-		vector<int> t = sequence(0, (frame + 1), Config.update_R0_every_n_frame);
+		std::vector<int> t = sequence(0, (frame + 1), Config.update_R0_every_n_frame);
 		Eigen::Map<Eigen::MatrixXi> time(t.data(), t.size(), 1);
 
 		Eigen::MatrixXd time_series(mean_R0.rows(),2);
@@ -552,7 +556,7 @@ void save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Conf
 /*-----------------------------------------------------------*/
 /*         save population data at current time step         */
 /*-----------------------------------------------------------*/
-void save_population(Eigen::ArrayXXf population, int tstep, string folder)
+void COVID_SIM::save_population(Eigen::ArrayXXf population, int tstep, std::string folder)
 {
 	/*dumps population data at given timestep to disk
 
@@ -574,7 +578,7 @@ void save_population(Eigen::ArrayXXf population, int tstep, string folder)
 /*-----------------------------------------------------------*/
 /*    save population ground covered at current time step    */
 /*-----------------------------------------------------------*/
-void save_ground_covered(Eigen::ArrayXXf ground_covered, int tstep, string folder)
+void COVID_SIM::save_ground_covered(Eigen::ArrayXXf ground_covered, int tstep, std::string folder)
 {
 	/*dumps population data at given timestep to disk
 
@@ -596,7 +600,7 @@ void save_ground_covered(Eigen::ArrayXXf ground_covered, int tstep, string folde
 /*-----------------------------------------------------------*/
 /*                   save grid coordinates                   */
 /*-----------------------------------------------------------*/
-void save_grid_coords(Eigen::ArrayXXf grid_coords, string folder)
+void COVID_SIM::save_grid_coords(Eigen::ArrayXXf grid_coords, std::string folder)
 {
 	/*dumps population data at given timestep to disk
 

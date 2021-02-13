@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     # terminate MCS
     run = 0
-    run_end = 60 + 1
+    run_end = 299 + 1
     points = points[run:run_end]
 
     for point in points:

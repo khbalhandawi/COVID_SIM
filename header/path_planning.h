@@ -1,36 +1,40 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <Eigen/Core>
-#include "motion.h"
+#include<vector>
+#include<Eigen/Core>
 
-using namespace std;
+#ifndef PATH_PLANNING_H_H
+#define PATH_PLANNING_H_H
 
-/*-----------------------------------------------------------*/
-/*                  Send patient to location                 */
-/*-----------------------------------------------------------*/
-void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, int dest_no = 1);
+namespace COVID_SIM {
 
-/*-----------------------------------------------------------*/
-/*                Set population destination                 */
-/*-----------------------------------------------------------*/
-void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double travel_speed = 2);
+	/*-----------------------------------------------------------*/
+	/*                  Send patient to location                 */
+	/*-----------------------------------------------------------*/
+	void go_to_location(Eigen::VectorXi Choices, Eigen::ArrayXXf &patients, Eigen::ArrayXXf &destinations, int dest_no = 1);
 
-/*-----------------------------------------------------------*/
-/*                Check who is at destination                */
-/*-----------------------------------------------------------*/
-void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double wander_factor = 1);
+	/*-----------------------------------------------------------*/
+	/*                Set population destination                 */
+	/*-----------------------------------------------------------*/
+	void set_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double travel_speed = 2);
 
-/*-----------------------------------------------------------*/
-/*            Keeps arrivals within wander range             */
-/*-----------------------------------------------------------*/
-void keep_at_destination(Eigen::ArrayXXf &population, 
-	vector<double> lb_environments, vector<double> ub_environments,
-	double wall_buffer, double bounce_buffer);
+	/*-----------------------------------------------------------*/
+	/*                Check who is at destination                */
+	/*-----------------------------------------------------------*/
+	void check_at_destination(Eigen::ArrayXXf &population, Eigen::ArrayXXf destinations, double wander_factor = 1);
 
-/*-----------------------------------------------------------*/
-/*                 Clear destination markers                 */
-/*-----------------------------------------------------------*/
-void reset_destinations(Eigen::ArrayXXf &population, vector<int> Ids = {});
+	/*-----------------------------------------------------------*/
+	/*            Keeps arrivals within wander range             */
+	/*-----------------------------------------------------------*/
+	void keep_at_destination(Eigen::ArrayXXf &population,
+		std::vector<double> lb_environments, std::vector<double> ub_environments,
+		double wall_buffer, double bounce_buffer);
+
+	/*-----------------------------------------------------------*/
+	/*                 Clear destination markers                 */
+	/*-----------------------------------------------------------*/
+	void reset_destinations(Eigen::ArrayXXf &population, std::vector<int> Ids = {});
+
+}
+
+#endif // PATH_PLANNING_H_H
