@@ -12,4 +12,4 @@
 #define DLL_API
 #endif
 
-#define GPU_ACC
+#define GPU_ACC // comment to disable GPU acceleration

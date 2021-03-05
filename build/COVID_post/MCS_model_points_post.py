@@ -37,7 +37,7 @@ if __name__ == '__main__':
     # min_bin_width_i = 15 # for discrete distributions
     # min_bin_width_f = 5 # for discrete distributions
 
-    n_samples = 500
+    n_samples = 500 # <-------------------------- adjust the number of observations according to MCS_model_points
     n_bins = 30 # for continuous distributions
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions
@@ -100,8 +100,9 @@ if __name__ == '__main__':
         colors = ['#FFFFFF'] * 300
 
     # terminate
+    select_indices = [0,1,2,3]
     # select_indices = [0,1,2,3,4,5,6]
-    select_indices = [0,5,6]
+    # select_indices = [0,5,6]
     opts_unscaled = [opts_unscaled[index] for index in select_indices]
     runs = select_indices
 
@@ -178,7 +179,7 @@ if __name__ == '__main__':
         mean_d_runs += [mean_d]
         std_d_runs += [std_d]
 
-        label_name = u'Socio-economic impact $M^t$'
+        label_name = u'Mobility $M^t$'
         fun_name = 'ground covered'
         data = GC_i
 
@@ -192,14 +193,14 @@ if __name__ == '__main__':
         std_gc_runs += [std_gc]
 
         if auto_limits != "determine":
-            fig_infections.savefig('data/%i_PDF_%s.pdf' %(run , 'infections'), 
-                                    format='pdf', dpi=100,bbox_inches='tight')
-            fig_fatalities.savefig('data/%i_PDF_%s.pdf' %(run , 'fatalities'), 
-                                format='pdf', dpi=100,bbox_inches='tight')
-            fig_dist.savefig('data/%i_PDF_%s.pdf' %(run , 'distance'), 
-                            format='pdf', dpi=100,bbox_inches='tight')
-            fig_GC.savefig('data/%i_PDF_%s.pdf' %(run , 'ground_covered'), 
-                            format='pdf', dpi=100,bbox_inches='tight')
+            fig_infections.savefig('data/%i_PDF_%s.png' %(run , 'infections'), 
+                                    format='png', dpi=100,bbox_inches='tight')
+            fig_fatalities.savefig('data/%i_PDF_%s.png' %(run , 'fatalities'), 
+                                format='png', dpi=100,bbox_inches='tight')
+            fig_dist.savefig('data/%i_PDF_%s.png' %(run , 'distance'), 
+                            format='png', dpi=100,bbox_inches='tight')
+            fig_GC.savefig('data/%i_PDF_%s.png' %(run , 'ground_covered'), 
+                            format='png', dpi=100,bbox_inches='tight')
 
         print('==============================================')
         print('Run %i stats:' %(run))
@@ -232,12 +233,12 @@ if __name__ == '__main__':
         pickle.dump(std_gc_runs,fid)
 
     if same_axis:
-        fig_infections.savefig('data/PDF_%s.pdf' %('infections'), 
-                                format='pdf', dpi=100,bbox_inches='tight')
-        fig_fatalities.savefig('data/PDF_%s.pdf' %('fatalities'), 
-                            format='pdf', dpi=100,bbox_inches='tight')
-        fig_dist.savefig('data/PDF_%s.pdf' %('distance'), 
-                        format='pdf', dpi=100,bbox_inches='tight')
-        fig_GC.savefig('data/PDF_%s.pdf' %('ground_covered'), 
-                       format='pdf', dpi=100,bbox_inches='tight')
+        fig_infections.savefig('data/PDF_%s.png' %('infections'), 
+                                format='png', dpi=100,bbox_inches='tight')
+        fig_fatalities.savefig('data/PDF_%s.png' %('fatalities'), 
+                            format='png', dpi=100,bbox_inches='tight')
+        fig_dist.savefig('data/PDF_%s.png' %('distance'), 
+                        format='png', dpi=100,bbox_inches='tight')
+        fig_GC.savefig('data/PDF_%s.png' %('ground_covered'), 
+                       format='png', dpi=100,bbox_inches='tight')
         plt.show()

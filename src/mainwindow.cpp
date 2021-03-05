@@ -365,6 +365,14 @@ void MainWindow::setupRealtimeScatterDemo(QCustomPlot *customPlot)
 	//=============================================================================//
 	// Set up R0 display
 	//ui->R0_box->setMinimumSize(200, 50);
+	
+	//=============================================================================//
+	// Set up directory for saving screenshots
+
+	if (sim->Config.save_plot) {
+		COVID_SIM::check_folder(sim->Config.plot_path);
+		COVID_SIM::check_folder("screenshots");
+	}
 
 }
 
@@ -458,8 +466,10 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 
 	// take a screenshot
 	if ((sim->Config.save_plot) && ((frame % sim->Config.save_pop_freq) == 0)) {
+		screenShot();
 		//QTimer::singleShot(4000, this, SLOT(screenShot()));
-		pdfrender(); // only works in debug mode
+		//pdfrender(); // only works in debug mode
+		pngrender(); // works everytime
 	}
 
 	int sleep_time = (1000 / 60) - computation_time - (time.elapsed() - key); // target frame rate = 60 FPS
@@ -475,10 +485,10 @@ void MainWindow::on_run_button_clicked()
 	bool run_action = ui->run_button->isChecked();
 
 	if (run_action) {
-		ui->run_button->setText("run");
+		ui->run_button->setText("pause");
 	}
 	else {
-		ui->run_button->setText("pause");
+		ui->run_button->setText("run");
 	}
 }
 
@@ -491,7 +501,9 @@ void MainWindow::screenShot()
 #else
 	QPixmap pm = qApp->primaryScreen()->grabWindow(qApp->desktop()->winId(), this->x()-7, this->y()-7, this->frameGeometry().width()+14, this->frameGeometry().height()+14);
 #endif
-	QString fileName = demoName.toLower() + "_" + QString::number(frame_count) + ".png";
+	QString number = QStringLiteral("%1").arg(frame_count, 5, 10, QLatin1Char('0'));
+
+	QString fileName = demoName.toLower() + "_" + number + ".png";
 	fileName.replace(" ", "");
 	pm.save("./screenshots/"+fileName);
 }
@@ -508,6 +520,16 @@ void MainWindow::pdfrender()
 	QString folder = QString::fromStdString(sim->Config.plot_path);
 	QString fileName = "./" + folder + "/sim_" + QString::number(frame_count) + ".pdf";
 	ui->customPlot->savePdf(fileName);
+}
+
+void MainWindow::pngrender()
+{
+	QString folder = QString::fromStdString(sim->Config.plot_path);
+
+	QString number = QStringLiteral("%1").arg(frame_count, 5, 10, QLatin1Char('0'));
+
+	QString fileName = "./" + folder + "/sim_" + number + ".png";
+	ui->customPlot->savePng(fileName, 0, 0, 1.0, 30, 20);
 }
 
 MainWindow::~MainWindow()

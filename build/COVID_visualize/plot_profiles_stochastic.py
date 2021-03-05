@@ -74,7 +74,7 @@ def draw_SIR(fig, ax1, leg=None, data=None,
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/SIRF_plot.pdf' %(plot_path), dpi=1000, facecolor=bg_color, bbox_inches='tight')
+    fig.savefig('%s/SIRF_plot.png' %(plot_path), dpi=1000, facecolor=bg_color, bbox_inches='tight')
 
 def draw_SIR_compare(data, lb_data, ub_data, fig, ax1, leg=None, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
@@ -119,7 +119,7 @@ def draw_SIR_compare(data, lb_data, ub_data, fig, ax1, leg=None, labels=None,
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/%s.pdf' %(plot_path,save_name), dpi=100, facecolor=bg_color, bbox_inches='tight')
+    fig.savefig('%s/%s.png' %(plot_path,save_name), dpi=100, facecolor=bg_color, bbox_inches='tight')
 
 def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, leg=None, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
@@ -198,7 +198,7 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, leg=None, labels=N
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/%s.pdf' %(plot_path,save_name), dpi=1000, facecolor=bg_color, bbox_inches='tight')
+    fig.savefig('%s/%s.png' %(plot_path,save_name), dpi=1000, facecolor=bg_color, bbox_inches='tight')
 
 def process_statistics(run):
 
@@ -316,8 +316,8 @@ if __name__ == '__main__':
     ub_data_I = []; ub_data_F = []; ub_data_R = []; ub_data_M = []; ub_data_R0 = []
 
     # terminate
-    # select_indices = [0,1,2,3]
-    select_indices = [0,5,6]
+    select_indices = [0,1,2,3]
+    # select_indices = [0,5,6]
     # select_indices = [0]
     points_unscaled = [points_unscaled[index] for index in select_indices]
     runs = select_indices

@@ -89,7 +89,7 @@ def visualize_surrogate(bounds,variable_lbls,server,training_X,training_Y,plt,cu
     else:
         hyperplane_SGTE_vis_norm(server,training_X,bounds,variable_lbls,nominal,training_Y,nn,fig,plt,opts=opts,threshold=threshold, cmax=cmax, cmin=cmin)
 
-    fig_name = '%s.pdf' %(base_name)
+    fig_name = '%s.png' %(base_name)
     fig_file_name = os.path.join(current_path,fig_name)
     fig.savefig(fig_file_name, bbox_inches='tight')
 
@@ -122,7 +122,7 @@ def main():
         std_gc_opts = pickle.load(fid)
 
     # Variables
-    n_samples_LH = 299 + 1
+    n_samples_LH = 299 + 1 # <-------------------------- adjust the number of observations according to MCS_model_LHS
     [lob_var, upb_var, points, points_us] = LHS_sampling(n_samples_LH,new_LHS=False)
 
     # Opts

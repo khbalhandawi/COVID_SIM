@@ -43,6 +43,7 @@
 #define MAINWINDOW_H
 
 #include "simulation.h"
+#include "utilities.h"
 
 #include <QMainWindow>
 #include <QTimer>
@@ -72,6 +73,7 @@ public:
 	void setupDemo(int demoIndex);
 	void setupRealtimeScatterDemo(QCustomPlot *customPlot);
 	void pdfrender();
+	void pngrender();
   
 public slots:
 	void realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,

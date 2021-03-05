@@ -86,7 +86,7 @@ if __name__ == '__main__':
     upb_var = bounds[:,1] # upper bounds
     
     new_LHS = False
-    n_samples_LH = 300
+    n_samples_LH = 300 # <-------------------------- adjust the number of latin hyper cube points (recommend 30 for quick results)
 
     # LHS distribution
     [_,_,_,points] = LHS_sampling(n_samples_LH,lob_var,upb_var,new_LHS=True)
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     # min_bin_width_i = 15 # for discrete distributions
     # min_bin_width_f = 5 # for discrete distributions
 
-    n_samples = 500
+    n_samples = 500 # <-------------------------- adjust the number of observations per latin hypercube point (recommend 50 for quick results)
     n_bins = 30 # for continuous distributions
     min_bin_width_i = 15 # for discrete distributions
     min_bin_width_f = 5 # for discrete distributions

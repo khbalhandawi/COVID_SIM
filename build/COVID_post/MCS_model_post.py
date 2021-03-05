@@ -42,7 +42,7 @@ if __name__ == '__main__':
     color_mode = 'color' # Choose color mode (black_White)
     run = 0 # starting point
     
-    n_samples_LH = 300
+    n_samples_LH = 300 # <-------------------------- adjust the number of observations according to MCS_model_LHS
 
     # LHS distribution
     [lob_var, upb_var, _,points] = LHS_sampling(n_samples_LH,new_LHS=False)
@@ -61,9 +61,9 @@ if __name__ == '__main__':
     # Initialize
 
     # terminate MCS
-    run = 0
-    run_end = 299 + 1
-    points = points[run:run_end]
+    # run = 0
+    # run_end = 299 + 1
+    # points = points[run:run_end]
 
     for point in points:
 
