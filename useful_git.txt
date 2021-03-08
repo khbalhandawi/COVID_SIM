@@ -3,3 +3,50 @@ git commit -- amend -- no-edit
 git push -f origin master
 REM https://stackoverflow.com/questions/7527982/applying-gitignore-to-committed-files/7528016
 for /F "tokens=*" %a in ('git ls-files -ci --exclude-standard') do @git rm --cached "%a"
+
+# delete last commit
+git reset --hard HEAD~1 
+
+# untrack previously tracked files
+git rm --cached build/CUDA_functions.dll
+git rm --cached build/CUDA_functions_d.dll
+git rm --cached build/CUDA_functions_d.ilk
+git rm --cached libs/CUDA_functions.dll
+git rm --cached libs/CUDA_functions.lib
+git rm --cached libs/CUDA_functions_d.dll
+git rm --cached libs/CUDA_functions_d.lib
+
+# DUPLICATION
+git clone --bare https://github.com/khbalhandawi/cpp_corona_simulation
+cd cpp_corona_simulation.git
+git push --mirror https://github.com/khbalhandawi/COVID_SIM
+
+# DUPLICATION
+git clone --bare https://github.com/khbalhandawi/CUDA_agent_based
+cd CUDA_agent_based.git
+git push --mirror https://github.com/khbalhandawi/CUDA_ABM
+
+# first delete duplicate files in repo B and commit
+# delete backups/
+# add libs/ to .gitignore
+
+# rename a directory
+git mv include tmp
+git mv tmp Include
+# modify project file accordingly
+
+# make sure master is the default branch in repo A
+
+# Merge REPO A into REPO B (onto other branch with --no-ff):
+git remote rm origin
+git remote add origin https://github.com/khbalhandawi/cpp_corona_simulation
+git checkout main
+git branch -m CUDA_functions
+git fetch
+git checkout CUDA_functions
+git push -u origin CUDA_functions
+git checkout master
+git merge --no-ff CUDA_functions --allow-unrelated-histories
+git add -A
+git commit -m "Merged CUDA_functions"
+git push -f origin master

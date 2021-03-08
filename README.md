@@ -9,10 +9,10 @@ I provide Python scripts to call the model in batch mode and run Monte-Carlo sim
 # Setup
 
 ## Dependencies 
-[![Generic badge](https://img.shields.io/badge/Python-3.8.3-<COLOR>.svg)](https://shields.io/)
-[![Generic badge](https://img.shields.io/badge/Qt-5.15.1-<COLOR>.svg)](https://shields.io/)
-[![Generic badge](https://img.shields.io/badge/CUDA-11.2.0-<COLOR>.svg)](https://shields.io/)
-[![Generic badge](https://img.shields.io/badge/VisualStudio-C++17-<COLOR>.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/Python-3.8.3-<COLOR>.svg)](https://anaconda.org/)
+[![Generic badge](https://img.shields.io/badge/Qt-5.15.1-<COLOR>.svg)](https://www.qt.io/download)
+[![Generic badge](https://img.shields.io/badge/CUDA-11.2.0-<COLOR>.svg)](https://developer.nvidia.com/cuda-downloads)
+[![Generic badge](https://img.shields.io/badge/VisualStudio-C++17-<COLOR>.svg)](https://visualstudio.microsoft.com/downloads/)
 
 - [**SGTELIB**](https://github.com/bbopt/sgtelib) (optional) for sensitivity analysis
 - **Qt** [5.15.1](https://www.qt.io/download) for user-interface
@@ -37,16 +37,19 @@ C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\bin;
 ```
 - Add `%CUDA%` to the `PATH` environment variable
 
-## Compiling executable files
+## Compiling executable files (CUDA-capabale systems only)
 
-Build the project executable using [COVID_SIM_UI.sln](COVID_SIM_UI.sln). This will dump the executable and all relevant dll's in the [build](build/) directory. I took the liberty of including precompiled dll's ([CUDA_functions.dll](build/CUDA_functions.dll) for release and [CUDA_functions_d.dll](build/CUDA_functions_d.dll) for debug) for CUDA GPU acceleration. 
+Build the project executable using [COVID_SIM_UI_CUDA.sln](COVID_SIM_UI_CUDA.sln). This will dump the executable and all relevant dll's in the [build](build/) directory.
 
-IMPORTANT: Check that you have a [CUDA-capable GPU](https://developer.nvidia.com/cuda-gpus) before building the project. To disable GPU acceleration goto the [header/Defines.h](header/Defines.h) and comment the line.
+IMPORTANT: Check that you have a [CUDA-capable GPU](https://developer.nvidia.com/cuda-gpus) before building the project.
+
+## Compiling executable files 
+
+First disable GPU acceleration during compilation by going to [header/Defines.h](header/Defines.h) and commenting the line.
 
 `#define GPU_ACC // comment to disable GPU acceleration`
 
-This [repository](https://github.com/khbalhandawi/CUDA_agent_based) includes the source code and project files for building the CUDA dlls.
-
+Build the project executable using [COVID_SIM_UI.sln](COVID_SIM_UI.sln).
 # Example usage
 
 To run the model simply execute [COVID_SIM_UI.exe](build/COVID_SIM_UI.exe). The following user-interface will be shown

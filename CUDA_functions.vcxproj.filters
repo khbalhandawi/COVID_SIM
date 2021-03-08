@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="sources">
+      <UniqueIdentifier>{63c83a96-38f1-45c0-814a-b367165797fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{f13fb0e5-4c5b-4abf-b5ff-b816f352c182}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\CUDA_main.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\kernels.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\Utilities.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDA_functions.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="header\Defines.cuh">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="header\kernels.cuh">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utilities.cuh">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="header\CUDA_functions.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -19,6 +19,13 @@ build/COVID_SIM_UI.lib
 build/COVID_sim_lib.dll
 build/COVID_sim_lib.exe
 build/COVID_sim_lib.exp
+build/CUDA_functions.dll
+build/CUDA_functions.exe
+build/CUDA_functions.exp
+build/CUDA_functions_d.dll
+build/CUDA_functions_d.exe
+build/CUDA_functions_d.exp
+build/*.ilk
 .vs/
 Debug/
 *.pyc
@@ -49,3 +56,4 @@ build/COVID_visualize/render/*.png
 .qmake.stash
 *.ts
 libs/COVID_sim_lib*
+libs/CUDA_functions*

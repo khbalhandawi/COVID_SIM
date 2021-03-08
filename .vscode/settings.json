@@ -105,7 +105,9 @@
         "qscreen": "cpp",
         "qmetaenum": "cpp",
         "*.h": "cpp",
-        "*.hpp": "cpp"
+        "*.hpp": "cpp",
+        "*.cu": "cpp",
+        "*.cuh": "cpp"
     },
     "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe"
 }

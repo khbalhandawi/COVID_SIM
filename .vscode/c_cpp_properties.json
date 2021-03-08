@@ -7,7 +7,10 @@
                 "${workspaceFolder}/Include/**",
                 "${workspaceFolder}/libs/**",
                 "${QT}/include/**",
-                "${QT}/lib/**"
+                "${QT}/lib/**",
+                "${CUDA_PATH}/bin/**",
+                "${CUDA_PATH}/libnvvp/**",
+                "${CUDA_PATH}/include/**"
             ],
             "defines": [
                 "_WINDOWS",
@@ -32,7 +35,10 @@
                 "${workspaceFolder}/Include/**",
                 "${workspaceFolder}/libs/**",
                 "${QT}/include/**",
-                "${QT}/lib/**"
+                "${QT}/lib/**",
+                "${CUDA_PATH}/bin/**",
+                "${CUDA_PATH}/libnvvp/**",
+                "${CUDA_PATH}/include/**"
             ],
             "defines": [
                 "_WINDOWS",
