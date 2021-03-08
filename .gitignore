@@ -12,6 +12,7 @@ Release/
 build/
 .vs/
 Debug/
+libs/
 *.pyc
 ui_mainwindow.h
 *.npy
