@@ -9,69 +9,69 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header\Configuration.h">
+    <ClInclude Include="..\header\Configuration.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\Convert.h">
+    <ClInclude Include="..\header\Convert.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\infection.h">
+    <ClInclude Include="..\header\Defines.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\motion.h">
+    <ClInclude Include="..\header\infection.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\path_planning.h">
+    <ClInclude Include="..\header\motion.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\Population_trackers.h">
+    <ClInclude Include="..\header\path_planning.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\RandomDevice.h">
+    <ClInclude Include="..\header\Population_trackers.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\simulation.h">
+    <ClInclude Include="..\header\RandomDevice.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\tic_toc.h">
+    <ClInclude Include="..\header\simulation.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\utilities.h">
+    <ClInclude Include="..\header\tic_toc.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="header\Defines.h">
+    <ClInclude Include="..\header\utilities.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Configuration.cpp">
+    <ClCompile Include="..\src\Configuration.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\Convert.cpp">
+    <ClCompile Include="..\src\Convert.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\infection.cpp">
+    <ClCompile Include="..\src\covidsim.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\motion.cpp">
+    <ClCompile Include="..\src\infection.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\path_planning.cpp">
+    <ClCompile Include="..\src\motion.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\Population_trackers.cpp">
+    <ClCompile Include="..\src\path_planning.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\RandomDevice.cpp">
+    <ClCompile Include="..\src\Population_trackers.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\simulation.cpp">
+    <ClCompile Include="..\src\RandomDevice.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\utilities.cpp">
+    <ClCompile Include="..\src\simulation.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\covidsim.cpp">
+    <ClCompile Include="..\src\utilities.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

@@ -35,29 +35,29 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header\Configuration.h" />
-    <ClInclude Include="header\Convert.h" />
-    <ClInclude Include="header\Defines.h" />
-    <ClInclude Include="header\infection.h" />
-    <ClInclude Include="header\motion.h" />
-    <ClInclude Include="header\path_planning.h" />
-    <ClInclude Include="header\Population_trackers.h" />
-    <ClInclude Include="header\RandomDevice.h" />
-    <ClInclude Include="header\simulation.h" />
-    <ClInclude Include="header\tic_toc.h" />
-    <ClInclude Include="header\utilities.h" />
+    <ClInclude Include="..\header\Configuration.h" />
+    <ClInclude Include="..\header\Convert.h" />
+    <ClInclude Include="..\header\Defines.h" />
+    <ClInclude Include="..\header\infection.h" />
+    <ClInclude Include="..\header\motion.h" />
+    <ClInclude Include="..\header\path_planning.h" />
+    <ClInclude Include="..\header\Population_trackers.h" />
+    <ClInclude Include="..\header\RandomDevice.h" />
+    <ClInclude Include="..\header\simulation.h" />
+    <ClInclude Include="..\header\tic_toc.h" />
+    <ClInclude Include="..\header\utilities.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Configuration.cpp" />
-    <ClCompile Include="src\Convert.cpp" />
-    <ClCompile Include="src\infection.cpp" />
-    <ClCompile Include="src\covidsim.cpp" />
-    <ClCompile Include="src\motion.cpp" />
-    <ClCompile Include="src\path_planning.cpp" />
-    <ClCompile Include="src\Population_trackers.cpp" />
-    <ClCompile Include="src\RandomDevice.cpp" />
-    <ClCompile Include="src\simulation.cpp" />
-    <ClCompile Include="src\utilities.cpp" />
+    <ClCompile Include="..\src\Configuration.cpp" />
+    <ClCompile Include="..\src\Convert.cpp" />
+    <ClCompile Include="..\src\covidsim.cpp" />
+    <ClCompile Include="..\src\infection.cpp" />
+    <ClCompile Include="..\src\motion.cpp" />
+    <ClCompile Include="..\src\path_planning.cpp" />
+    <ClCompile Include="..\src\Population_trackers.cpp" />
+    <ClCompile Include="..\src\RandomDevice.cpp" />
+    <ClCompile Include="..\src\simulation.cpp" />
+    <ClCompile Include="..\src\utilities.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -158,12 +158,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)build\</OutDir>
+    <OutDir>$(SolutionDir)..\build\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)build\</OutDir>
+    <OutDir>$(SolutionDir)..\build\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -174,12 +174,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)build\</OutDir>
+    <OutDir>$(SolutionDir)..\build\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)build\</OutDir>
+    <OutDir>$(SolutionDir)..\build\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -226,13 +226,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_N_QT;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Release;$(SolutionDir)Include;$(SolutionDir)header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Release;$(SolutionDir)..\Include;$(SolutionDir)..\header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>CUDA_functions_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">
@@ -243,15 +244,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DLL_EXPORTS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Release;$(SolutionDir)Include;$(SolutionDir)header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Release;$(SolutionDir)..\Include;$(SolutionDir)..\header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>CUDA_functions_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>$(SolutionDir)libs\$(TargetName).lib</ImportLibrary>
+      <ImportLibrary>$(SolutionDir)..\libs\$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -302,7 +303,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Release;$(SolutionDir)Include;$(SolutionDir)header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Release;$(SolutionDir)..\Include;$(SolutionDir)..\header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -310,7 +311,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>CUDA_functions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -324,7 +325,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DLL_EXPORTS;_NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Release;$(SolutionDir)Include;$(SolutionDir)header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Release;$(SolutionDir)..\Include;$(SolutionDir)..\header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -332,9 +333,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>CUDA_functions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ImportLibrary>$(SolutionDir)libs\$(TargetName).lib</ImportLibrary>
+      <ImportLibrary>$(SolutionDir)..\libs\$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

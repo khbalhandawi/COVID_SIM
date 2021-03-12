@@ -1,4 +1,7 @@
 # COVID-19 agent-based simulation using C++
+<a name="top"></a>
+
+<img src="images/example_use.gif" width="4800">
 
 After seeing [this article](https://www.washingtonpost.com/graphics/2020/world/corona-simulator/) and checking out this cool [project](https://github.com/paulvangentcom/python_corona_simulation/) it occurred to me that there is room for improvement both in terms of agent-based modeling to simulate pandemics more realistically and to use them to come up with sound scientific intervention policies to bring the disease under control quickly without suffocating the economy. I created an agent based model with a lot of features in terms of code and execution optimization so that we can use exhaustive search and optimization algorithms to find those policies that hit that sweet-spot between controlling the pandemic and preserving jobs and economic activity.
 
@@ -39,7 +42,7 @@ C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\bin;
 
 ## Compiling executable files (CUDA-capabale systems only)
 
-Build the project executable using [COVID_SIM_UI_CUDA.sln](COVID_SIM_UI_CUDA.sln). This will dump the executable and all relevant dll's in the [build](build/) directory.
+Build the project executable using [COVID_SIM_UI_CUDA.sln](visual_studio/COVID_SIM_UI_CUDA.sln). This will dump the executable and all relevant dll's in the [build](build/) directory.
 
 IMPORTANT: Check that you have a [CUDA-capable GPU](https://developer.nvidia.com/cuda-gpus) before building the project.
 
@@ -49,12 +52,10 @@ First disable GPU acceleration during compilation by going to [header/Defines.h]
 
 `#define GPU_ACC // comment to disable GPU acceleration`
 
-Build the project executable using [COVID_SIM_UI.sln](COVID_SIM_UI.sln).
+Build the project executable using [COVID_SIM_UI.sln](visual_studio/COVID_SIM_UI.sln).
 # Example usage
 
-To run the model simply execute [COVID_SIM_UI.exe](build/COVID_SIM_UI.exe). The following user-interface will be shown
-
-<img src="images/example_use.gif" width="4800">
+To run the model simply execute [COVID_SIM_UI.exe](build/COVID_SIM_UI.exe). The <a href="#top">user-interface</a> shown at the beginning will be shown.
 
 Click the **run** button to start the simulation. Click the **pause** button to pause the simulation. Use the sliders to adjust the different intervention measures shown
 

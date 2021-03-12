@@ -37,37 +37,44 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\covidsim_ui.cpp">
+    <ClCompile Include="..\src\covidsim_ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mainwindow.cpp">
+    <ClCompile Include="..\src\mainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\qcustomplot.cpp">
+    <ClCompile Include="..\src\qcustomplot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Worker.cpp">
+    <ClCompile Include="..\src\worker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="header\mainwindow.h">
+    <QtMoc Include="..\header\mainwindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="header\qcustomplot.h">
+    <QtMoc Include="..\header\qcustomplot.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="header\Worker.h">
+    <QtMoc Include="..\header\worker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
+    
+    
     <CustomBuild Include="debug\moc_predefs.h.cbt">
       <Filter>Generated Files</Filter>
     </CustomBuild>
     <CustomBuild Include="release\moc_predefs.h.cbt">
       <Filter>Generated Files</Filter>
     </CustomBuild>
+    
+    
+    
+    
+    
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="mainwindow.ui">

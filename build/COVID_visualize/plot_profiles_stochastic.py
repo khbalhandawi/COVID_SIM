@@ -311,6 +311,14 @@ if __name__ == '__main__':
             points = pickle.load(fid)
             points_unscaled = pickle.load(fid)
 
+    # other_points = np.array([[6.87323850e+01,4.43845073e-02,4.75511210e+01],
+    #                         [7.07245300e+01,5.36435305e-02,4.68560890e+01],
+    #                         [8.96503750e+01,6.30122805e-02,5.02193600e+01]])
+
+    # points_unscaled = np.vstack((points_unscaled,other_points))
+
+    # print(points_unscaled)
+
     run = 0; data_I = []; data_F = []; data_R = []; data_M = []; data_R0 = []; labels = []
     lb_data_I = []; lb_data_F = []; lb_data_R = []; lb_data_M = []; lb_data_R0 = []
     ub_data_I = []; ub_data_F = []; ub_data_R = []; ub_data_M = []; ub_data_R0 = []
@@ -340,11 +348,19 @@ if __name__ == '__main__':
         # Legend labels
         # legend_label = "Run %i: $n_E$ = %i, $S_D$ = %.3f, $n_T$ = %i" %(run+1,round(point[0]),point[1],round(point[2]))
         legend_label = "Solution %i: $n_E$ = %i, $S_D$ = %.3f, $n_T$ = %i" %(run+1,round(point[0]),point[1],round(point[2]))
+    
+        # if run < 4:
+        #     legend_label = "Run %i: $n_E$ = %i, $S_D$ = %.3f, $n_T$ = %i" %(run+1,round(point[0]),point[1],round(point[2]))
+        # else:
+        #     if run == 4:
+        #         run = 0
+        #     legend_label = "Solution %i: $n_E$ = %i, $S_D$ = %.3f, $n_T$ = %i" %(run+1,round(point[0]),point[1],round(point[2]))
+       
         labels += [legend_label]
 
     fig_1, _, ax1_1 = build_fig_SIR(pop_size = pop_size)
     draw_SIR_compare(data_I, lb_data_I, ub_data_I, fig_1, ax1_1, labels=labels, palette = palette, 
-        pop_size = pop_size, save_name = 'I_compare', xlim = 350, leg_location = 'center right', 
+        pop_size = pop_size, save_name = 'I_compare', xlim = 350, ylim = None, leg_location = 'center right', 
         y_label = 'Number of infections $n_I^k$', threshold=90, threshold_label="Healthcare capacity $H_{\mathrm{max}}$")
     
     fig_2, _, ax1_2 = build_fig_SIR(pop_size = pop_size)
@@ -359,7 +375,7 @@ if __name__ == '__main__':
 
     fig_4, _, ax1_4 = build_fig_SIR(pop_size = pop_size)
     draw_SIR_compare(data_M, lb_data_M, ub_data_M, fig_4, ax1_4, labels=labels, palette = palette, 
-        pop_size = pop_size, save_name = 'M_compare', xlim = 350, leg_location = 'lower right', 
+        pop_size = pop_size, save_name = 'M_compare', xlim = 350, ylim = 2.5, leg_location = 'lower right', 
         y_label = 'Mobility $M^k$')
 
     fig_5, _, ax1_5 = build_fig_SIR(pop_size = pop_size)

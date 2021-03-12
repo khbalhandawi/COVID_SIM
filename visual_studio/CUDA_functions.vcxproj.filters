@@ -9,31 +9,31 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\CUDA_main.cu">
-      <Filter>sources</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\kernels.cu">
-      <Filter>sources</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\Utilities.cu">
-      <Filter>sources</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\CUDA_functions.cu">
-      <Filter>sources</Filter>
-    </CudaCompile>
+    <ClInclude Include="..\header\CUDA_functions.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\Defines.cuh">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\kernels.cuh">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\Utilities.cuh">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header\Defines.cuh">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="header\kernels.cuh">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Utilities.cuh">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="header\CUDA_functions.h">
-      <Filter>headers</Filter>
-    </ClInclude>
+    <CudaCompile Include="..\src\CUDA_functions.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\CUDA_main.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\kernels.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\Utilities.cu">
+      <Filter>sources</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
