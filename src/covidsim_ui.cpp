@@ -79,7 +79,7 @@ vector<double> processInput(int i, COVID_SIM::simulation *sim, ofstream *file)
 /*-----------------------------------------------------------*/
 /*                    Load configuration                     */
 /*-----------------------------------------------------------*/
-void load_config(COVID_SIM::Configuration *config, const char *config_file)
+void load_config(COVID_SIM::Configuration *config, const char *config_file, QApplication *application = NULL)
 {	
 	std::map<string,string COVID_SIM::Configuration::*> mapper;
 	mapper["simulation_steps"] = &COVID_SIM::Configuration::simulation_steps_in;
@@ -145,19 +145,52 @@ void load_config(COVID_SIM::Configuration *config, const char *config_file)
 	mapper["wall_buffer"] = &COVID_SIM::Configuration::wall_buffer_in;
 	mapper["bounce_buffer"] = &COVID_SIM::Configuration::bounce_buffer_in;
 
-	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
-	string line, value, value_str;
+    if (application) {
+        // if being used in UI mode
+        // get current working directory of executable
+        // qDebug() << "App path : " << application->applicationDirPath();
 
-	while (file.good()) {
-		getline(file, line, '\n');
-		istringstream is_line(line);
-		vector<string> key_value_pair;
+        QString finalPath = QDir(application->applicationDirPath()).filePath(config_file);
 
-		while (getline(is_line, value, '=')) {
-			key_value_pair.push_back(value.c_str());
-		}
-		config->*(mapper[key_value_pair[0]])=key_value_pair[1];
-	}
+        // qDebug() << "exe path : " << finalPath;
+
+        QFile file(finalPath); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
+        string line, value, value_str;
+
+
+        if(!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::information(0, "error", file.errorString());
+        }
+
+        QTextStream in(&file);
+
+        while(!in.atEnd()) {
+            QString line = in.readLine();
+            QStringList fields = line.split("=");
+            config->*(mapper[fields[0].toStdString()])=fields[1].toStdString();
+        }
+
+        file.close();
+
+    } else if (!application) {
+        // if being used in batch mode
+
+        ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
+        string line, value, value_str;
+
+        while (file.good()) {
+            getline(file, line, '\n');
+            istringstream is_line(line);
+            vector<string> key_value_pair;
+
+            while (getline(is_line, value, '=')) {
+                key_value_pair.push_back(value.c_str());
+            }
+            config->*(mapper[key_value_pair[0]])=key_value_pair[1];
+        }
+
+    }
+
 }
 
 /*-----------------------------------------------------------*/
@@ -205,15 +238,6 @@ int main(int argc, char* argv[])
 		cout << "\n" << "/*                                                                                 */";
 		cout << "\n" << "/*---------------------------------------------------------------------------------*/" << endl;
 
-		/*-----------------------------------------------------------*/
-		/*            Simulation configuration variables             */
-		/*-----------------------------------------------------------*/
-		// initialize
-		const char config_file[] = "configuration_debug.ini";
-
-		load_config(&Config, config_file);
-		Config.set_from_file();
-
 	} 
 	else if (!debug) {
 
@@ -241,7 +265,7 @@ int main(int argc, char* argv[])
 		// initialize
 		const char config_file[] = "configuration.ini";
 
-		load_config(&Config, config_file);
+        load_config(&Config, config_file);
 		Config.set_from_file();
 
 		cout << "Config loaded!" << endl;
@@ -266,7 +290,6 @@ int main(int argc, char* argv[])
 	// seed random generator
 	/* using nano-seconds instead of seconds */
 	unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
-	COVID_SIM::simulation sim(Config, seed);
 
 	if (Config.visualise) {
 		// use QT to run the simulation while loop
@@ -274,17 +297,29 @@ int main(int argc, char* argv[])
 		QApplication::setGraphicsSystem("raster");
 #endif
 		QApplication application(argc, argv);
-		MainWindow mainWindow(&sim);
-		mainWindow.show();
 
 		qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
 		qRegisterMetaType<int>("int"); // register "double" for queued connection type
 		qRegisterMetaType<float>("float"); // register "double" for queued connection type
 
+        /*-----------------------------------------------------------*/
+        /*            Simulation configuration variables             */
+        /*-----------------------------------------------------------*/
+        // initialize
+        const char config_file[] = "configuration_debug.ini";
+
+        load_config(&Config, config_file, &application);
+        Config.set_from_file();
+        COVID_SIM::simulation sim(Config, seed);
+
+        MainWindow mainWindow(&sim);
+        mainWindow.show();
+
 		return application.exec();
 	}
 	else {
 		// run the simulation while loop without QT
+        COVID_SIM::simulation sim(Config, seed);
 		if (debug) {
 			sim.run();
 		}

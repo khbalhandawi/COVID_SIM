@@ -42,8 +42,18 @@
 
 #include "utilities.h"
 
+#ifdef _MSC_VER
 #include <direct.h>
 #include <windows.h>
+#endif
+
+#ifdef __llvm__
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <iostream>
+#include <mach-o/dyld.h>
+#include <limits.h>
+#endif
 
 /*-----------------------------------------------------------*/
 /*                    Select block of data                   */
@@ -191,18 +201,35 @@ std::vector<int> COVID_SIM::sequence(int min, int max, int skip)
 void COVID_SIM::check_folder(std::string folder)
 {
 	/*check if folder exists, make if not present*/
+#ifdef __llvm__
+    char buf [PATH_MAX];
+    uint32_t bufsize = PATH_MAX;
+    if(!_NSGetExecutablePath(buf, &bufsize)) puts(buf);
 
-	std::string dir = folder + "\\";
+    // Remove executable name from directory
+    std::string buf_dir = buf;
+    buf_dir = buf_dir.substr(0, buf_dir.find_last_of("\\/"));
+    
+    char final [256];
+    std::sprintf (final, "%s/%s",buf_dir.c_str(),folder.c_str());
+    // std::cout << final << std::endl;
+    
+    int rc = mkdir(final,0777);
+    // if(rc == 0) std::cout << "Created " << final << " success\n";
+#endif
+#ifdef _MSC_VER
+    std::string dir = folder + "\\";
 
-	DWORD const ftyp = GetFileAttributesA(folder.c_str());
+    DWORD const ftyp = GetFileAttributesA(folder.c_str());
 
-	if ((ftyp != INVALID_FILE_ATTRIBUTES) && (ftyp & FILE_ATTRIBUTE_DIRECTORY)) {
-		// printf("%s is a directory\n", folder); // this is a directory!
-	}
-	else {
-		// printf("%s is not a directory, creating ...\n", folder); // this is not a directory!
-		_mkdir(dir.c_str());
-	}
+    if ((ftyp != INVALID_FILE_ATTRIBUTES) && (ftyp & FILE_ATTRIBUTE_DIRECTORY)) {
+        // printf("%s is a directory\n", folder); // this is a directory!
+    }
+    else {
+        // printf("%s is not a directory, creating ...\n", folder); // this is not a directory!
+        _mkdir(dir.c_str());
+    }
+#endif
 }
 
 /*-----------------------------------------------------------*/

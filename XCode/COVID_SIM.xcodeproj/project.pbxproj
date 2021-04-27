@@ -1,0 +1,528 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6E42EABD2638BD7E007274D5 /* libCOVID_SIM.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EA7192025E2394600D56743 /* libCOVID_SIM.dylib */; };
+		6E42EAC82638BEED007274D5 /* covidsim.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6E42EAC72638BEED007274D5 /* covidsim.cpp */; };
+		6EA7199825E284CE00D56743 /* utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7198F25E284CD00D56743 /* utilities.cpp */; };
+		6EA7199925E284CE00D56743 /* motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199025E284CD00D56743 /* motion.cpp */; };
+		6EA7199A25E284CE00D56743 /* Configuration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199125E284CD00D56743 /* Configuration.cpp */; };
+		6EA7199B25E284CE00D56743 /* Convert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199225E284CD00D56743 /* Convert.cpp */; };
+		6EA7199C25E284CE00D56743 /* infection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199325E284CD00D56743 /* infection.cpp */; };
+		6EA7199D25E284CE00D56743 /* path_planning.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199425E284CD00D56743 /* path_planning.cpp */; };
+		6EA7199E25E284CE00D56743 /* Population_trackers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199525E284CD00D56743 /* Population_trackers.cpp */; };
+		6EA7199F25E284CE00D56743 /* RandomDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199625E284CD00D56743 /* RandomDevice.cpp */; };
+		6EA719A025E284CE00D56743 /* simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6EA7199725E284CE00D56743 /* simulation.cpp */; };
+		6EA719AD25E284F000D56743 /* Defines.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A225E284F000D56743 /* Defines.h */; };
+		6EA719AE25E284F000D56743 /* path_planning.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A325E284F000D56743 /* path_planning.h */; };
+		6EA719AF25E284F000D56743 /* motion.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A425E284F000D56743 /* motion.h */; };
+		6EA719B025E284F000D56743 /* simulation.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A525E284F000D56743 /* simulation.h */; };
+		6EA719B125E284F000D56743 /* infection.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A625E284F000D56743 /* infection.h */; };
+		6EA719B225E284F000D56743 /* RandomDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A725E284F000D56743 /* RandomDevice.h */; };
+		6EA719B325E284F000D56743 /* Convert.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A825E284F000D56743 /* Convert.h */; };
+		6EA719B425E284F000D56743 /* Population_trackers.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719A925E284F000D56743 /* Population_trackers.h */; };
+		6EA719B525E284F000D56743 /* tic_toc.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719AA25E284F000D56743 /* tic_toc.h */; };
+		6EA719B625E284F000D56743 /* utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719AB25E284F000D56743 /* utilities.h */; };
+		6EA719B725E284F000D56743 /* Configuration.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EA719AC25E284F000D56743 /* Configuration.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6E42EAC12638BD91007274D5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6EA7191825E2394600D56743 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6EA7191F25E2394600D56743;
+			remoteInfo = COVID_SIM;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6E42EAB02638BD45007274D5 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		6E42EAB22638BD45007274D5 /* COVID_SIM_CMD */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = COVID_SIM_CMD; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E42EAC72638BEED007274D5 /* covidsim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = covidsim.cpp; path = ../../src/covidsim.cpp; sourceTree = "<group>"; };
+		6EA7192025E2394600D56743 /* libCOVID_SIM.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libCOVID_SIM.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		6EA7198F25E284CD00D56743 /* utilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = utilities.cpp; sourceTree = "<group>"; };
+		6EA7199025E284CD00D56743 /* motion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = motion.cpp; sourceTree = "<group>"; };
+		6EA7199125E284CD00D56743 /* Configuration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Configuration.cpp; sourceTree = "<group>"; };
+		6EA7199225E284CD00D56743 /* Convert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Convert.cpp; sourceTree = "<group>"; };
+		6EA7199325E284CD00D56743 /* infection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = infection.cpp; sourceTree = "<group>"; };
+		6EA7199425E284CD00D56743 /* path_planning.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_planning.cpp; sourceTree = "<group>"; };
+		6EA7199525E284CD00D56743 /* Population_trackers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Population_trackers.cpp; sourceTree = "<group>"; };
+		6EA7199625E284CD00D56743 /* RandomDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RandomDevice.cpp; sourceTree = "<group>"; };
+		6EA7199725E284CE00D56743 /* simulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simulation.cpp; sourceTree = "<group>"; };
+		6EA719A225E284F000D56743 /* Defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Defines.h; sourceTree = "<group>"; };
+		6EA719A325E284F000D56743 /* path_planning.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = path_planning.h; sourceTree = "<group>"; };
+		6EA719A425E284F000D56743 /* motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motion.h; sourceTree = "<group>"; };
+		6EA719A525E284F000D56743 /* simulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = simulation.h; sourceTree = "<group>"; };
+		6EA719A625E284F000D56743 /* infection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = infection.h; sourceTree = "<group>"; };
+		6EA719A725E284F000D56743 /* RandomDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RandomDevice.h; sourceTree = "<group>"; };
+		6EA719A825E284F000D56743 /* Convert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Convert.h; sourceTree = "<group>"; };
+		6EA719A925E284F000D56743 /* Population_trackers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Population_trackers.h; sourceTree = "<group>"; };
+		6EA719AA25E284F000D56743 /* tic_toc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tic_toc.h; sourceTree = "<group>"; };
+		6EA719AB25E284F000D56743 /* utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
+		6EA719AC25E284F000D56743 /* Configuration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Configuration.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6E42EAAF2638BD45007274D5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E42EABD2638BD7E007274D5 /* libCOVID_SIM.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6EA7191E25E2394600D56743 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6E42EAA62638B8DE007274D5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		6E42EAB32638BD45007274D5 /* COVID_SIM_CMD */ = {
+			isa = PBXGroup;
+			children = (
+				6E42EAC72638BEED007274D5 /* covidsim.cpp */,
+			);
+			path = COVID_SIM_CMD;
+			sourceTree = SOURCE_ROOT;
+		};
+		6EA7191725E2394600D56743 = {
+			isa = PBXGroup;
+			children = (
+				6EA7192225E2394600D56743 /* COVID_SIM */,
+				6E42EAB32638BD45007274D5 /* COVID_SIM_CMD */,
+				6EA7192125E2394600D56743 /* Products */,
+				6E42EAA62638B8DE007274D5 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		6EA7192125E2394600D56743 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6EA7192025E2394600D56743 /* libCOVID_SIM.dylib */,
+				6E42EAB22638BD45007274D5 /* COVID_SIM_CMD */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6EA7192225E2394600D56743 /* COVID_SIM */ = {
+			isa = PBXGroup;
+			children = (
+				6EA7198E25E2845E00D56743 /* source_files */,
+				6EA7198D25E2841F00D56743 /* header */,
+			);
+			path = COVID_SIM;
+			sourceTree = "<group>";
+		};
+		6EA7198D25E2841F00D56743 /* header */ = {
+			isa = PBXGroup;
+			children = (
+				6EA719AC25E284F000D56743 /* Configuration.h */,
+				6EA719A825E284F000D56743 /* Convert.h */,
+				6EA719A225E284F000D56743 /* Defines.h */,
+				6EA719A625E284F000D56743 /* infection.h */,
+				6EA719A425E284F000D56743 /* motion.h */,
+				6EA719A325E284F000D56743 /* path_planning.h */,
+				6EA719A925E284F000D56743 /* Population_trackers.h */,
+				6EA719A725E284F000D56743 /* RandomDevice.h */,
+				6EA719A525E284F000D56743 /* simulation.h */,
+				6EA719AA25E284F000D56743 /* tic_toc.h */,
+				6EA719AB25E284F000D56743 /* utilities.h */,
+			);
+			name = header;
+			path = ../../header;
+			sourceTree = "<group>";
+		};
+		6EA7198E25E2845E00D56743 /* source_files */ = {
+			isa = PBXGroup;
+			children = (
+				6EA7199125E284CD00D56743 /* Configuration.cpp */,
+				6EA7199225E284CD00D56743 /* Convert.cpp */,
+				6EA7199325E284CD00D56743 /* infection.cpp */,
+				6EA7199025E284CD00D56743 /* motion.cpp */,
+				6EA7199425E284CD00D56743 /* path_planning.cpp */,
+				6EA7199525E284CD00D56743 /* Population_trackers.cpp */,
+				6EA7199625E284CD00D56743 /* RandomDevice.cpp */,
+				6EA7199725E284CE00D56743 /* simulation.cpp */,
+				6EA7198F25E284CD00D56743 /* utilities.cpp */,
+			);
+			name = source_files;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		6EA7191C25E2394600D56743 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6EA719B125E284F000D56743 /* infection.h in Headers */,
+				6EA719B225E284F000D56743 /* RandomDevice.h in Headers */,
+				6EA719AE25E284F000D56743 /* path_planning.h in Headers */,
+				6EA719B625E284F000D56743 /* utilities.h in Headers */,
+				6EA719B325E284F000D56743 /* Convert.h in Headers */,
+				6EA719B425E284F000D56743 /* Population_trackers.h in Headers */,
+				6EA719AF25E284F000D56743 /* motion.h in Headers */,
+				6EA719AD25E284F000D56743 /* Defines.h in Headers */,
+				6EA719B025E284F000D56743 /* simulation.h in Headers */,
+				6EA719B525E284F000D56743 /* tic_toc.h in Headers */,
+				6EA719B725E284F000D56743 /* Configuration.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		6E42EAB12638BD45007274D5 /* COVID_SIM_CMD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6E42EAB62638BD45007274D5 /* Build configuration list for PBXNativeTarget "COVID_SIM_CMD" */;
+			buildPhases = (
+				6E42EAAE2638BD45007274D5 /* Sources */,
+				6E42EAAF2638BD45007274D5 /* Frameworks */,
+				6E42EAB02638BD45007274D5 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6E42EAC22638BD91007274D5 /* PBXTargetDependency */,
+			);
+			name = COVID_SIM_CMD;
+			productName = COVID_SIM_CMD;
+			productReference = 6E42EAB22638BD45007274D5 /* COVID_SIM_CMD */;
+			productType = "com.apple.product-type.tool";
+		};
+		6EA7191F25E2394600D56743 /* COVID_SIM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6EA7192B25E2394600D56743 /* Build configuration list for PBXNativeTarget "COVID_SIM" */;
+			buildPhases = (
+				6EA7191C25E2394600D56743 /* Headers */,
+				6EA7191D25E2394600D56743 /* Sources */,
+				6EA7191E25E2394600D56743 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = COVID_SIM;
+			productName = COVID_SIM;
+			productReference = 6EA7192025E2394600D56743 /* libCOVID_SIM.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6EA7191825E2394600D56743 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1240;
+				TargetAttributes = {
+					6E42EAB12638BD45007274D5 = {
+						CreatedOnToolsVersion = 12.4;
+					};
+					6EA7191F25E2394600D56743 = {
+						CreatedOnToolsVersion = 12.4;
+					};
+				};
+			};
+			buildConfigurationList = 6EA7191B25E2394600D56743 /* Build configuration list for PBXProject "COVID_SIM" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6EA7191725E2394600D56743;
+			productRefGroup = 6EA7192125E2394600D56743 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6EA7191F25E2394600D56743 /* COVID_SIM */,
+				6E42EAB12638BD45007274D5 /* COVID_SIM_CMD */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6E42EAAE2638BD45007274D5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E42EAC82638BEED007274D5 /* covidsim.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6EA7191D25E2394600D56743 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6EA7199C25E284CE00D56743 /* infection.cpp in Sources */,
+				6EA7199825E284CE00D56743 /* utilities.cpp in Sources */,
+				6EA7199F25E284CE00D56743 /* RandomDevice.cpp in Sources */,
+				6EA7199B25E284CE00D56743 /* Convert.cpp in Sources */,
+				6EA7199E25E284CE00D56743 /* Population_trackers.cpp in Sources */,
+				6EA719A025E284CE00D56743 /* simulation.cpp in Sources */,
+				6EA7199D25E284CE00D56743 /* path_planning.cpp in Sources */,
+				6EA7199A25E284CE00D56743 /* Configuration.cpp in Sources */,
+				6EA7199925E284CE00D56743 /* motion.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6E42EAC22638BD91007274D5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6EA7191F25E2394600D56743 /* COVID_SIM */;
+			targetProxy = 6E42EAC12638BD91007274D5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		6E42EAB72638BD45007274D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		6E42EAB82638BD45007274D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		6EA7192925E2394600D56743 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DYLIB_INSTALL_NAME_BASE = "${SYMROOT}";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/../Include";
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/COVID_SIM_UI";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = macosx;
+				SYMROOT = "${SRCROOT}/../build/";
+			};
+			name = Debug;
+		};
+		6EA7192A25E2394600D56743 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_INSTALL_NAME_BASE = "${SYMROOT}";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/../Include";
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/COVID_SIM_UI";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SYMROOT = "${SRCROOT}/../build/";
+			};
+			name = Release;
+		};
+		6EA7192C25E2394600D56743 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "${SRCROOT}/../build/${CONFIGURATION}";
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/../Include";
+				INSTALL_PATH = "$(inherited)";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/${EXECUTABLE_PATH}";
+				MACH_O_TYPE = mh_dylib;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
+				SYMROOT = "${SRCROOT}/../build/";
+			};
+			name = Debug;
+		};
+		6EA7192D25E2394600D56743 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "${SRCROOT}/../build/${CONFIGURATION}";
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/../Include";
+				INSTALL_PATH = "$(inherited)";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/${EXECUTABLE_PATH}";
+				MACH_O_TYPE = mh_dylib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
+				SYMROOT = "${SRCROOT}/../build/";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6E42EAB62638BD45007274D5 /* Build configuration list for PBXNativeTarget "COVID_SIM_CMD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E42EAB72638BD45007274D5 /* Debug */,
+				6E42EAB82638BD45007274D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6EA7191B25E2394600D56743 /* Build configuration list for PBXProject "COVID_SIM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6EA7192925E2394600D56743 /* Debug */,
+				6EA7192A25E2394600D56743 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6EA7192B25E2394600D56743 /* Build configuration list for PBXNativeTarget "COVID_SIM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6EA7192C25E2394600D56743 /* Debug */,
+				6EA7192D25E2394600D56743 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6EA7191825E2394600D56743 /* Project object */;
+}

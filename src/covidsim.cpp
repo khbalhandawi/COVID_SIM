@@ -12,6 +12,12 @@
 #include <fstream>
 #include <map>
 
+#ifdef __llvm__
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <mach-o/dyld.h>
+#endif
+
 using namespace std;
 
 /*-----------------------------------------------------------*/
@@ -145,7 +151,24 @@ void load_config(COVID_SIM::Configuration *config, const char *config_file)
 	mapper["wall_buffer"] = &COVID_SIM::Configuration::wall_buffer_in;
 	mapper["bounce_buffer"] = &COVID_SIM::Configuration::bounce_buffer_in;
 
+#ifdef __llvm__
+    // get current working directory of executable
+    char buf [PATH_MAX];
+    std::uint32_t bufsize = PATH_MAX;
+    if(!_NSGetExecutablePath(buf, &bufsize)) std::puts(buf);
+
+    // Remove executable name from directory
+    std::string buf_dir = buf;
+    buf_dir = buf_dir.substr(0, buf_dir.find_last_of("\\/"));
+
+    char final [256];
+    std::sprintf (final, "%s/%s",buf_dir.c_str(),config_file);
+    // std::cout << final << std::endl;
+    
+	ifstream file(final); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
+#else
 	ifstream file(config_file); // declare file stream: http://www.cplusplus.com/reference/iostream/ifstream/
+#endif
 	string line, value, value_str;
 
 	while (file.good()) {
@@ -165,7 +188,6 @@ void load_config(COVID_SIM::Configuration *config, const char *config_file)
 /*-----------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	
 	bool debug;
 	double SD;
 	int run, n_violators, test_capacity, healthcare_capacity;
@@ -198,7 +220,6 @@ int main(int argc, char* argv[])
 		/*-----------------------------------------------------------*/
 		// initialize
 		COVID_SIM::Configuration Config;
-
 		const char config_file[] = "configuration_debug.ini";
 
 		load_config(&Config, config_file);

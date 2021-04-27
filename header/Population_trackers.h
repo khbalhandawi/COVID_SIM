@@ -17,6 +17,7 @@
 
 namespace COVID_SIM {
 
+MACOS_API_BEGIN
 	class DLL_API Population_trackers
 	{
 	public:
@@ -57,6 +58,7 @@ namespace COVID_SIM {
 		/*-----------------------------------------------------------*/
 		~Population_trackers();
 	};
+MACOS_API_END
 
 	/*-----------------------------------------------------------*/
 	/*                  initialize population                    */
@@ -76,10 +78,12 @@ namespace COVID_SIM {
 	void initialize_ground_covered_matrix(Eigen::ArrayXXf &grid_coords, Eigen::ArrayXXf &ground_covered, int pop_size, int n_gridpoints, std::vector<double> xbounds = { 0, 1 },
 		std::vector<double> ybounds = { 0, 1 });
 
+MACOS_API_BEGIN
 	/*-----------------------------------------------------------*/
 	/*                   save population data                    */
 	/*-----------------------------------------------------------*/
 	void DLL_API save_data(Eigen::ArrayXXf population, Population_trackers pop_tracker, Configuration Config, int frame, std::string folder);
+MACOS_API_END
 
 	/*-----------------------------------------------------------*/
 	/*         save population data at current time step         */
@@ -91,10 +95,12 @@ namespace COVID_SIM {
 	/*-----------------------------------------------------------*/
 	void save_ground_covered(Eigen::ArrayXXf ground_covered, int tstep = 0, std::string folder = "data_tstep");
 
+MACOS_API_BEGIN
 	/*-----------------------------------------------------------*/
 	/*                   save grid coordinates                   */
 	/*-----------------------------------------------------------*/
 	void DLL_API save_grid_coords(Eigen::ArrayXXf grid_coords, std::string folder = "data_tstep");
+MACOS_API_END
 
 }
 

@@ -55,5 +55,14 @@ build/COVID_visualize/render/*.png
 *.sgt
 .qmake.stash
 *.ts
+build/COVID_SIM_UI.app
 libs/COVID_sim_lib*
 libs/CUDA_functions*
+build/intermediates.noindex
+XCode/COVID_SIM
+XCode/COVID_SIM_CMD
+*.DS_Store
+*.o
+moc_*
+build/Makefile
+*.tmp

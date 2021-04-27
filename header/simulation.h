@@ -18,6 +18,7 @@
 
 namespace COVID_SIM {
 
+MACOS_API_BEGIN
 #ifdef GPU_ACC
 	class DLL_API simulation : Population_trackers, RandomDevice, CUDA_GPU::Kernels
 #else
@@ -96,6 +97,7 @@ namespace COVID_SIM {
 		/*-----------------------------------------------------------*/
 		~simulation();
 	};
+MACOS_API_END
 
 }
 
