@@ -39,6 +39,7 @@
     <ClInclude Include="..\header\Convert.h" />
     <ClInclude Include="..\header\Defines.h" />
     <ClInclude Include="..\header\infection.h" />
+    <ClInclude Include="..\header\io_blackbox_functions.h" />
     <ClInclude Include="..\header\motion.h" />
     <ClInclude Include="..\header\path_planning.h" />
     <ClInclude Include="..\header\Population_trackers.h" />
@@ -52,6 +53,7 @@
     <ClCompile Include="..\src\Convert.cpp" />
     <ClCompile Include="..\src\covidsim.cpp" />
     <ClCompile Include="..\src\infection.cpp" />
+    <ClCompile Include="..\src\io_blackbox_functions.cpp" />
     <ClCompile Include="..\src\motion.cpp" />
     <ClCompile Include="..\src\path_planning.cpp" />
     <ClCompile Include="..\src\Population_trackers.cpp" />

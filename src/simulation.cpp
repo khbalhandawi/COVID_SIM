@@ -260,7 +260,10 @@ void COVID_SIM::simulation::callback()
 	*/
 
 	if (frame == 50) {
-		std::cout << "infecting person (Patient Zero)" << std::endl;
+
+		if (Config.verbose) {
+			std::cout << "infecting person (Patient Zero)" << std::endl;
+		}
 
 		if (Config.patient_Z_loc == "random") {
 			population(0, 6) = 1;

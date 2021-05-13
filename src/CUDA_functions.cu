@@ -392,8 +392,6 @@ void CUDA_GPU::Kernels::get_G_trace(Eigen::ArrayXXf *G_track)
 /*-----------------------------------------------------------*/
 CUDA_GPU::Kernels::~Kernels() 
 {
-	//check(cudaPeekAtLastError());
-	//check(cudaDeviceReset());
 
 	///* Destroy all memory allocation pointers and free memory */
 	//check(cudaFree(atoms_x_d));
@@ -419,4 +417,8 @@ CUDA_GPU::Kernels::~Kernels()
 	//check(cudaFree(d_ones_force));
 	//check(cudaFree(d_ones_track));
 	//cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+
+	/* Reset CUDA device (this is redundant) */
+	check(cudaPeekAtLastError());
+	check(cudaDeviceReset());
 }

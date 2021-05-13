@@ -4,6 +4,7 @@
 #include "Configuration.h"
 #include "simulation.h"
 #include "utilities.h"
+#include "io_blackbox_functions.h"
 
 #include "mainwindow.h"
 #include <map>
@@ -15,71 +16,9 @@
 using namespace std;
 
 /*-----------------------------------------------------------*/
-/*              Post process simulation results              */
-/*-----------------------------------------------------------*/
-vector<double> processInput(int i, COVID_SIM::simulation *sim, ofstream *file)
-{
-	sim->run();
-
-	int infected, fatalities, SD_thresh, E, T, f;
-	double mean_distance, mean_GC, SD;
-
-	double distance_scaling = sim->Config.distance_scaling;
-	double force_scaling = sim->Config.force_scaling;
-
-	SD = sim->Config.social_distance_factor / (1e-6 * force_scaling);
-	SD_thresh = sim->Config.social_distance_threshold_on;
-	E = sim->Config.social_distance_violation;
-	T = sim->Config.number_of_tests;
-
-	infected = *max_element(sim->pop_tracker.infectious.begin(), sim->pop_tracker.infectious.end());
-	fatalities = sim->pop_tracker.fatalities.back();
-	mean_distance = (sim->pop_tracker.distance_travelled.back() / double(sim->frame)) * 100.0 * 2000;
-	mean_GC = (sim->pop_tracker.mean_perentage_covered.back() / double(sim->frame)) * 100.0 * 2000;
-
-	f = sim->frame;
-
-	int n_vars = 4;
-	vector<double> matrix_out, matrix_opt; // unstripped matrix
-	matrix_out.push_back(i);
-	matrix_out.push_back(SD);
-	matrix_out.push_back(SD_thresh);
-	matrix_out.push_back(E);
-	matrix_out.push_back(T);
-	matrix_out.push_back(infected); matrix_opt.push_back(infected);
-	matrix_out.push_back(fatalities); matrix_opt.push_back(fatalities);
-	matrix_out.push_back(mean_distance); matrix_opt.push_back(mean_distance);
-	matrix_out.push_back(mean_GC); matrix_opt.push_back(mean_GC);
-	matrix_out.push_back(f);
-
-	// Convert int to ostring stream
-	ostringstream oss;
-	oss.precision(11);
-	if (!matrix_out.empty())
-	{
-		// Convert all but the last element to avoid a trailing ","
-		copy(matrix_out.begin(), matrix_out.end() - 1,
-			ostream_iterator<double>(oss, ","));
-
-		// Now add the last element with no delimiter
-		oss << matrix_out.back();
-	}
-
-	file->precision(11);
-	// Write ostring stream to file
-	if (file->is_open())
-	{
-		(*file) << oss.str() << '\n';
-	}
-
-	return matrix_opt;
-
-}
-
-/*-----------------------------------------------------------*/
 /*                    Load configuration                     */
 /*-----------------------------------------------------------*/
-void load_config(COVID_SIM::Configuration *config, const char *config_file, QApplication *application = NULL)
+void load_config_ui(COVID_SIM::Configuration *config, const char *config_file, QApplication *application = NULL)
 {	
 	std::map<string,string COVID_SIM::Configuration::*> mapper;
 	mapper["simulation_steps"] = &COVID_SIM::Configuration::simulation_steps_in;
@@ -201,7 +140,7 @@ int main(int argc, char* argv[])
 	
 	bool debug;
 	double SD;
-	int run, n_violators, test_capacity, healthcare_capacity;
+	int run, sample, n_violators, test_capacity, healthcare_capacity;
 
 	// Check if this is an external system call
     if (argc > 2) {
@@ -215,8 +154,8 @@ int main(int argc, char* argv[])
 
 	// Log file name
 	string log_file;
-	if (argc == 7) {
-		string filename = argv[6];
+	if (argc == 8) {
+		string filename = argv[7];
 		log_file = "data/" + filename;
 	}
 	else { // if no file name argument provided use defaults
@@ -246,14 +185,15 @@ int main(int argc, char* argv[])
 		/*-----------------------------------------------------------*/
 
 		run = stoi(argv[1]);
+		sample = stoi(argv[2]);
 
 		// Model variables
-		n_violators = stoi(argv[2]);
-		SD = atof(argv[3]);
-		test_capacity = stoi(argv[4]);
+		n_violators = stoi(argv[3]);
+		SD = atof(argv[4]);
+		test_capacity = stoi(argv[5]);
 
 		// Model parameters
-		healthcare_capacity = stoi(argv[5]);
+		healthcare_capacity = stoi(argv[6]);
 
 		// Display input arguments
 		cout << "\n" << "================= starting =================" << endl;
@@ -265,7 +205,7 @@ int main(int argc, char* argv[])
 		// initialize
 		const char config_file[] = "configuration.ini";
 
-        load_config(&Config, config_file);
+        load_config_ui(&Config, config_file);
 		Config.set_from_file();
 
 		cout << "Config loaded!" << endl;
@@ -308,7 +248,7 @@ int main(int argc, char* argv[])
         // initialize
         const char config_file[] = "configuration_debug.ini";
 
-        load_config(&Config, config_file, &application);
+        load_config_ui(&Config, config_file, &application);
         Config.set_from_file();
         COVID_SIM::simulation sim(Config, seed);
 
@@ -330,28 +270,34 @@ int main(int argc, char* argv[])
 			/*-----------------------------------------------------------*/
 			cout << "initialized simulation" << endl;
 			COVID_SIM::check_folder("data");
-			string filename = "matlab_out_Blackbox.log";
+			string filename = to_string(sample) + "-matlab_out_Blackbox.log";
 			string full_filename = "data/" + filename;
 
 			// Output evaluation to file
 
 			vector<double> matrix_opt;
-			ofstream output_file;
 
-			if (run == 0) {
-				output_file.open(log_file, ofstream::out);
+			if (!Config.write_bb_output) {
+				ofstream output_file;
 
-				output_file.precision(11);
-				output_file << "index,SD_factor,threshold,essential_workers,testing_capacity," <<
-					"n_infected,n_fatalaties,mean_distance,mean_GC,n_steps" << endl;
+				if (run == 0) {
+					output_file.open(log_file, ofstream::out);
+
+					output_file.precision(11);
+					output_file << "index,SD_factor,threshold,essential_workers,testing_capacity," <<
+						"n_infected,n_fatalaties,mean_distance,mean_GC,n_steps" << endl;
+				}
+				else {
+					output_file.open(log_file, ofstream::app);
+					output_file.precision(11);
+				}
+
+				matrix_opt = COVID_SIM::processInput(run, &sim, &output_file);
+				output_file.close();
 			}
 			else {
-				output_file.open(log_file, ofstream::app);
-				output_file.precision(11);
+				matrix_opt = COVID_SIM::processInput(run, &sim);
 			}
-
-			matrix_opt = processInput(run, &sim, &output_file);
-			output_file.close();
 
 			double infected = matrix_opt[0];
 			double fatalities = matrix_opt[1];
