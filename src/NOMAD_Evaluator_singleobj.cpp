@@ -86,7 +86,12 @@ bool My_Evaluator::eval_x(NOMAD::Eval_Point   & x,
 		unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
 
 		// run the simulation while loop without QT
+#ifdef GPU_ACC
+		sims[i] = new COVID_SIM::simulation(Config, seed, handle);
+#else
 		sims[i] = new COVID_SIM::simulation(Config, seed);
+#endif
+
 	}
 
 	// Parallel for loop over samples
@@ -272,6 +277,10 @@ My_Evaluator::My_Evaluator(const NOMAD::Parameters &p, int max_bb_eval, int leng
 
 	bbe = new int;
 	*bbe = 0;
+
+#ifdef GPU_ACC
+	cublascheck(cublasCreate(&handle)); // construct cublas handle
+#endif
 }
 
 /*----------------------------------------------------*/
@@ -281,6 +290,9 @@ My_Evaluator::~My_Evaluator(void)
 {
 	free(history);
 	delete n_evals, bbe;
+#ifdef GPU_ACC
+	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+#endif
 }
 
 

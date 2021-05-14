@@ -90,8 +90,11 @@ MACOS_API_BEGIN
 		/*-----------------------------------------------------------*/
 		/*                        Constructor                        */
 		/*-----------------------------------------------------------*/
+#ifdef GPU_ACC
+		simulation(Configuration Config_init, unsigned long seed, cublasHandle_t handle);
+#else
 		simulation(Configuration Config_init, unsigned long seed);
-
+#endif
 		/*-----------------------------------------------------------*/
 		/*                        Destructor                         */
 		/*-----------------------------------------------------------*/

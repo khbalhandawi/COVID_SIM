@@ -1,5 +1,68 @@
 #pragma once
 #include "Defines.cuh"
+#ifndef CUBLAS_NDEBUG
+#include <cublas_v2.h>
+#endif
+
+#ifndef CUBLAS_NDEBUG
+/*-----------------------------------------------------------*/
+/*             CUBLAS ERROR MESSAGES ENUMERATOR              */
+/*-----------------------------------------------------------*/
+static const char *_cublasGetErrorEnum(cublasStatus_t error)
+{
+	switch (error)
+	{
+	case CUBLAS_STATUS_SUCCESS:
+		return "CUBLAS_STATUS_SUCCESS";
+
+	case CUBLAS_STATUS_NOT_INITIALIZED:
+		return "CUBLAS_STATUS_NOT_INITIALIZED";
+
+	case CUBLAS_STATUS_ALLOC_FAILED:
+		return "CUBLAS_STATUS_ALLOC_FAILED";
+
+	case CUBLAS_STATUS_INVALID_VALUE:
+		return "CUBLAS_STATUS_INVALID_VALUE";
+
+	case CUBLAS_STATUS_ARCH_MISMATCH:
+		return "CUBLAS_STATUS_ARCH_MISMATCH";
+
+	case CUBLAS_STATUS_MAPPING_ERROR:
+		return "CUBLAS_STATUS_MAPPING_ERROR";
+
+	case CUBLAS_STATUS_EXECUTION_FAILED:
+		return "CUBLAS_STATUS_EXECUTION_FAILED";
+
+	case CUBLAS_STATUS_INTERNAL_ERROR:
+		return "CUBLAS_STATUS_INTERNAL_ERROR";
+
+	case CUBLAS_STATUS_NOT_SUPPORTED:
+		return "CUBLAS_STATUS_NOT_SUPPORTED";
+
+	case CUBLAS_STATUS_LICENSE_ERROR:
+		return "CUBLAS_STATUS_LICENSE_ERROR";
+	}
+
+	return "<unknown>";
+}
+
+/*-----------------------------------------------------------*/
+/*                   CUBLAS ERROR CHECKING                   */
+/*-----------------------------------------------------------*/
+inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int line)
+{
+	if (CUBLAS_STATUS_SUCCESS != err) {
+		fprintf(stderr, "CUBLAS error in file '%s', line %d, error: %s\nterminating!\n", __FILE__, __LINE__, \
+			_cublasGetErrorEnum(err)); \
+			assert(0); \
+	}
+}
+
+/*-----------------------------------------------------------*/
+/*               CUBLAS ERROR CHECKING (macro)               */
+/*-----------------------------------------------------------*/
+#define cublascheck(ans) { __cublasSafeCall((ans), __FILE__, __LINE__); }
+#endif
 
 namespace CUDA_GPU {
 
@@ -47,10 +110,13 @@ namespace CUDA_GPU {
 
 		int threads_per_block;
 
+#ifndef CUBLAS_NDEBUG
+		cublasHandle_t local_handle;
+#endif
 		/*-----------------------------------------------------------*/
 		/*						 Constructor					     */
 		/*-----------------------------------------------------------*/
-		Kernels(const int n_pop, const int n_grids, const int threads_per_block_in);
+		Kernels(const int n_pop, const int n_grids, const int threads_per_block_in, const cublasHandle_t handle);
 
 		/*-----------------------------------------------------------*/
 		/*              Repulsive force evaluation (GPU)             */

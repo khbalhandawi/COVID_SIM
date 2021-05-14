@@ -7,9 +7,9 @@
 #include <iostream>
 
 #ifdef GPU_ACC
-COVID_SIM::simulation::simulation(Configuration Config_init, unsigned long seed) :
-	Population_trackers(Config_init), RandomDevice(seed), CUDA_GPU::Kernels(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024),
-	pop_tracker(Config_init), my_rand(seed), ABM_cuda(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024)
+COVID_SIM::simulation::simulation(Configuration Config_init, unsigned long seed, cublasHandle_t handle) :
+	Population_trackers(Config_init), RandomDevice(seed), CUDA_GPU::Kernels(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024, handle),
+	pop_tracker(Config_init), my_rand(seed), ABM_cuda(Config_init.pop_size, Config_init.n_gridpoints - 1, 1024, handle)
 #else
 COVID_SIM::simulation::simulation(Configuration Config_init, unsigned long seed) :
 	Population_trackers(Config_init), RandomDevice(seed), 

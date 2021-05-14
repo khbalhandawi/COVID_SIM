@@ -37,12 +37,8 @@
  \date   2021-01-11
  \see    CUDA_functions.cuh
  */
-#include <thrust/host_vector.h>
 #include  "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#ifndef CUBLAS_NDEBUG
-#include <cublas_v2.h>
-#endif
 #include <iostream>
 #include <stdio.h>
 #include <assert.h>
@@ -53,70 +49,6 @@
 #include "Utilities.cuh"
 
 using namespace std;
-
-
-#ifndef CUBLAS_NDEBUG
-
-cublasHandle_t handle;
-
-/*-----------------------------------------------------------*/
-/*             CUBLAS ERROR MESSAGES ENUMERATOR              */
-/*-----------------------------------------------------------*/
-static const char *_cublasGetErrorEnum(cublasStatus_t error)
-{
-	switch (error)
-	{
-	case CUBLAS_STATUS_SUCCESS:
-		return "CUBLAS_STATUS_SUCCESS";
-
-	case CUBLAS_STATUS_NOT_INITIALIZED:
-		return "CUBLAS_STATUS_NOT_INITIALIZED";
-
-	case CUBLAS_STATUS_ALLOC_FAILED:
-		return "CUBLAS_STATUS_ALLOC_FAILED";
-
-	case CUBLAS_STATUS_INVALID_VALUE:
-		return "CUBLAS_STATUS_INVALID_VALUE";
-
-	case CUBLAS_STATUS_ARCH_MISMATCH:
-		return "CUBLAS_STATUS_ARCH_MISMATCH";
-
-	case CUBLAS_STATUS_MAPPING_ERROR:
-		return "CUBLAS_STATUS_MAPPING_ERROR";
-
-	case CUBLAS_STATUS_EXECUTION_FAILED:
-		return "CUBLAS_STATUS_EXECUTION_FAILED";
-
-	case CUBLAS_STATUS_INTERNAL_ERROR:
-		return "CUBLAS_STATUS_INTERNAL_ERROR";
-
-	case CUBLAS_STATUS_NOT_SUPPORTED:
-		return "CUBLAS_STATUS_NOT_SUPPORTED";
-
-	case CUBLAS_STATUS_LICENSE_ERROR:
-		return "CUBLAS_STATUS_LICENSE_ERROR";
-	}
-
-	return "<unknown>";
-}
-
-/*-----------------------------------------------------------*/
-/*                   CUBLAS ERROR CHECKING                   */
-/*-----------------------------------------------------------*/
-inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int line)
-{
-	if (CUBLAS_STATUS_SUCCESS != err) {
-		fprintf(stderr, "CUBLAS error in file '%s', line %d, error: %s\nterminating!\n", __FILE__, __LINE__, \
-			_cublasGetErrorEnum(err)); \
-			assert(0); \
-	}
-}
-
-/*-----------------------------------------------------------*/
-/*               CUBLAS ERROR CHECKING (macro)               */
-/*-----------------------------------------------------------*/
-#define cublascheck(ans) { __cublasSafeCall((ans), __FILE__, __LINE__); }
-#endif
 
 /*-----------------------------------------------------------*/
 /*                    CUDA ERROR CHECKING                    */
@@ -137,7 +69,7 @@ inline void _check(cudaError_t code, char *file, int line)
 /*-----------------------------------------------------------*/
 /*						 Constructor					     */
 /*-----------------------------------------------------------*/
-CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads_per_block_in)
+CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads_per_block_in, const cublasHandle_t handle)
 {
 	N_rows = n_pop; // number of rows
 	N_cols = n_grids * n_grids; // number of rows
@@ -195,7 +127,8 @@ CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads
 	int n_blocks_cols(div_up(N_cols, sqrt(threads_per_block)));
 	CUDA_GPU::initKernel << <n_blocks_cols, threads_per_block >> > (d_ones_track, value, N_cols);
 
-	cublascheck(cublasCreate(&handle)); // construct cublas handle
+	local_handle = handle;
+	//cublascheck(cublasCreate(&handle)); // construct cublas handle
 
 	alpha = 1.f;
 	beta = 0.f;
@@ -245,9 +178,9 @@ void CUDA_GPU::Kernels::pairwise_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atom
 	int n_blocks_rows(div_up(N_actual, sqrt(threads_per_block)));
 	CUDA_GPU::initKernel << <n_blocks_rows, threads_per_block >> > (d_ones_force, value, N_actual);
 
-	cublascheck(cublasSgemv(handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_x_d, N_actual,
-		d_ones_force, 1, &beta, thrust::raw_pointer_cast(force_x_d), 1)); // rowwise multiplication x
-	cublascheck(cublasSgemv(handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_y_d, N_actual,
+	cublascheck(cublasSgemv(local_handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_x_d, N_actual,
+		d_ones_force, 1, &beta, force_x_d, 1)); // rowwise multiplication x
+	cublascheck(cublasSgemv(local_handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_y_d, N_actual,
 		d_ones_force, 1, &beta, force_y_d, 1)); // rowwise multiplication y
 #endif
 	//======================================================//
@@ -296,7 +229,7 @@ void CUDA_GPU::Kernels::tracker_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms
 	// Percentage covered (rowise matrix reduction by CUBLAS)
 
 #ifndef CUBLAS_NDEBUG
-	cublascheck(cublasSgemv(handle, CUBLAS_OP_N, N_rows, N_cols, &alpha, G_track_d, N_rows,
+	cublascheck(cublasSgemv(local_handle, CUBLAS_OP_N, N_rows, N_cols, &alpha, G_track_d, N_rows,
 		d_ones_track, 1, &beta, p_d, 1)); // rowwise multiplication
 #endif CUBLAS_NDEBUG
 	//======================================================//

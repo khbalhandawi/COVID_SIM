@@ -52,7 +52,12 @@ int main(int argc, char **argv)
 	const int threads_per_block(1024); // number of thrreads
 	cout << "n_blocks:" << div_up(n_pop, sqrt(threads_per_block)) << endl;
 
-	CUDA_GPU::Kernels ABM_cuda(n_pop, n_grids, threads_per_block);
+#ifndef CUBLAS_NDEBUG
+	cublasHandle_t handle;
+	cublascheck(cublasCreate(&handle)); // construct cublas handle
+#endif
+
+	CUDA_GPU::Kernels ABM_cuda(n_pop, n_grids, threads_per_block, handle);
 
 	ABM_cuda.pairwise_gpu(x, y, SD_factor); // Compute forces using GPU
 	ABM_cuda.get_forces(&force_x, &force_y); // get GPU forces
@@ -157,6 +162,10 @@ int main(int argc, char **argv)
 
 	cout << G << endl;
 	cout << p << endl;
+
+#ifndef CUBLAS_NDEBUG
+	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+#endif
 
 	return 0;
 }

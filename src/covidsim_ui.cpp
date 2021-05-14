@@ -223,13 +223,17 @@ int main(int argc, char* argv[])
 
 	}
 
-/*-----------------------------------------------------------*/
-/*                        Run blackbox                       */
-/*-----------------------------------------------------------*/
+	/*-----------------------------------------------------------*/
+	/*                        Run blackbox                       */
+	/*-----------------------------------------------------------*/
 
 	// seed random generator
 	/* using nano-seconds instead of seconds */
 	unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
+#ifdef GPU_ACC
+	cublasHandle_t handle;
+	cublascheck(cublasCreate(&handle)); // construct cublas handle
+#endif
 
 	if (Config.visualise) {
 		// use QT to run the simulation while loop
@@ -250,7 +254,11 @@ int main(int argc, char* argv[])
 
         load_config_ui(&Config, config_file, &application);
         Config.set_from_file();
-        COVID_SIM::simulation sim(Config, seed);
+#ifdef GPU_ACC
+		COVID_SIM::simulation sim(Config, seed, handle);
+#else
+		COVID_SIM::simulation sim(Config, seed);
+#endif
 
         MainWindow mainWindow(&sim);
         mainWindow.show();
@@ -259,7 +267,11 @@ int main(int argc, char* argv[])
 	}
 	else {
 		// run the simulation while loop without QT
-        COVID_SIM::simulation sim(Config, seed);
+#ifdef GPU_ACC
+		COVID_SIM::simulation sim(Config, seed, handle);
+#else
+		COVID_SIM::simulation sim(Config, seed);
+#endif
 		if (debug) {
 			sim.run();
 		}
@@ -319,6 +331,8 @@ int main(int argc, char* argv[])
 
 	}
 
-
+#ifdef GPU_ACC
+	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+#endif
 
 }

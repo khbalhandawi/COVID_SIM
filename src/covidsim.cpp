@@ -200,6 +200,11 @@ int main(int argc, char* argv[])
 		debug = true;
 	}
 
+#ifdef GPU_ACC
+	cublasHandle_t handle;
+	cublascheck(cublasCreate(&handle)); // construct cublas handle
+#endif
+
 	if (debug) {
 		
 		// Display input arguments
@@ -231,8 +236,11 @@ int main(int argc, char* argv[])
 		// seed random generator
 		/* using nano-seconds instead of seconds */
 		unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
-
+#ifdef GPU_ACC
+		COVID_SIM::simulation sim(Config, seed, handle);
+#else
 		COVID_SIM::simulation sim(Config, seed);
+#endif
 		sim.run();
 
 
@@ -296,7 +304,11 @@ int main(int argc, char* argv[])
 		// seed random generator
 		/* using nano-seconds instead of seconds */
 		unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
+#ifdef GPU_ACC
+		COVID_SIM::simulation sim(Config, seed, handle);
+#else
 		COVID_SIM::simulation sim(Config, seed);
+#endif
 		cout << "initialized simulation" << endl;
 		COVID_SIM::check_folder("data");
 		string filename = "matlab_out_Blackbox.log";
@@ -340,5 +352,9 @@ int main(int argc, char* argv[])
 		}
 
 	}
+
+#ifdef GPU_ACC
+	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+#endif
 
 }

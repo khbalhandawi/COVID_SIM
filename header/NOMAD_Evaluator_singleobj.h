@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nomad.hpp"
+#include "cublas_v2.h"
 #include<vector>
 
 #ifndef MY_EVALUATOR_SINGLEOBJ_H
@@ -46,6 +47,10 @@ public:
 	size_t n_rows;
 	int *n_evals;
 	int *bbe;
+
+#ifndef GPU_ACC
+	cublasHandle_t handle;
+#endif
 
 };
 
