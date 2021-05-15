@@ -204,6 +204,7 @@ int main(int argc, char* argv[])
 	cublasHandle_t handle;
 	cublascheck(cublasCreate(&handle)); // construct cublas handle
 #endif
+	COVID_SIM::simulation* sim;
 
 	if (debug) {
 		
@@ -237,11 +238,11 @@ int main(int argc, char* argv[])
 		/* using nano-seconds instead of seconds */
 		unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
 #ifdef GPU_ACC
-		COVID_SIM::simulation sim(Config, seed, handle);
+		sim = new COVID_SIM::simulation(Config, seed, handle);
 #else
-		COVID_SIM::simulation sim(Config, seed);
+		sim = new COVID_SIM::simulation(Config, seed);
 #endif
-		sim.run();
+		sim->run();
 
 
 	} 
@@ -271,10 +272,6 @@ int main(int argc, char* argv[])
 			log_file = "data/opt_run.log";
 		}
 
-		// Display input arguments
-		cout << "\n" << "================= starting =================" << endl;
-		cout << "E: " << n_violators << " | SD: " << SD << " | T: " << test_capacity << " | H_c: " << healthcare_capacity << " | output: " << log_file <<"\n";
-
 		/*-----------------------------------------------------------*/
 		/*            Simulation configuration variables             */
 		/*-----------------------------------------------------------*/
@@ -286,7 +283,12 @@ int main(int argc, char* argv[])
 		load_config(&Config, config_file);
 		Config.set_from_file();
 
-		cout << "Config loaded!" << endl;
+		if (Config.verbose) {
+			// Display input arguments
+			cout << "\n" << "================= starting =================" << endl;
+			cout << "E: " << n_violators << " | SD: " << SD << " | T: " << test_capacity << " | H_c: " << healthcare_capacity << " | output: " << log_file << "\n";
+			cout << "Config loaded!" << endl;
+		}
 
 		/*-----------------------------------------------------------*/
 		/*                      Design variables                     */
@@ -305,11 +307,13 @@ int main(int argc, char* argv[])
 		/* using nano-seconds instead of seconds */
 		unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
 #ifdef GPU_ACC
-		COVID_SIM::simulation sim(Config, seed, handle);
+		sim = new COVID_SIM::simulation(Config, seed, handle);
 #else
-		COVID_SIM::simulation sim(Config, seed);
+		sim = new COVID_SIM::simulation(Config, seed);
 #endif
-		cout << "initialized simulation" << endl;
+		if (Config.verbose) {
+			cout << "initialized simulation" << endl;
+		}
 		COVID_SIM::check_folder("data");
 		string filename = "matlab_out_Blackbox.log";
 		string full_filename = "data/" + filename;
@@ -331,7 +335,7 @@ int main(int argc, char* argv[])
 			output_file.precision(11);
 		}
 
-		matrix_opt = processInput(run, &sim, &output_file);
+		matrix_opt = processInput(run, sim, &output_file);
 		output_file.close();
 
 		double infected = matrix_opt[0]; 
@@ -348,13 +352,17 @@ int main(int argc, char* argv[])
 			output_file_opt.precision(10); // number of decimal places to output
 			output_file_opt << obj_1 << " " << obj_2 << " " << c1 << endl;
 			output_file_opt.close();
-			cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+			if (Config.verbose) {
+				cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+			}
 		}
 
 	}
 
+	delete sim;
+
 #ifdef GPU_ACC
-	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+	cublasDestroy(handle); // destroy cublas handle to avoid malloc errors
 #endif
 
 }

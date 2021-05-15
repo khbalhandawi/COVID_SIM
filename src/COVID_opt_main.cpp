@@ -19,9 +19,13 @@ int main(int argc, char ** argv) {
 	// set default arguments if input arguments not provided
 	int healthcare_capacity = 90;
 	int eval_k = 20;
+	int eval_k_success = 100;
 	std::string log_file = "NOMAD_hist.txt";
 	std::string feasible_file = "f_hist_NOMAD.txt";
 	std::string infeasible_file = "i_hist_NOMAD.txt";
+	std::string feasible_success_file = "f_progress_NOMAD.txt";
+	std::string infeasible_success_file = "i_progress_NOMAD.txt";
+
 	int nb_proc = 2;
 
 	if (argc == n_sargs + 1) {
@@ -61,6 +65,7 @@ int main(int argc, char ** argv) {
 		x0[1] = 0.5;   // SD
 		x0[2] = 0.5;   // testing
 		p.set_X0(x0);
+		p.set_H_MIN(0.0);
 
 		// actual bounds for unscaling
 		NOMAD::Point lb_us(3), ub_us(3);
@@ -77,6 +82,23 @@ int main(int argc, char ** argv) {
 		p.set_UPPER_BOUND(ub);
 
 		p.set_MAX_BB_EVAL(10000 / eval_k);     // the algorithm terminates after 500 black-box evaluations
+		p.set_MIN_MESH_SIZE(1e-31);
+		p.set_EPSILON(1e-31);
+		//p.set_ANISOTROPY_FACTOR(0.1);
+
+		// NOMAD basic
+		//p.set_ANISOTROPIC_MESH(false);
+		//p.set_DIRECTION_TYPE(NOMAD::ORTHO_2N);
+		//p.set_MODEL_SEARCH(false);
+		//p.set_NM_SEARCH(false);
+		//p.set_OPPORTUNISTIC_EVAL(false);
+
+		// NOMAD default
+		//p.set_ANISOTROPIC_MESH(true);
+		//p.set_DIRECTION_TYPE(NOMAD::ORTHO_NP1_NEG);
+		//p.set_MODEL_SEARCH(true);
+		//p.set_NM_SEARCH(true);
+		//p.set_OPPORTUNISTIC_EVAL(false);
 
 		p.set_DISPLAY_DEGREE(2);
 		p.set_SOLUTION_FILE("sol.txt");
@@ -86,9 +108,11 @@ int main(int argc, char ** argv) {
 
 		// Print titles to file
 		std::vector<std::string> titles(8);
+		std::vector<std::string> titles_success(9);
 		titles = { "bbe","x1","x2","x3","f","cstr","p_value" };
+		titles_success = { "n_success","bbe","x1","x2","x3","f","cstr","p_value" };
 
-		ofstream output_file, f_file, i_file;
+		ofstream output_file, f_file, i_file, f_s_file, i_s_file;
 		output_file.open(log_file, ofstream::out);
 		IO_BB::writeToFile<std::string>(titles, &output_file);
 		output_file.close();
@@ -98,16 +122,25 @@ int main(int argc, char ** argv) {
 		i_file.open(infeasible_file, ofstream::out);
 		IO_BB::writeToFile<std::string>(titles, &i_file);
 		i_file.close();
+		f_s_file.open(feasible_success_file, ofstream::out);
+		IO_BB::writeToFile<std::string>(titles_success, &f_s_file);
+		f_s_file.close();
+		i_s_file.open(infeasible_success_file, ofstream::out);
+		IO_BB::writeToFile<std::string>(titles_success, &i_s_file);
+		i_s_file.close();
 
 		// custom evaluator creation:
 		My_Evaluator ev(p, 10000, 7, nb_proc);
 		ev.healthcare_capacity = healthcare_capacity;
 		ev.eval_k = eval_k; // number of samples for estimates
+		ev.eval_k_success = eval_k_success; // number of samples for success estimates (not used in optimization)
 		ev.lb = lb_us; // get lower bounds
 		ev.ub = ub_us; // get upper bounds
 		ev.log_file = log_file; // log filename
 		ev.feasible_file = feasible_file; // feasible history filename
 		ev.infeasible_file = infeasible_file; // infeasible history filename
+		ev.feasible_success_file = feasible_success_file; // feasible progress filename
+		ev.infeasible_success_file = infeasible_success_file; // infeasible progress filename
 
 		// algorithm creation and execution:
 		NOMAD::Mads mads(p, &ev);

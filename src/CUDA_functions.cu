@@ -325,33 +325,34 @@ void CUDA_GPU::Kernels::get_G_trace(Eigen::ArrayXXf *G_track)
 /*-----------------------------------------------------------*/
 CUDA_GPU::Kernels::~Kernels() 
 {
-
 	///* Destroy all memory allocation pointers and free memory */
-	//check(cudaFree(atoms_x_d));
-	//check(cudaFreeHost(atoms_x_h));
-	//check(cudaFree(atoms_y_d));
-	//check(cudaFreeHost(atoms_y_h));
+	check(cudaFree(atoms_x_d));
+	check(cudaFreeHost(atoms_x_h));
+	check(cudaFree(atoms_y_d));
+	check(cudaFreeHost(atoms_y_h));
 
-	//check(cudaFree(diffs_x_d));
-	//check(cudaFree(diffs_y_d));
+	check(cudaFree(diffs_x_d));
+	check(cudaFree(diffs_y_d));
 
-	//check(cudaFree(force_x_d));
-	//check(cudaFreeHost(force_x_h));
-	//check(cudaFree(force_y_d));
-	//check(cudaFreeHost(force_y_h));
+	check(cudaFree(force_x_d));
+	check(cudaFreeHost(force_x_h));
+	check(cudaFree(force_y_d));
+	check(cudaFreeHost(force_y_h));
 
-	///* Destroy all memory allocation pointers and free memory */
-	//check(cudaFree(G_d));
-	//check(cudaFreeHost(G_h));
+	/* Destroy all memory allocation pointers and free memory */
+	check(cudaFree(G_d));
+	check(cudaFreeHost(G_h));
+	check(cudaFree(G_track_d));
+	check(cudaFreeHost(G_track_h));
 
-	//check(cudaFree(p_d));
-	//check(cudaFreeHost(p_h));
+	check(cudaFree(p_d));
+	check(cudaFreeHost(p_h));
 
-	//check(cudaFree(d_ones_force));
-	//check(cudaFree(d_ones_track));
+	check(cudaFree(d_ones_force));
+	check(cudaFree(d_ones_track));
 	//cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
 
 	/* Reset CUDA device (this is redundant) */
 	check(cudaPeekAtLastError());
-	check(cudaDeviceReset());
+	//check(cudaDeviceReset());
 }

@@ -2,6 +2,7 @@
 
 #include "nomad.hpp"
 #include "cublas_v2.h"
+#include "simulation.h"
 #include<vector>
 
 #ifndef MY_EVALUATOR_SINGLEOBJ_H
@@ -23,22 +24,31 @@ public:
 	/*----------------------------------------*/
 	/*               the problem              */
 	/*----------------------------------------*/
-	bool eval_x(NOMAD::Eval_Point &x, const NOMAD::Double &h_max, bool &count_eval) const;
+	bool eval_x(NOMAD::Eval_Point &x, const NOMAD::Double &h_max, bool &count_eval);
 
 	/*----------------------------------------*/
 	/*            Success callback            */
 	/*----------------------------------------*/
 	void update_success(const NOMAD::Stats &stats, const NOMAD::Eval_Point &x);
 
+	/*----------------------------------------*/
+	/*          Parallel Simulation           */
+	/*----------------------------------------*/
+	void parallelCompute(const COVID_SIM::Configuration &Config, const int &run, const int &n_samples, int &new_bbe, double &mean_f, double &mean_c, double &p_value);
+
+
 	// Model parameters
 	int healthcare_capacity; // healthcare capacity
 	int eval_k; // number of samples for estimates
+	int eval_k_success; // number of samples for tracking progress
 	NOMAD::Point lb; // get lower bounds
 	NOMAD::Point ub; // get upper bounds
 
 	std::string log_file; // log filename
 	std::string feasible_file; // feasible history filename
 	std::string infeasible_file; // infeasible history filename
+	std::string feasible_success_file; // feasible progress filename
+	std::string infeasible_success_file; // infeasible progress filename
 
 	NOMAD::Mads* session;
 
@@ -47,8 +57,10 @@ public:
 	size_t n_rows;
 	int *n_evals;
 	int *bbe;
+	int *n_successes_f;
+	int *n_successes_i;
 
-#ifndef GPU_ACC
+#ifdef GPU_ACC
 	cublasHandle_t handle;
 #endif
 

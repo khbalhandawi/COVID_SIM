@@ -195,10 +195,6 @@ int main(int argc, char* argv[])
 		// Model parameters
 		healthcare_capacity = stoi(argv[6]);
 
-		// Display input arguments
-		cout << "\n" << "================= starting =================" << endl;
-		cout << "E: " << n_violators << " | SD: " << SD << " | T: " << test_capacity << " | H_c: " << healthcare_capacity << " | output: " << log_file <<"\n";
-
 		/*-----------------------------------------------------------*/
 		/*            Simulation configuration variables             */
 		/*-----------------------------------------------------------*/
@@ -208,7 +204,12 @@ int main(int argc, char* argv[])
         load_config_ui(&Config, config_file);
 		Config.set_from_file();
 
-		cout << "Config loaded!" << endl;
+		if (Config.verbose) {
+			// Display input arguments
+			cout << "\n" << "================= starting =================" << endl;
+			cout << "E: " << n_violators << " | SD: " << SD << " | T: " << test_capacity << " | H_c: " << healthcare_capacity << " | output: " << log_file << "\n";
+			cout << "Config loaded!" << endl;
+		}
 
 		/*-----------------------------------------------------------*/
 		/*                      Design variables                     */
@@ -234,6 +235,7 @@ int main(int argc, char* argv[])
 	cublasHandle_t handle;
 	cublascheck(cublasCreate(&handle)); // construct cublas handle
 #endif
+	COVID_SIM::simulation* sim;
 
 	if (Config.visualise) {
 		// use QT to run the simulation while loop
@@ -255,12 +257,12 @@ int main(int argc, char* argv[])
         load_config_ui(&Config, config_file, &application);
         Config.set_from_file();
 #ifdef GPU_ACC
-		COVID_SIM::simulation sim(Config, seed, handle);
+		sim = new COVID_SIM::simulation(Config, seed, handle);
 #else
-		COVID_SIM::simulation sim(Config, seed);
+		sim = new COVID_SIM::simulation(Config, seed);
 #endif
 
-        MainWindow mainWindow(&sim);
+        MainWindow mainWindow(sim);
         mainWindow.show();
 
 		return application.exec();
@@ -268,19 +270,21 @@ int main(int argc, char* argv[])
 	else {
 		// run the simulation while loop without QT
 #ifdef GPU_ACC
-		COVID_SIM::simulation sim(Config, seed, handle);
+		sim = new COVID_SIM::simulation(Config, seed, handle);
 #else
-		COVID_SIM::simulation sim(Config, seed);
+		sim = new COVID_SIM::simulation(Config, seed);
 #endif
 		if (debug) {
-			sim.run();
+			sim->run();
 		}
 		else {
 
 			/*-----------------------------------------------------------*/
 			/*                    Log blackbox outputs                   */
 			/*-----------------------------------------------------------*/
-			cout << "initialized simulation" << endl;
+			if (Config.verbose) {
+				cout << "initialized simulation" << endl;
+			}
 			COVID_SIM::check_folder("data");
 			string filename = to_string(sample) + "-matlab_out_Blackbox.log";
 			string full_filename = "data/" + filename;
@@ -304,11 +308,11 @@ int main(int argc, char* argv[])
 					output_file.precision(11);
 				}
 
-				matrix_opt = COVID_SIM::processInput(run, &sim, &output_file);
+				matrix_opt = COVID_SIM::processInput(run, sim, &output_file);
 				output_file.close();
 			}
 			else {
-				matrix_opt = COVID_SIM::processInput(run, &sim);
+				matrix_opt = COVID_SIM::processInput(run, sim);
 			}
 
 			double infected = matrix_opt[0];
@@ -325,14 +329,21 @@ int main(int argc, char* argv[])
 				output_file_opt.precision(10); // number of decimal places to output
 				output_file_opt << obj_1 << " " << obj_2 << " " << c1 << endl;
 				output_file_opt.close();
-				cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+				if (Config.verbose) {
+					cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+				}
 			}
 		}
 
 	}
 
+	delete sim;
+
 #ifdef GPU_ACC
-	cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
+	cublasDestroy(handle); // destroy cublas handle to avoid malloc errors
+	if (Config.verbose) {
+		cout << "CuBLAS destroyed" << endl;
+	}
 #endif
 
 }
