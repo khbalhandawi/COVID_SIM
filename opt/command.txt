@@ -1,1 +1,11 @@
-COVID_opt 90 20 NOMAD_hist.txt f_hist_NOMAD.txt i_hist_NOMAD.txt 8
+REM healthcare_capacity, eval_k, MAX_BB_EVAL, MIN_MESH_SIZE, EPSILON, nb_proc, eval_k_success, config, folder
+COVID_opt 90 4 20000 1e-31 1e-31 4 20 basic ./NOMAD_exp/Run_3
+
+cd %MATLAB%\..\extern\engines\python
+python setup.py install
+
+REM n_k, epsilon_f, nb_proc, n_runs
+python StoMADS_experiment.py 4 0.01 2 4
+
+REM n_k, nb_proc, config, n_runs
+python NOMAD_experiment.py 4 4 default 4
