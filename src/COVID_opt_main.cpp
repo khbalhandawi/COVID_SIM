@@ -4,6 +4,7 @@
 #include "NOMAD_Evaluator_singleobj.h"
 #include "io_blackbox_functions.h"
 #include "io_utilities.h"
+#include "utilities.h"
 
 #include "nomad.hpp"
 #include <iterator>
@@ -14,28 +15,48 @@ using namespace std;
 /*------------------------------------------*/
 int main(int argc, char ** argv) {
 
-	int n_sargs = 6; // number of static arguments
+	int n_sargs = 9; // number of static arguments
 
 	// set default arguments if input arguments not provided
 	int healthcare_capacity = 90;
 	int eval_k = 20;
-	int eval_k_success = 100;
-	std::string log_file = "NOMAD_hist.txt";
-	std::string feasible_file = "f_hist_NOMAD.txt";
-	std::string infeasible_file = "i_hist_NOMAD.txt";
-	std::string feasible_success_file = "f_progress_NOMAD.txt";
-	std::string infeasible_success_file = "i_progress_NOMAD.txt";
-
+	int MAX_BB_EVAL = 10000;
+	NOMAD::Double MIN_MESH_SIZE;
+	NOMAD::Double EPSILON;
 	int nb_proc = 2;
+	int eval_k_success = 10;
+	std::string config = "default";
+	std::string folder = "./NOMAD_exp/Run_1";
 
 	if (argc == n_sargs + 1) {
 		healthcare_capacity = stoi(argv[1]);
 		eval_k = stoi(argv[2]);
-		log_file = argv[3];
-		feasible_file = argv[4];
-		infeasible_file = argv[5];
+		MAX_BB_EVAL = stoi(argv[3]);
+		MIN_MESH_SIZE = stod(argv[4]);
+		EPSILON = stod(argv[5]);
 		nb_proc = stoi(argv[6]);
+		eval_k_success = stoi(argv[7]);
+		config = argv[8];
+		folder = argv[9];
 	}
+
+	COVID_SIM::check_folder(folder); // create empty directory (works only if base directory is already created)
+
+	std::string log_file = folder + "/" + "NOMAD_hist.txt";
+	std::string feasible_file = folder + "/" + "f_hist_NOMAD.txt";
+	std::string infeasible_file = folder + "/" + "i_hist_NOMAD.txt";
+	std::string feasible_success_file = folder + "/" + "f_progress_NOMAD.txt";
+	std::string infeasible_success_file = folder + "/" + "i_progress_NOMAD.txt";
+
+	cout << "healthcare_capacity" << " : " << healthcare_capacity << endl;
+	cout << "eval_k" << " : " << eval_k << endl;
+	cout << "MAX_BB_EVAL" << " : " << MAX_BB_EVAL << endl;
+	cout << "MIN_MESH_SIZE" << " : " << MIN_MESH_SIZE << endl;
+	cout << "EPSILON" << " : " << EPSILON << endl;
+	cout << "nb_proc" << " : " << nb_proc << endl;
+	cout << "eval_k_success" << " : " << eval_k_success << endl;
+	cout << "config" << " : " << config << endl;
+	cout << "folder" << " : " << folder << endl;
 
 	// display:
 	NOMAD::Display out(std::cout);
@@ -81,27 +102,29 @@ int main(int argc, char ** argv) {
 		p.set_LOWER_BOUND(lb);
 		p.set_UPPER_BOUND(ub);
 
-		p.set_MAX_BB_EVAL(10000 / eval_k);     // the algorithm terminates after 500 black-box evaluations
-		p.set_MIN_MESH_SIZE(1e-31);
-		p.set_EPSILON(1e-31);
+		p.set_MAX_BB_EVAL(MAX_BB_EVAL / eval_k);     // the algorithm terminates after 500 black-box evaluations
+		p.set_MIN_MESH_SIZE(MIN_MESH_SIZE);
+		p.set_EPSILON(EPSILON);
 		//p.set_ANISOTROPY_FACTOR(0.1);
 
-		// NOMAD basic
-		//p.set_ANISOTROPIC_MESH(false);
-		//p.set_DIRECTION_TYPE(NOMAD::ORTHO_2N);
-		//p.set_MODEL_SEARCH(false);
-		//p.set_NM_SEARCH(false);
-		//p.set_OPPORTUNISTIC_EVAL(false);
+		if (config == "basic") {
+			// NOMAD basic
+			p.set_ANISOTROPIC_MESH(false);
+			p.set_DIRECTION_TYPE(NOMAD::ORTHO_2N);
+			p.set_MODEL_SEARCH(false);
+			p.set_NM_SEARCH(false);
+			p.set_OPPORTUNISTIC_EVAL(false);
+		}
 
 		// NOMAD default
 		//p.set_ANISOTROPIC_MESH(true);
 		//p.set_DIRECTION_TYPE(NOMAD::ORTHO_NP1_NEG);
 		//p.set_MODEL_SEARCH(true);
 		//p.set_NM_SEARCH(true);
-		//p.set_OPPORTUNISTIC_EVAL(false);
+		//p.set_OPPORTUNISTIC_EVAL(true);
 
 		p.set_DISPLAY_DEGREE(2);
-		p.set_SOLUTION_FILE("sol.txt");
+		p.set_SOLUTION_FILE(folder + "/" + "sol.txt");
 
 		// parameters validation:
 		p.check();

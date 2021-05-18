@@ -67,10 +67,9 @@ XCode/COVID_SIM_CMD
 moc_*
 build/Makefile
 *.tmp
-opt/*
-!opt/configuration.ini
-!opt/sgtelib.dll
-!opt/nomad.dll
-!opt/command.txt
-!opt/COVID_sim_lib.dll
-!opt/CUDA_functions.dll
+opt/.vscode/*
+opt/opt_data/*
+opt/data/*
+opt/NOMAD_exp/*
+opt/StoMADS_exp/*
+opt/COVID_opt*
