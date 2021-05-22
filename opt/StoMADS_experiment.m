@@ -21,6 +21,9 @@ MAX_BB_EVAL             = 10000;
 nb_proc                 = 8;
 n_k_success             = 100;
 
+nprob = 34; % Problem using COVID_SIM_UI for both objective and constraint
+% nprob = 35; % Problem including CovidSim as a constraint
+
 StoMADS_settings = { n_k, epsilon_f, Delta, gamma, tau, OPPORTUNISTIC_EVAL ,...
     MAX_BB_EVAL, nb_proc, n_k_success };
 StoMADS_settings_text = { 'n_k', 'epsilon_f', 'Delta', 'gamma', 'tau', 'OPPORTUNISTIC_EVAL' ,...
@@ -60,7 +63,7 @@ for i = 1:1:n_runs
         
     diary(diary_file) % save console output to window
     diary on
-    StoMADS_call(n_k,epsilon_f,Delta,gamma,tau,MAX_BB_EVAL,nb_proc,n_k_success,run_folder)
+    StoMADS_call(nprob,n_k,epsilon_f,Delta,gamma,tau,MAX_BB_EVAL,nb_proc,n_k_success,run_folder)
     diary off
 
 end

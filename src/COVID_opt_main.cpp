@@ -113,7 +113,7 @@ int main(int argc, char ** argv) {
 			p.set_DIRECTION_TYPE(NOMAD::ORTHO_2N);
 			p.set_MODEL_SEARCH(false);
 			p.set_NM_SEARCH(false);
-			p.set_OPPORTUNISTIC_EVAL(false);
+			p.set_OPPORTUNISTIC_EVAL(true);
 		}
 
 		// NOMAD default

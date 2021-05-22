@@ -67,9 +67,13 @@ XCode/COVID_SIM_CMD
 moc_*
 build/Makefile
 *.tmp
+*.asv
 opt/.vscode/*
 opt/opt_data/*
 opt/data/*
 opt/NOMAD_exp/*
 opt/StoMADS_exp/*
+opt/GA_exp/*
 opt/COVID_opt*
+opt/covid_sim/output_files
+opt/covid_sim/network_files

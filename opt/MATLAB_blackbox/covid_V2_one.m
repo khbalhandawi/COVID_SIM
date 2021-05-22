@@ -5,9 +5,12 @@ end
 if iscolumn(x)
     x = x';
 end
+
+% COVID_SIM_UI blackbox (objective and constraint)
 u = Blackbox_call(x,bbe,e);
 z(1) = u(1);
 z(2) = u(3);
+
 if isrow(z)
     z = z';
 end

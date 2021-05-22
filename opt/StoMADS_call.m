@@ -1,4 +1,4 @@
-function StoMADS_call(n_k,epsilon_f,Delta,gamma,tau,max_bb_eval,nb_proc,n_eval_k_success,folder)
+function StoMADS_call(nprob,n_k,epsilon_f,Delta,gamma,tau,max_bb_eval,nb_proc,n_eval_k_success,folder)
 
     addpath MATLAB_blackbox
     addpath MATLAB_blackbox\support_functions
@@ -20,6 +20,6 @@ function StoMADS_call(n_k,epsilon_f,Delta,gamma,tau,max_bb_eval,nb_proc,n_eval_k
     end
     
     ceal = v_deux_Sto_Param(2,n_k,epsilon_f,Delta,gamma,tau,max_bb_eval,nb_proc,n_eval_k_success,folder);
-    V2_StoMADS_PB(34,ceal)
+    V2_StoMADS_PB(nprob,ceal)
     
 end
