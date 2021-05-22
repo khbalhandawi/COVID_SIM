@@ -72,4 +72,5 @@ opt/opt_data/*
 opt/data/*
 opt/NOMAD_exp/*
 opt/StoMADS_exp/*
+opt/GA_exp/*
 opt/COVID_opt*

@@ -20,7 +20,7 @@ function [f] = Blackbox_call(d,bbe,e,sur)
     healthcare_capacity = 90;
     
     %% Scale variables
-    d = scaling(d, lob, upb, 2); % Normalize variables for optimization (StoMADS)
+    d = scaling(d, lob, upb, 2); % Normalize variables for optimization (StoMADS, GA)
     % d = scaling(d', lob, upb, 2); % Normalize variables for optimization (NOMAD)
     d(1) = round(d(1)); d(3) = round(d(3));
     

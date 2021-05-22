@@ -88,46 +88,83 @@ if __name__ == "__main__":
     NOMAD_dict = {
         "folder" : "NOMAD",
         "stats" : {
-            0 : { "index" : 1, "n_k" : 20,    "min_mesh_size_enabled" : True,    "min_mesh_size" : None,   "epsilon" : 1e-13, "config" : "default", "n_cores" : 8},
-            1 : { "index" : 2, "n_k" : 20,    "min_mesh_size_enabled" : True,    "min_mesh_size" : None,   "epsilon" : 1e-13, "config" : "default", "n_cores" : 8},
-            2 : { "index" : 3, "n_k" : 20,    "min_mesh_size_enabled" : True,    "min_mesh_size" : None,   "epsilon" : 1e-13, "config" : "default", "n_cores" : 8},
-            3 : { "index" : 4, "n_k" : 20,    "min_mesh_size_enabled" : True,    "min_mesh_size" : None,   "epsilon" : 1e-13, "config" : "default", "n_cores" : 8},
-            4 : { "index" : 5, "n_k" : 1,     "min_mesh_size_enabled" : False,   "min_mesh_size" : 1e-6,   "epsilon" : 1e-13, "config" : "default", "n_cores" : 8},
-            5 : { "index" : 6, "n_k" : 1,     "min_mesh_size_enabled" : False,   "min_mesh_size" : 1e-6,   "epsilon" : 1e-13, "config" : "default", "n_cores" : 8},
-            6 : { "index" : 7, "n_k" : 1,     "min_mesh_size_enabled" : False,   "min_mesh_size" : 1e-31,  "epsilon" : 1e-31, "config" : "default", "n_cores" : 8},
-            7 : { "index" : 8, "n_k" : 4,     "min_mesh_size_enabled" : False,   "min_mesh_size" : 1e-31,  "epsilon" : 1e-31, "config" : "default", "n_cores" : 4},
+            0   : { "index" : 1,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
+            1   : { "index" : 2,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
+            2   : { "index" : 3,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
+            3   : { "index" : 4,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
+            4   : { "index" : 5,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-6,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
+            5   : { "index" : 6,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-6,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
+            6   : { "index" : 7,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 8, "group" : 1},
+            7   : { "index" : 16,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 8, "group" : 1},
+            8   : { "index" : 17,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 8, "group" : 1},
+            9   : { "index" : 18,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 8, "group" : 1},
+            10  : { "index" : 8,    "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 4, "group" : 2},
+            11  : { "index" : 13,   "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 4, "group" : 2},
+            12  : { "index" : 14,   "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 4, "group" : 2},
+            13  : { "index" : 15,   "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 4, "group" : 2},
+            14  : { "index" : 9,    "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 3},
+            15  : { "index" : 10,   "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 3},
+            16  : { "index" : 11,   "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 3},
+            17  : { "index" : 12,   "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 3},
+            18  : { "index" : 19,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 4}, # running
+            19  : { "index" : 20,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 4}, # running
+            20  : { "index" : 21,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 4}, # running
+            21  : { "index" : 22,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 4}, # running
+            22  : { "index" : 27,   "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 5}, # left to go
+            23  : { "index" : 28,   "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 5}, # left to go
+            24  : { "index" : 29,   "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 5}, # left to go
+            25  : { "index" : 30,   "n_k" : 4,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 5}, # left to go
+            26  : { "index" : 23,   "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 6}, # running
+            27  : { "index" : 24,   "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 6}, # running
+            28  : { "index" : 25,   "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 6}, # running
+            29  : { "index" : 26,   "n_k" : 20, "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "basic",     "n_cores" : 8, "group" : 6}, # running
         },
     }
 
     StoMADS_dict = {
         "folder" : "StoMADS",
         "stats" : {
-            0   : { "index" : 9,  "n_k" : 1,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 4, "group" : 1},
-            1   : { "index" : 5,  "n_k" : 4,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 2},
-            2   : { "index" : 7,  "n_k" : 20,   "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 3},
-            3   : { "index" : 4,  "n_k" : 1,    "epsilon_f" : 0.09, "config" : "default", "n_cores" : 8, "group" : 4},
-            4   : { "index" : 3,  "n_k" : 4,    "epsilon_f" : 0.09, "config" : "default", "n_cores" : 4, "group" : 5},
-            5   : { "index" : 1,  "n_k" : 20,   "epsilon_f" : 0.09, "config" : "default", "n_cores" : 8, "group" : 6},
-            6   : { "index" : 2,  "n_k" : 20,   "epsilon_f" : 0.09, "config" : "default", "n_cores" : 8, "group" : 6},
-            7   : { "index" : 14, "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 7},
-            8   : { "index" : 21, "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 7},
-            9   : { "index" : 22, "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 7},
-            10  : { "index" : 23, "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 7},
-            11  : { "index" : 6,  "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 4, "group" : 8}, # best ignore
-            12  : { "index" : 12, "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 8},
-            13  : { "index" : 15, "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 8},
-            14  : { "index" : 16, "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 8},
-            15  : { "index" : 17, "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 8},
-            16  : { "index" : 13, "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 9},
-            17  : { "index" : 18, "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 9},
-            18  : { "index" : 19, "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 9},
-            19  : { "index" : 20, "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 9},
-            20  : { "index" : 10, "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 10},
-            20  : { "index" : 24, "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 10},
-            20  : { "index" : 25, "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 10},
-            20  : { "index" : 26, "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 10},
-            21  : { "index" : 8,  "n_k" : 4,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 11},
-            22  : { "index" : 11, "n_k" : 20,   "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 12},
+            0   : { "index" : 4,    "n_k" : 1,    "epsilon_f" : 0.09, "config" : "default", "n_cores" : 8, "group" : 0}, # best ignore
+            1   : { "index" : 3,    "n_k" : 4,    "epsilon_f" : 0.09, "config" : "default", "n_cores" : 4, "group" : 0}, # best ignore
+            2   : { "index" : 1,    "n_k" : 20,   "epsilon_f" : 0.09, "config" : "default", "n_cores" : 8, "group" : 0}, # best ignore
+            3   : { "index" : 2,    "n_k" : 20,   "epsilon_f" : 0.09, "config" : "default", "n_cores" : 8, "group" : 0}, # best ignore
+            4   : { "index" : 6,    "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 4, "group" : 0}, # best ignore
+            5   : { "index" : 9,    "n_k" : 1,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 4, "group" : 1},
+            6   : { "index" : 27,   "n_k" : 1,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 1},
+            7   : { "index" : 28,   "n_k" : 1,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 1},
+            8   : { "index" : 29,   "n_k" : 1,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 1},
+            9   : { "index" : 5,    "n_k" : 4,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 2},
+            10  : { "index" : 30,   "n_k" : 4,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 2},
+            11  : { "index" : 31,   "n_k" : 4,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 2},
+            12  : { "index" : 32,   "n_k" : 4,    "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 2},
+            13  : { "index" : 7,    "n_k" : 20,   "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 3},
+            14  : { "index" : 33,   "n_k" : 20,   "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 3},
+            15  : { "index" : 34,   "n_k" : 20,   "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 3},
+            16  : { "index" : 35,   "n_k" : 20,   "epsilon_f" : 0.01, "config" : "default", "n_cores" : 8, "group" : 3},
+            17  : { "index" : 14,   "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 4},
+            18  : { "index" : 21,   "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 4},
+            19  : { "index" : 22,   "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 4},
+            20  : { "index" : 23,   "n_k" : 1,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 4},
+            21  : { "index" : 12,   "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 5},
+            22  : { "index" : 15,   "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 5},
+            23  : { "index" : 16,   "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 5},
+            24  : { "index" : 17,   "n_k" : 4,    "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 5},
+            25  : { "index" : 13,   "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 6},
+            26  : { "index" : 18,   "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 6},
+            27  : { "index" : 19,   "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 6},
+            28  : { "index" : 20,   "n_k" : 20,   "epsilon_f" : 0.1,  "config" : "default", "n_cores" : 8, "group" : 6},
+            29  : { "index" : 10,   "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 7},
+            30  : { "index" : 24,   "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 7},
+            31  : { "index" : 25,   "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 7},
+            32  : { "index" : 26,   "n_k" : 1,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 7},
+            33  : { "index" : 8,    "n_k" : 4,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 8},
+            34  : { "index" : 36,   "n_k" : 4,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 8},
+            35  : { "index" : 37,   "n_k" : 4,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 8},
+            36  : { "index" : 38,   "n_k" : 4,    "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 8},
+            37  : { "index" : 11,   "n_k" : 20,   "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 9},
+            38  : { "index" : 39,   "n_k" : 20,   "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 9},
+            39  : { "index" : 40,   "n_k" : 20,   "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 9},
+            40  : { "index" : 41,   "n_k" : 20,   "epsilon_f" : 0.2,  "config" : "default", "n_cores" : 8, "group" : 9},
         },
     }
 
