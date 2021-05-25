@@ -5,13 +5,16 @@ if (nargin==4)
 end
 
 global hist f_progress i_progress ceal;
-z = zeros(eval_k, ceal{4}+1);
+size_empty = max(1,eval_k); % in case eval_k == 0 
+
+z = zeros(size_empty, ceal{4}+1);
+z_sur = zeros(size_empty, ceal{4}+1);
 bbe = size(hist,1); 
 folder = ceal{19};
     
 %% Display success
 if isempty(hist) == 0 && success_type == 1
-    [fsk,csk,psk,hsk,usk] = get_updated_estimates(hist(:,2:end),x,nprob);
+    [fsk,csk,psk,hsk,~,~,~,~,~,~] = get_updated_estimates(hist(:,2:end),x,nprob);
     format_bbe = '          %4d      (         ';
     format_x = [repmat('%12.10f ',1, length(x))]; format_x(end)='';
     format_obj = '  )     %12.10f';
@@ -40,11 +43,11 @@ if re_evaluate
 
     if nb_proc ~= 1
         parfor (e = 1:eval_k, nb_proc)
-            z(e,:) = v_deux_black_box(x, nprob, bbe+e-1, e);
+            [z(e,:),z_sur(e,:)] = v_deux_black_box(x, nprob, bbe+e-1, e);
         end
     else
         for e = 1:eval_k
-            z(e,:) = v_deux_black_box(x, nprob, bbe+e-1);
+            [z(e,:),z_sur(e,:)] = v_deux_black_box(x, nprob, bbe+e-1);
         end
     end
     
@@ -58,9 +61,9 @@ if re_evaluate
     % loop over results
     for i = 1:size(z,1)
         % Update evaluation matrix
-        P_matrix = [P_matrix; x' z(i,:)];
+        P_matrix = [P_matrix; x' z(i,:) z_sur(i,:)];
     end
-    [fsk,csk,psk,hsk,usk] = get_updated_estimates(P_matrix,x,nprob);
+    [fsk,csk,psk,hsk,~,~,~,~,~,~] = get_updated_estimates(P_matrix,x,nprob);
 else
     % use last known result instead
     if success_type == 1

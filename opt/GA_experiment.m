@@ -15,14 +15,18 @@ diary off
 % GA_settings
 n_k                     = 4;
 MAX_BB_EVAL             = 10000;
-nb_proc                 = 4;
+nb_proc                 = 8;
 n_k_success             = 100;
 n_population            = 50;
-R_initial               = 5; % can be 'auto'
+R_initial               = 'auto'; % can be 'auto'
+R_factor                = 100;
+max_stall_G             = 50;
 config                  = 'default';
 
-GA_settings = { n_k, MAX_BB_EVAL, nb_proc, n_k_success, n_population, R_initial, config };
-GA_settings_text = { 'n_k', 'MAX_BB_EVAL', 'nb_proc', 'n_k_success', 'n_population', 'R_initial', 'config'};
+GA_settings = { n_k, MAX_BB_EVAL, nb_proc, n_k_success, n_population, ...
+    R_initial, R_factor, max_stall_G, config };
+GA_settings_text = { 'n_k', 'MAX_BB_EVAL', 'nb_proc', 'n_k_success', ...
+    'n_population', 'R_initial', 'R_factor', 'max_stall_G', 'config'};
 
 n_runs = 4;
 
@@ -58,7 +62,8 @@ for i = 1:1:n_runs
         
     diary(diary_file) % save console output to window
     diary on
-    GA_call(n_k,MAX_BB_EVAL,nb_proc,n_k_success,n_population,R_initial,config,run_folder)
+    GA_call(n_k,MAX_BB_EVAL,nb_proc,n_k_success,n_population,R_initial,...
+        R_factor,max_stall_G,config,run_folder)
     diary off
 
 end

@@ -28,7 +28,7 @@ if isfile(hist_file_name)
     delete(hist_file_name);
 end
 hist_file = fopen(hist_file_name, 'w');
-fprintf(hist_file, 'bbe,x1,x2,x3,f,cstr,p_value,h\n');
+fprintf(hist_file, 'bbe,x1,x2,x3,f,cstr,p_value,h,f_sur,cstr_sur,p_value_sur,h_sur\n');
 fclose(hist_file); 
 
 f_hist_file_name = [folder,'/f_hist_STOMADS' num2str(nprob) '.txt'];  % Check if f_hist_file_name already exists in the directory
@@ -36,7 +36,7 @@ if isfile(f_hist_file_name)
     delete(f_hist_file_name);
 end
 f_hist_file = fopen(f_hist_file_name, 'w');
-fprintf(f_hist_file, 'bbe,x1,x2,x3,f,cstr,p_value,h\n');
+fprintf(f_hist_file, 'bbe,x1,x2,x3,f,cstr,p_value,h,f_sur,cstr_sur,p_value_sur,h_sur\n');
 fclose(f_hist_file); 
 
 i_hist_file_name = [folder,'/i_hist_STOMADS' num2str(nprob) '.txt'];  % Check if i_hist_file_name already exists in the directory
@@ -44,7 +44,7 @@ if isfile(i_hist_file_name)
     delete(i_hist_file_name);
 end
 i_hist_file = fopen(i_hist_file_name, 'w');
-fprintf(i_hist_file, 'bbe,x1,x2,x3,f,cstr,p_value,h,u\n');
+fprintf(i_hist_file, 'bbe,x1,x2,x3,f,cstr,p_value,h,u,f_sur,cstr_sur,p_value_sur,h_sur,u_sur\n');
 fclose(i_hist_file); 
 
 f_hist_file_name = [folder,'/f_progress_STOMADS' num2str(nprob) '.txt'];  % Check if f_hist_file_name already exists in the directory
@@ -460,5 +460,6 @@ fprintf('\n')
 title_string = '} end of run\n';
 fprintf(title_string)
 toc()
+save([run_folder,'/STOMADS_hist' num2str(nprob) '.mat'],'history','hist','i_progress','f_progress') % save all history to .mat file
 %clear
 end

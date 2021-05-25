@@ -12,12 +12,14 @@ addpath MATLAB_blackbox\support_functions
 %% Problem definition
 n_k                     = 4;
 MAX_BB_EVAL             = 10000;
-nb_proc                 = 4;
+nb_proc                 = 8;
 n_k_success             = 20;
 n_population            = 30;
-R_initial               = 5; % can be 'auto'
-
+R_initial               = 'auto'; % can be 'auto'
+R_factor                = 100;
+max_stall_G             = 50;
 config = 'default';
+
 folder = 'GA_exp';
 machine = 'WORKSTATION';
 check_folder(folder)
@@ -68,6 +70,7 @@ fclose(G_hist_file);
 global cumilative_f_evals GA_hist x_feas
 global hist hist_avg f_hist f_progress;
 global max_generations_per_it max_stall_generations_per_it min_tol_per_it
+global fig
 
 cumilative_f_evals = 0; GA_hist = []; x_feas = [];
 hist = []; hist_avg = []; f_hist = []; f_progress = [];
@@ -94,18 +97,21 @@ if strcmp(config,'custom')
 
     % Non-default options
     options = optimoptions('ga','Display','off',...
-        'MaxStallGenerations',100,'FunctionTolerance',1e-6,'ConstraintTolerance',0,...
+        'MaxStallGenerations',max_stall_G,'FunctionTolerance',1e-6,'ConstraintTolerance',0,...
         'NonlinearConstraintAlgorithm','auglag','PopulationSize',n_population,...
         'InitialPopulationMatrix',initial_population,'InitialPenalty',R,...
+        'PenaltyFactor',R_factor,...
         'CrossoverFraction',0.1,'MutationFcn',{@mutationadaptfeasible,1,.5},...
         'OutputFcn',@(options,state,flag) callback_function(options,state,flag,ceal));
 
 elseif strcmp(config,'default')
 
     % Default options
-    options = optimoptions('ga','Display','off','NonlinearConstraintAlgorithm','auglag',...
+    options = optimoptions('ga','Display','off',...
+        'MaxStallGenerations',max_stall_G,...
+        'NonlinearConstraintAlgorithm','auglag','PopulationSize',n_population,...
         'InitialPopulationMatrix',initial_population,'InitialPenalty',R,...
-        'PopulationSize',n_population,...
+        'PenaltyFactor',R_factor,...
         'OutputFcn',@(options,state,flag) callback_function(options,state,flag,ceal));
 
 end
@@ -120,6 +126,12 @@ x_string = repmat('%-012.6f   ',1,ceal{3});
 fprintf(['The optimizer is at x = [   ',x_string,']\n'],x)
 fprintf('The optimum function value is f = %-012.6f \n',fval)
 fprintf('================================\n')
+
+% Save figure of progress to file and close it
+set(fig,'color','w');
+savefig(fig,[folder,'/progress.fig']);
+print(fig,[folder,'/progress.pdf'],'-dpdf','-r300');
+close(fig);
 
 %% Inline functions
 %=========================================================%

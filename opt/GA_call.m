@@ -1,4 +1,4 @@
-function GA_call(n_k,max_bb_eval,nb_proc,n_eval_k_success,n_population,R_initial,config,folder)
+function GA_call(n_k,max_bb_eval,nb_proc,n_eval_k_success,n_population,R_initial,R_factor,max_stall_G,config,folder)
 
     addpath GA
     addpath MATLAB_blackbox
@@ -50,6 +50,7 @@ function GA_call(n_k,max_bb_eval,nb_proc,n_eval_k_success,n_population,R_initial
     global cumilative_f_evals GA_hist x_feas
     global hist hist_avg f_hist f_progress;
     global max_generations_per_it max_stall_generations_per_it min_tol_per_it
+    global fig
 
     cumilative_f_evals = 0; GA_hist = []; x_feas = [];
     hist = []; hist_avg = []; f_hist = []; f_progress = [];
@@ -78,18 +79,21 @@ function GA_call(n_k,max_bb_eval,nb_proc,n_eval_k_success,n_population,R_initial
 
         % Non-default options
         options = optimoptions('ga','Display','off',...
-            'MaxStallGenerations',100,'FunctionTolerance',1e-6,'ConstraintTolerance',0,...
+            'MaxStallGenerations',max_stall_G,'FunctionTolerance',1e-6,'ConstraintTolerance',0,...
             'NonlinearConstraintAlgorithm','auglag','PopulationSize',n_population,...
             'InitialPopulationMatrix',initial_population,'InitialPenalty',R,...
+            'PenaltyFactor',R_factor,...
             'CrossoverFraction',0.1,'MutationFcn',{@mutationadaptfeasible,1,.5},...
             'OutputFcn',@(options,state,flag) callback_function(options,state,flag,ceal));
 
     elseif strcmp(config,'default')
 
         % Default options
-        options = optimoptions('ga','Display','off','NonlinearConstraintAlgorithm','auglag',...
+        options = optimoptions('ga','Display','off',...
+            'MaxStallGenerations',max_stall_G,...
+            'NonlinearConstraintAlgorithm','auglag','PopulationSize',n_population,...
             'InitialPopulationMatrix',initial_population,'InitialPenalty',R,...
-            'PopulationSize',n_population,...
+            'PenaltyFactor',R_factor,...
             'OutputFcn',@(options,state,flag) callback_function(options,state,flag,ceal));
 
     end
@@ -106,5 +110,10 @@ function GA_call(n_k,max_bb_eval,nb_proc,n_eval_k_success,n_population,R_initial
     fprintf('The optimum function value is f = %-012.6f \n',fval)
     fprintf('================================\n')
   
-
+% Save figure of progress to file and close it
+set(fig,'color','w');
+savefig(fig,[folder,'/progress.fig']);
+print(fig,[folder,'/progress.pdf'],'-dpdf','-r300');
+close(fig);
+    
 end
