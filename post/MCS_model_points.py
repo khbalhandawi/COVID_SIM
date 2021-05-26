@@ -4,6 +4,7 @@ import pickle
 
 from functionsUtilities.utils import serial_sampling,parallel_sampling,scaling
 from functionsDOE.blackboxes import blackbox_COVID_SIM_UI
+from functionsDOE.blackbox_CovidSim import blackbox_CovidSim
 
 #==============================================================================#
 # Main execution
@@ -16,14 +17,18 @@ if __name__ == '__main__':
                        [   0.0001, 0.15  ], # Social distancing factor
                        [   10    , 51    ]]) # Testing capacity
 
+    bounds_CovidSim = np.array([[   1.0     , 0.0   ],      # compliance rate (inversely proportional to number of essential workers)
+                                [   3.0     , 0.05  ],      # Contact rate given Social distancing (inversely proportional to Social distancing factor)
+                                [   0.1     , 0.9   ]])     # Testing capacity
+
     run = 0 # starting point
 
     # Points to plot
     # Demo points
-    opts = np.array([[0.164705882 , 0.666444296 , 0.000000000 ],
-                     [0.517647058 , 0.666444296 , 0.000000000 ],
-                     [0.164705882 , 0.833222148 , 0.000000000 ],
-                     [0.164705882 , 0.666444296 , 0.243902439 ]])
+    # opts = np.array([[0.164705882 , 0.666444296 , 0.000000000 ],
+    #                  [0.517647058 , 0.666444296 , 0.000000000 ],
+    #                  [0.164705882 , 0.833222148 , 0.000000000 ],
+    #                  [0.164705882 , 0.666444296 , 0.243902439 ]])
 
     # Points to plot
     # StoMADS V2
@@ -35,6 +40,14 @@ if __name__ == '__main__':
     #                  [0.6438180000, 0.3571950000, 0.8989290000],
     #                  [0.8664750000, 0.4196950000, 0.9809600000]])
 
+    # Points to plot
+    # trail points with CovidSim
+    opts = np.array([[0.500000000 , 0.500000000 , 0.500000000 ],
+                     [0.433109873 , 0.684745762 , 0.993190799 ],    # United Kingdom
+                     [0.1164501187, 0.524594992 , 0.9041672301],    # United Kingdom
+                     [0.3039501187, 0.441967874 , 0.6541672301]])   # United Kingdom
+
+    # COVID_SIM_UI
     opts_unscaled = scaling(opts, bounds[:3,0], bounds[:3,1], 2)
 
     i = 0
@@ -52,8 +65,27 @@ if __name__ == '__main__':
         pickle.dump(opts, fid)
         pickle.dump(opts_unscaled, fid)
 
+    # CovidSim
+    opts_unscaled_CovidSim = scaling(opts, bounds_CovidSim[:3,0], bounds_CovidSim[:3,1], 2)
+
+    i = 0
+    for point in opts_unscaled_CovidSim:
+        print('point #%i: Compliance = %f, Contact_rate = %f, Testing_capacity = %f' %(i+1,point[0],point[1],point[2])); i+=1
+
+
+    # Points to plot
+    lob_var = bounds_CovidSim[:,0] # lower bounds
+    upb_var = bounds_CovidSim[:,1] # upper bounds
+
+    # save optimization points in LHS format file
+    with open('data/points_opts_CovidSim.pkl','wb') as fid:
+        pickle.dump(lob_var, fid)
+        pickle.dump(upb_var, fid)
+        pickle.dump(opts, fid)
+        pickle.dump(opts_unscaled_CovidSim, fid)
+
     #===================================================================#
-    n_samples = 1 # <<-------------------------- Edit the number of observations
+    n_samples = 10 # <<-------------------------- Edit the number of observations
     new_run = True
 
     #===================================================================#
@@ -71,40 +103,61 @@ if __name__ == '__main__':
                 os.remove(dirname)
 
         # Resume MCS
-        # run = 1
+        # run = 3
         # opts_unscaled = opts_unscaled[run:]
+        # opts_unscaled_CovidSim = opts_unscaled_CovidSim[run:]
 
         # # terminate MCS
         # run = 3
         # run_end = 3 + 1
         # opts_unscaled = opts_unscaled[run:run_end]
+        # opts_unscaled_CovidSim = opts_unscaled_CovidSim[run:run_end]
 
-        for point in opts_unscaled:
+        for point,point_CovidSim in zip(opts_unscaled,opts_unscaled_CovidSim):
 
             # Model variables
+            # COVID_SIM_UI
             n_violators = int(point[0])
             SD = point[1]
             test_capacity = int(point[2])
 
+            # CovidSim
+            Compliance = point_CovidSim[0]
+            Contact_rate = point_CovidSim[1]
+            Testing_capacity = point_CovidSim[2]
+
             # Model parameters
             healthcare_capacity = 90
+            healthcare_capacity_CovidSim = 0.09
+            country = "United_Kingdom"
+            pop_size_CovidSim = 66777534
+            pop_size = 1000
 
             #=====================================================================#
-            # Design variables
+            # Design variables (COVID_SIM_UI)
             design_variables = [n_violators, SD, test_capacity]
             args = [design_variables] * n_samples # repeat variables by number of samples
+
+            # Design variables (CovidSim)
+            design_variables = [Compliance, Contact_rate, Testing_capacity]
+            args_CovidSim = [design_variables] * n_samples # repeat variables by number of samples
 
             #=====================================================================#
             # Empty result lists
             infected_i = []; fatalities_i = []; GC_i = []; distance_i = []
             process_I = []; process_F = []; process_R = []; process_M = []; process_R0 = []
 
+            infected_CovidSim = []; fatalities_CovidSim = []; process_I_CovidSim = []; process_F_CovidSim = []
+            process_R_CovidSim = []; process_S_CovidSim = []; process_Critical_CovidSim = []
+
             # Blackbox set-up
-            params_COVID_SIM_UI = [healthcare_capacity,]
+            params_COVID_SIM_UI = [healthcare_capacity]
+            params_CovidSim = [run, pop_size_CovidSim, healthcare_capacity_CovidSim, country]
+
             output_file_base = 'MCS_data_r%i' %run
             # return_process = False
             return_process = True
-            params = [run, output_file_base, params_COVID_SIM_UI,return_process]
+            params = [run, output_file_base, pop_size, params_COVID_SIM_UI, return_process]
 
             #################################################################
             # Parallel sampling of blackbox (more intense, does not return stochastic disease profiles)s
@@ -137,7 +190,22 @@ if __name__ == '__main__':
                 process_M   += [M]
                 process_R0  += [run_data_R0]
             #################################################################
+            results = serial_sampling(args_CovidSim,params_CovidSim,blackbox_CovidSim)
 
+            # Read results
+            for result in results: 
+                [infected, fatalities, I, F, R, S, Critical] = result
+
+                infected_CovidSim           += [infected]
+                fatalities_CovidSim         += [fatalities]
+
+                process_I_CovidSim          += [I]
+                process_F_CovidSim          += [F]
+                process_R_CovidSim          += [R]
+                process_S_CovidSim          += [S]
+                process_Critical_CovidSim   += [Critical]
+
+            #################################################################
             # wipe log files
             for f in os.listdir(job_dir):
                 dirname = os.path.join(job_dir, f)
@@ -156,5 +224,17 @@ if __name__ == '__main__':
                 pickle.dump(fatalities_i,fid)
                 pickle.dump(GC_i,fid)
                 pickle.dump(distance_i,fid)
-                run += 1
-                continue
+
+            with open('data/MCS_process_data_CovidSim_r%i.pkl' %run,'wb') as fid:    
+                pickle.dump(process_I_CovidSim,fid)
+                pickle.dump(process_F_CovidSim,fid)
+                pickle.dump(process_R_CovidSim,fid)
+                pickle.dump(process_S_CovidSim,fid)
+                pickle.dump(process_Critical_CovidSim,fid)
+
+            with open('data/MCS_data_CovidSim_r%i.pkl' %run,'wb') as fid:
+                pickle.dump(infected_CovidSim,fid)
+                pickle.dump(fatalities_CovidSim,fid)
+            
+            run += 1
+            continue

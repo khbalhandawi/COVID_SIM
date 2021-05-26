@@ -36,7 +36,7 @@ def application_COVID_SIM_UI( i, design_variables, parameters, output_file_n, de
 # COVID_SIM_UI blackbox
 def blackbox_COVID_SIM_UI(i, args, params):
 
-    [run, output_file_base, params_COVID_SIM_UI, read_process] = params
+    [run, output_file_base, pop_size, params_COVID_SIM_UI, read_process] = params
 
     output_file_n = '%s_%i.log' %(output_file_base, i)
     application_COVID_SIM_UI(i,args,params_COVID_SIM_UI,output_file_n)
@@ -57,8 +57,12 @@ def blackbox_COVID_SIM_UI(i, args, params):
         run_data = load_matrix('SIRF_data', folder='population')
         run_data_M = load_matrix('mean_GC_data', folder='population')
         run_data_R0 = load_matrix('mean_R0_data', folder='population')
-        I = run_data[:,2]; R = run_data[:,3]; F = run_data[:,4]; M = [x * 100 for x in run_data_M[:,1]]
 
-        return [int(infected), int(fatalities), float(mean_GC), float(mean_distance), I, F, R, M, run_data_R0]
+        I = [x / pop_size for x in run_data[:,2]]
+        R = [x / pop_size for x in run_data[:,3]]
+        F = [x / pop_size for x in run_data[:,4]]
+        M = [x * 100 for x in run_data_M[:,1]]
+
+        return [int(infected)/pop_size, int(fatalities)/pop_size, float(mean_GC), float(mean_distance), I, F, R, M, run_data_R0]
     else:
         return [int(infected), int(fatalities), float(mean_GC), float(mean_distance)]

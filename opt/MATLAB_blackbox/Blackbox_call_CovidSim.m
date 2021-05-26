@@ -13,13 +13,13 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     % suppress = ""; % uncomment to view console output of CovidSim
     %% Simulation Paramters
     % Model variables
-    % bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
-    %           0.99	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
-    %           0.1   , 0.9   ];   % Testing capacity
-  
     bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
-              1     , 720  ;... % Social distancing duration (0 - 720 days)
-              0.1   , 0.9   ];   % Testing capacity
+              2.0	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
+              0.1	, 0.9   ];   % Testing capacity
+  
+    % bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
+    %           1     , 720  ;... % Social distancing duration (0 - 720 days)
+    %           0.1   , 0.9   ];   % Testing capacity
           
     lob = bounds(:,1)'; upb = bounds(:,2)';
     
@@ -44,7 +44,7 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     % country = "United_Kingdom";
     country = "Canada";
     root = "PC7_CI_HQ_SD";
-    root = "PC7_CI_HQ_SD_duration";
+    % root = "PC7_CI_HQ_SD_duration";
     outdir = working_directory+"\covid_sim\output_files\";
     paramdir = working_directory+"\covid_sim\param_files\";
     networkdir = working_directory+"\covid_sim\network_files\";
