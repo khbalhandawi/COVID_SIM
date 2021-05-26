@@ -13,47 +13,62 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     % suppress = ""; % uncomment to view console output of CovidSim
     %% Simulation Paramters
     % Model variables
+    % bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
+    %           0.99	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
+    %           0.1   , 0.9   ];   % Testing capacity
+  
     bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
-              0.99	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
+              1     , 720  ;... % Social distancing duration (0 - 720 days)
               0.1   , 0.9   ];   % Testing capacity
           
     lob = bounds(:,1)'; upb = bounds(:,2)';
     
     %% Scale variables
     d = scaling(d, lob, upb, 2); % Normalize variables for optimization (StoMADS, GA)
+    % if optimizing duration then round to nearest integer
+    d(2) = round(d(2));
+    
     % d = scaling(d', lob, upb, 2); % Normalize variables for optimization (NOMAD)
     
     %% Input variables
     variable_str = sprintf("/CLP1:%.4f /CLP2:%.4f /CLP3:%.4f" ,d(1),d(2),d(3));
 
     %% Input parameters
-    pop = 66777534;
     pop_surrogate = 1000;
     healthcare_capacity = 0.09;
     r = 3.0;
     rs = r/2;
-    threads = 4;
+    threads = 8;
     
     working_directory = pwd;
-    country = "United_Kingdom";
+    % country = "United_Kingdom";
+    country = "Canada";
     root = "PC7_CI_HQ_SD";
+    root = "PC7_CI_HQ_SD_duration";
     outdir = working_directory+"\covid_sim\output_files\";
     paramdir = working_directory+"\covid_sim\param_files\";
     networkdir = working_directory+"\covid_sim\network_files\";
     admindir = working_directory+"\covid_sim\admin_units\";
     
     switch country 
-        case "united_states + canada"
+        case "Canada"
             wpop_file_root = "usacan";
+            pp_file = paramdir+"preUK_R0=2.0.txt";
+            pop = 36460098;
         case "usa_territories"
             wpop_file_root = "us_terr";
+            pp_file = paramdir+"preUS_R0=2.0.txt";
+            pop = 1;
         case "nigeria"
             wpop_file_root = "nga_adm1";
+            pp_file = paramdir+"preNGA_R0=2.0.txt";
+            pop = 1;
     	case "United_Kingdom"
             wpop_file_root = "eur";
+            pp_file = paramdir+"preUK_R0=2.0.txt";
+            pop = 66777534;
     end
     
-    pp_file = paramdir+"preUK_R0=2.0.txt";
     cf = paramdir+"p_"+root+".txt";
     out_file = outdir+num2str(e)+"-"+country+"_"+root+"_R0="+num2str(r,"%4.1f");
     wpop_file = networkdir+"wpop_"+wpop_file_root+".txt";
@@ -67,7 +82,7 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     random_seed_2 = [randi([1e6,9e6]),randi([1e6,9e6])];
     
     % First time setup
-    if bbe == 10000                                                         % DEBUG: Suppress
+    if bbe == 1                                                             % DEBUG: Suppress
         
         try_remove(network_bin);
         try_remove(wpop_bin);
