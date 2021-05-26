@@ -34,24 +34,14 @@ ui_mainwindow.h
 *.npy
 *.pkl
 COVID_SIM_UI.pro.user.*
-build/COVID_DOE/*.dll
-build/COVID_DOE/*.exe
-build/COVID_DOE/*.ini
-build/COVID_DOE/data/*
-build/COVID_DOE/platforms/*.dll
-build/COVID_DOE/*.png
-build/COVID_post/*.dll
-build/COVID_post/*.ini
-build/COVID_post/data/*
-build/COVID_post/platforms/*.dll
-build/COVID_post/*.png
-build/COVID_visualize/COVID_SIM_UI*
-build/COVID_visualize/configuration*
-build/COVID_visualize/data/*
-build/COVID_visualize/*.dll
-build/COVID_visualize/population/demo_points/run*
-build/COVID_visualize/platforms/*.dll
-build/COVID_visualize/render/*.png
+# Postprocessing files
+post/data/*
+post/*.png
+post/data_dynamic/
+post/data_vis/
+post/population
+post/.vscode
+# Created by XCode and Qt Creater
 *.pdf
 *.sgt
 .qmake.stash
@@ -67,6 +57,7 @@ XCode/COVID_SIM_CMD
 moc_*
 build/Makefile
 *.tmp
+# Optimization files
 *.asv
 opt/.vscode/*
 opt/opt_data/*
