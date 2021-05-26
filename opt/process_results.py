@@ -276,10 +276,10 @@ if __name__ == "__main__":
     GA_dict = {
         "folder" : "GA",
         "stats" : {
-            0   : { "index" : 1,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 1}, # running
-            1   : { "index" : 2,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 1}, # running
-            2   : { "index" : 3,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 1}, # running
-            3   : { "index" : 4,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 1}, # running
+            0   : { "index" : 1,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 1},
+            1   : { "index" : 2,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 1},
+            2   : { "index" : 3,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 1},
+            3   : { "index" : 4,    "n_k" : 1,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 1},
             4   : { "index" : 5,    "n_k" : 4,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 2},
             5   : { "index" : 6,    "n_k" : 4,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 2},
             6   : { "index" : 7,    "n_k" : 4,  "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 2},
@@ -288,8 +288,8 @@ if __name__ == "__main__":
             9   : { "index" : 10,   "n_k" : 20, "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 3},
             10  : { "index" : 11,   "n_k" : 20, "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 3},
             11  : { "index" : 12,   "n_k" : 20, "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 3},
-            12  : { "index" : 13,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4}, # running
-            13  : { "index" : 14,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4}, # running
+            12  : { "index" : 13,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 8}, # running
+            13  : { "index" : 14,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 8}, # running
             14  : { "index" : 15,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4}, # running
             15  : { "index" : 16,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4}, # running
             16  : { "index" : 17,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5}, # running

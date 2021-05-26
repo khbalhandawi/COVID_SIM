@@ -111,6 +111,9 @@ for i = 1:N
     %disp(['i = ' num2str(i)])
     %disp(['Delta = ' num2str(Delta)])
     
+    % save progress
+    save([folder,'/STOMADS_hist' num2str(nprob) '.mat'],'history','hist','i_progress','f_progress') % save all history to .mat file
+
     if isempty(hist) == 1 % log initial guess
         eval_matrix_success(x_infeas, eval_k_success, nprob, 1)
         i_progress = f_progress;
@@ -460,6 +463,5 @@ fprintf('\n')
 title_string = '} end of run\n';
 fprintf(title_string)
 toc()
-save([run_folder,'/STOMADS_hist' num2str(nprob) '.mat'],'history','hist','i_progress','f_progress') % save all history to .mat file
 %clear
 end

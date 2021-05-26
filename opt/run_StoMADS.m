@@ -35,10 +35,10 @@ check_folder(folder)
 
 % Only needed If using CovidSim
 error_log = "err_out_Blackbox_CovidSim.log";
-CovidSim_output_folder = "./covid_sim/output_files";
+CovidSim_output_folder = '.\covid_sim\output_files';
 check_folder(CovidSim_output_folder)
 clear_folder(CovidSim_output_folder)
-try_remove(error_log);
+try_remove(error_log)
 
 run_folder = ['./',folder,'/Run_',num2str(1)];
 check_folder(run_folder)
