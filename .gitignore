@@ -41,6 +41,8 @@ post/data_dynamic/
 post/data_vis/
 post/population
 post/.vscode
+post/covid_sim/output_files
+post/covid_sim/network_files
 # Created by XCode and Qt Creater
 *.pdf
 *.sgt
