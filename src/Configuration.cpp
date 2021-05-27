@@ -149,7 +149,8 @@ COVID_SIM::Configuration::Configuration()
 	recovery_duration = { 200, 500 }; recovery_duration_in = "200, 500"; // how many ticks it may take to recover from the illness
 	mortality_chance = 0.02; mortality_chance_in = "0.02"; // global baseline chance of dying from the disease
 	incubation_period = 0; incubation_period_in = "0"; // number of frames the individual spreads disease unknowingly
-	patient_Z_loc = "random"; patient_Z_loc_in = "random";
+	patient_Z_loc = "random"; patient_Z_loc_in = "random"; // Where to seed the infection (center of box, or randomly inside box)
+	patient_Z_time = 50; patient_Z_time_in = "50"; // time at which to seed the infection
 
 	// healthcare variables
 	healthcare_capacity = 300; healthcare_capacity_in = "300"; // capacity of the healthcare system
@@ -412,7 +413,8 @@ void COVID_SIM::Configuration::set_from_file()
 	recovery_duration = { 200, 500 }; // how many ticks it may take to recover from the illness
 	mortality_chance = stod(mortality_chance_in); // global baseline chance of dying from the disease
 	incubation_period = stoi(incubation_period_in); // number of frames the individual spreads disease unknowingly
-	patient_Z_loc = patient_Z_loc_in;
+	patient_Z_loc = patient_Z_loc_in; // Where to seed the infection (center of box, or randomly inside box)
+	patient_Z_time = stoi(patient_Z_time_in); // time at which to seed the infection
 
 	// healthcare variables
 	healthcare_capacity = stoi(healthcare_capacity_in); // capacity of the healthcare system

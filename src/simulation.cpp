@@ -259,7 +259,7 @@ void COVID_SIM::simulation::callback()
 	The method is called after every simulation timestep.
 	*/
 
-	if (frame == 50) {
+	if (frame == Config.patient_Z_time) {
 
 		if (Config.verbose) {
 			std::cout << "infecting person (Patient Zero)" << std::endl;
@@ -267,7 +267,7 @@ void COVID_SIM::simulation::callback()
 
 		if (Config.patient_Z_loc == "random") {
 			population(0, 6) = 1;
-			population(0, 8) = 50;
+			population(0, 8) = Config.patient_Z_time;
 			population(0, 10) = 0; // do not place in treatment
 		}
 		else if (Config.patient_Z_loc == "central") {
@@ -285,7 +285,7 @@ void COVID_SIM::simulation::callback()
 			dist.minCoeff(&minRow);
 
 			population(minRow, 6) = 1;
-			population(minRow, 8) = 50;
+			population(minRow, 8) = Config.patient_Z_time;
 			population(minRow, 10) = 0; // do not place in treatment
 		}
 

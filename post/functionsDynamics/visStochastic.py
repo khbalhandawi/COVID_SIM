@@ -4,7 +4,7 @@ from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from functionsUtilities.utils import check_folder
 import numpy as np
 
-def build_fig_SIR(figsize=(5,4)):
+def build_fig_SIR(figsize=(6,5)):
 
     fig = plt.figure(figsize=figsize)
     spec = fig.add_gridspec(ncols=1, nrows=1)
@@ -73,7 +73,7 @@ def draw_SIR(fig, ax1, data=None,
     check_folder(plot_path)
     fig.savefig('%s/SIRF_plot.png' %(plot_path), dpi=1000, facecolor=bg_color, bbox_inches='tight')
 
-def draw_SIR_compare(data, lb_data, ub_data, fig, ax1, labels=None,
+def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
     plot_path = 'render/', save_name = 'X_compare',
     xlim = None, ylim = None, leg_location = 'center right',
@@ -91,10 +91,8 @@ def draw_SIR_compare(data, lb_data, ub_data, fig, ax1, labels=None,
     for artist in ax1.lines + ax1.collections + ax1.texts:
         artist.remove()
 
-    x_data = np.arange(len(data[0])) / 10 # time vector for plot
-
     n = 1; n_pts = len(data)
-    for datum,lb,ub,label,color in zip(data,lb_data,ub_data,labels,palette):
+    for x_data,datum,lb,ub,label,color in zip(time,data,lb_data,ub_data,labels,palette):
         
         if n_pts > 1:
             transparency = (-0.15 / (n_pts - 1)) * n + (0.15/ (n_pts - 1)) + 0.25
@@ -107,7 +105,7 @@ def draw_SIR_compare(data, lb_data, ub_data, fig, ax1, labels=None,
         n +=1 
     
     if (threshold is not None) and (threshold_label is not None):
-        ax1.plot(x_data, [threshold for x in range(len(datum))], 
+        ax1.plot(time[0], [threshold for x in range(len(data[0]))], 
                  'k:', label=threshold_label)
 
     ax1.legend(loc=leg_location, ncol=1, fontsize = 8)
@@ -145,7 +143,7 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
         else:
             transparency = 0.25
 
-        x_data = [x/10 for x in data_x] # time vector for plot
+        x_data = data_x # time vector for plot
         y_data = datum # R0 vector for plot
         ax1.plot(x_data, y_data, color=color, label=label, linewidth = 1)
         ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency)
@@ -170,7 +168,7 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
         else:
             transparency = 0.25
 
-        x_data = [x/10 for x in data_x] # time vector for plot
+        x_data = data_x # time vector for plot
         y_data = datum # R0 vector for plot
         axins.plot(x_data, y_data, color=color, label=label, linewidth = 1)
         axins.fill_between(x_data, lb, ub, color=color, alpha=transparency)

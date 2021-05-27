@@ -30,6 +30,7 @@ void load_config_ui(COVID_SIM::Configuration *config, const char *config_file, Q
 	mapper["endif_no_infections"] = &COVID_SIM::Configuration::endif_no_infections_in;
 	mapper["SD_act_onset"] = &COVID_SIM::Configuration::SD_act_onset_in;
 	mapper["patient_Z_loc"] = &COVID_SIM::Configuration::patient_Z_loc_in;
+	mapper["patient_Z_time"] = &COVID_SIM::Configuration::patient_Z_time_in;
 	mapper["plot_style"] = &COVID_SIM::Configuration::plot_style_in;
 	mapper["plot_text_style"] = &COVID_SIM::Configuration::plot_text_style_in;
 	mapper["visualise"] = &COVID_SIM::Configuration::visualise_in;
