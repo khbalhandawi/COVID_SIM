@@ -132,6 +132,7 @@ if __name__ == '__main__':
             country = "United_Kingdom"
             pop_size_CovidSim = 66777534
             pop_size = 1000
+            time_shift = 0
 
             #=====================================================================#
             # Design variables (COVID_SIM_UI)
@@ -157,7 +158,7 @@ if __name__ == '__main__':
             output_file_base = 'MCS_data_r%i' %run
             # return_process = False
             return_process = True
-            params = [run, output_file_base, pop_size, params_COVID_SIM_UI, return_process]
+            params = [run, output_file_base, pop_size, time_shift, params_COVID_SIM_UI, return_process]
 
             #################################################################
             # Parallel sampling of blackbox (more intense, does not return stochastic disease profiles)s
@@ -171,7 +172,7 @@ if __name__ == '__main__':
             #     fatalities_i    += [fatalities]
             #     GC_i            += [mean_GC]
             #     distance_i      += [mean_distance]
-            #################################################################
+            ################################################################
             # Serial sampling of blackbox (less intense + return stochastic disease profiles)
             results = serial_sampling(args,params,blackbox_COVID_SIM_UI)
 

@@ -36,7 +36,7 @@ def application_COVID_SIM_UI( i, design_variables, parameters, output_file_n, de
 # COVID_SIM_UI blackbox
 def blackbox_COVID_SIM_UI(i, args, params):
 
-    [run, output_file_base, pop_size, params_COVID_SIM_UI, read_process] = params
+    [run, output_file_base, pop_size, time_shift, params_COVID_SIM_UI, read_process] = params
 
     output_file_n = '%s_%i.log' %(output_file_base, i)
     application_COVID_SIM_UI(i,args,params_COVID_SIM_UI,output_file_n)
@@ -62,6 +62,13 @@ def blackbox_COVID_SIM_UI(i, args, params):
         R = [x / pop_size for x in run_data[:,3]]
         F = [x / pop_size for x in run_data[:,4]]
         M = [x * 100 for x in run_data_M[:,1]]
+
+        I = [I[0]]*time_shift + I
+        R = [R[0]]*time_shift + R
+        F = [F[0]]*time_shift + F
+        M = [M[0]]*time_shift + M
+
+        run_data_R0 = np.vstack((np.repeat([run_data_R0[0,:],], repeats=int(time_shift/20), axis=0),run_data_R0))
 
         return [int(infected)/pop_size, int(fatalities)/pop_size, float(mean_GC), float(mean_distance), I, F, R, M, run_data_R0]
     else:

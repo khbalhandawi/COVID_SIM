@@ -14,7 +14,7 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     %% Simulation Paramters
     % Model variables
     bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
-              2.0	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
+              3.0	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
               0.1	, 0.9   ];   % Testing capacity
   
     % bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
@@ -82,7 +82,7 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     random_seed_2 = [randi([1e6,9e6]),randi([1e6,9e6])];
     
     % First time setup
-    if bbe == 1                                                             % DEBUG: Suppress
+    if bbe == 1000                                                             % DEBUG: Suppress
         
         try_remove(network_bin);
         try_remove(wpop_bin);

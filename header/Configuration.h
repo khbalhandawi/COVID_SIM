@@ -120,7 +120,8 @@ MACOS_API_BEGIN
 		std::string recovery_duration_in; // how many ticks it may take to recover from the illness
 		std::string mortality_chance_in; // global baseline chance of dying from the disease
 		std::string incubation_period_in; // number of frames the individual spreads disease unknowingly
-		std::string patient_Z_loc_in;
+		std::string patient_Z_loc_in;  // Where to seed the infection (center of box, or randomly inside box)
+		std::string patient_Z_time_in; // time at which to seed the infection
 
 		// healthcare variables
 		std::string healthcare_capacity_in; // capacity of the healthcare system
@@ -255,7 +256,8 @@ MACOS_API_BEGIN
 		std::vector<int> recovery_duration; // how many ticks it may take to recover from the illness
 		double mortality_chance; // global baseline chance of dying from the disease
 		int incubation_period; // number of frames the individual spreads disease unknowingly
-		std::string patient_Z_loc;
+		std::string patient_Z_loc;  // Where to seed the infection (center of box, or randomly inside box)
+		int patient_Z_time; // time at which to seed the infection
 
 		// healthcare variables
 		int healthcare_capacity; // capacity of the healthcare system
