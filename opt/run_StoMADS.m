@@ -11,7 +11,7 @@ diary off
 % input arguments   
 
 % StoMADS_settings
-n_k                     = 4;
+n_k                     = 1;
 epsilon_f               = 0.01;
 Delta                   = 1.0;
 gamma                   = 5.0;

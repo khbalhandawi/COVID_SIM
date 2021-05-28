@@ -13,25 +13,31 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     % suppress = ""; % uncomment to view console output of CovidSim
     %% Simulation Paramters
     % Model variables
-    bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
-              3.0	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
-              0.1	, 0.9   ];   % Testing capacity
-  
+    % 
+    % % V1
     % bounds = [1.0	, 0.0   ;... % complaince rate (inversely propotional to number of essential workers)
-    %           1     , 720  ;... % Social distancing duration (0 - 720 days)
-    %           0.1   , 0.9   ];   % Testing capacity
+    %           3.0	, 0.05  ;... % Contact rate given Social distancing (inversely propotional to Social distancing factor)
+    %           0.1	, 0.9   ];   % Testing capacity
+
+    % V2
+    bounds = [1.0	, 0.9   ;... % complaince rate (inversely propotional to number of essential workers)
+              5.0	, 1.0   ;... % Contact rate scaling factor (inversely propotional to Social distancing factor)
+              0.1	, 0.9   ];   % Testing capacity
           
     lob = bounds(:,1)'; upb = bounds(:,2)';
     
     %% Scale variables
     d = scaling(d, lob, upb, 2); % Normalize variables for optimization (StoMADS, GA)
-    % if optimizing duration then round to nearest integer
-    d(2) = round(d(2));
-    
     % d = scaling(d', lob, upb, 2); % Normalize variables for optimization (NOMAD)
     
     %% Input variables
-    variable_str = sprintf("/CLP1:%.4f /CLP2:%.4f /CLP3:%.4f" ,d(1),d(2),d(3));
+    % % V1
+    % variable_str = sprintf("/CLP1:%.4f /CLP2:%.4f /CLP3:%.4f" ,d(1),d(2),d(3));
+    
+    % V2
+    SD_scaling = d(2)*[1.25, 0.1, 0.25, 1, 0.5, 1, 0.75];
+    SD_str = sprintf("/CLP21:%.4f /CLP22:%.4f /CLP23:%.4f /CLP24:%.4f /CLP25:%.4f /CLP26:%.4f /CLP27:%.4f",SD_scaling);
+    variable_str = sprintf("/CLP1:%.4f /CLP3:%.4f" ,d(1),d(3)) + " " + SD_str;
 
     %% Input parameters
     pop_surrogate = 1000;
@@ -43,8 +49,10 @@ function [f] = Blackbox_call_CovidSim(d,bbe,e,sur)
     working_directory = pwd;
     % country = "United_Kingdom";
     country = "Canada";
-    root = "PC7_CI_HQ_SD";
-    % root = "PC7_CI_HQ_SD_duration";
+    
+    % root = "PC7_CI_HQ_SD"; % V1
+    root = "PC7_CI_HQ_SD_V2"; % V2
+    
     outdir = working_directory+"\covid_sim\output_files\";
     paramdir = working_directory+"\covid_sim\param_files\";
     networkdir = working_directory+"\covid_sim\network_files\";
