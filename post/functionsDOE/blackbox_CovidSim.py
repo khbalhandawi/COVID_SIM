@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import pandas as pd
 import random
+import numpy as np
 
 def try_remove(f):
     try:
@@ -35,7 +36,7 @@ def parse_args():
         cpu_count = len(os.sched_getaffinity(0)) # only on Linux
     except AttributeError:
         # os.sched_getaffinity isn't available
-        cpu_count = int(multiprocessing.cpu_count()/2)
+        cpu_count = int(multiprocessing.cpu_count())
     if cpu_count is None or cpu_count == 0:
         cpu_count = 2
 
@@ -49,7 +50,7 @@ def parse_args():
     read_only = 'N'
     first_setup = 'N'
     exe_path = "CovidSim.exe"
-    country = "United_Kingdom"
+    country = "Canada"
 
     parser.add_argument(
             "--country",
@@ -188,7 +189,7 @@ def blackbox_CovidSim(i, args, params):
     # Configure an intervention (controls) parameter file.
     # In reality you will run CovidSim many times with different parameter
     # controls.
-    root = "PC7_CI_HQ_SD"
+    root = "PC7_CI_HQ_SD_V2"
     cf = os.path.join(args_exe.paramdir, "p_{0}.txt".format(root))
     if not os.path.exists(cf):
         print("Unable to find parameter file")
@@ -239,8 +240,31 @@ def blackbox_CovidSim(i, args, params):
 
     # output file root
     out_root = os.path.join(args_exe.outputdir,"{0}-{1}-{2}_{3}_R0={4}".format(i,run,args_exe.country, root, r))
+    
+
 
     if args_exe.firstsetup == 'Y':
+
+        # # Input variables (V1)
+        # cmd.extend([
+        #         "/PP:" + pp_file, # Preparam file
+        #         "/P:" + cf, # Param file
+        #         "/O:" + out_root,
+        #         "/D:" + wpop_file, # Input (this time text) pop density
+        #         "/M:" + wpop_bin, # Where to save binary pop density
+        #         "/S:" + network_bin, # Where to save binary net setup
+        #         "/R:{0}".format(rs),
+        #         "/CLP1:"+str(args[0]), # default is 1.0 (Individual level compliance with quarantine) [1.0 - 0.9] E
+        #         "/CLP3:"+str(args[2]), # default is 0.9 (Proportion of detected cases isolated) [0.1 - 0.9] T
+        #         "/CLP2:"+str(args[1]), # default is 1.0 (Relative spatial contact rate given social distancing) [5.0 - 1.0] S
+        #         str(random_seed_1[0]), # These four numbers are RNG seeds
+        #         str(random_seed_1[1]),
+        #         str(random_seed_2[0]),
+        #         str(random_seed_2[1])
+        #         ])
+
+        # Input variables (V2)
+        SD_scaling = args[1]*np.array([1.25, 0.1, 0.25, 1, 0.5, 1, 0.75])
 
         cmd.extend([
                 "/PP:" + pp_file, # Preparam file
@@ -250,9 +274,15 @@ def blackbox_CovidSim(i, args, params):
                 "/M:" + wpop_bin, # Where to save binary pop density
                 "/S:" + network_bin, # Where to save binary net setup
                 "/R:{0}".format(rs),
-                "/CLP1:"+str(args[0]), # default is 1.0 (Individual level compliance with quarantine) [0.6 - 1.0] E
-                "/CLP2:"+str(args[1]), # default is 0.1 (Relative spatial contact rate given social distancing) [0 - 0.4] S
-                "/CLP3:"+str(args[2]), # default is 0.9 (Proportion of detected cases isolated) [0.0 - 1.0] T
+                "/CLP1:"+str(args[0]), # default is 1.0 (Individual level compliance with quarantine) [1.0 - 0.9] E
+                "/CLP3:"+str(args[2]), # default is 0.9 (Proportion of detected cases isolated) [0.1 - 0.9] T
+                "/CLP21:"+str(SD_scaling[0]), # default is 1.0 (Relative spatial contact rate given social distancing) [5.0 - 1.0] S
+                "/CLP22:"+str(SD_scaling[1]), 
+                "/CLP23:"+str(SD_scaling[2]), 
+                "/CLP24:"+str(SD_scaling[3]), 
+                "/CLP25:"+str(SD_scaling[4]), 
+                "/CLP26:"+str(SD_scaling[5]), 
+                "/CLP27:"+str(SD_scaling[6]), 
                 str(random_seed_1[0]), # These four numbers are RNG seeds
                 str(random_seed_1[1]),
                 str(random_seed_2[0]),
@@ -261,6 +291,26 @@ def blackbox_CovidSim(i, args, params):
 
     elif args_exe.firstsetup == 'N':
         
+        # # Input variables (V1)
+        # cmd.extend([
+        #         "/PP:" + pp_file,
+        #         "/P:" + cf,
+        #         "/O:" + out_root,
+        #         "/D:" + wpop_bin, # Binary pop density file (speedup)
+        #         "/L:" + network_bin, # Network to load
+        #         "/R:{0}".format(rs),
+        #         "/CLP1:"+str(args[0]), # default is 1.0 (Individual level compliance with quarantine) [1.0 - 0.9] E
+        #         "/CLP3:"+str(args[2]), # default is 0.9 (Proportion of detected cases isolated) [0.1 - 0.9] T
+        #         "/CLP2:"+str(args[1]), # default is 1.0 (Relative spatial contact rate given social distancing) [5.0 - 1.0] S
+        #         str(random_seed_1[0]), # These four numbers are RNG seeds
+        #         str(random_seed_1[1]),
+        #         str(random_seed_2[0]),
+        #         str(random_seed_2[1])
+        #         ])
+
+        # Input variables (V2)
+        SD_scaling = args[1]*np.array([1.25, 0.1, 0.25, 1, 0.5, 1, 0.75])
+
         cmd.extend([
                 "/PP:" + pp_file,
                 "/P:" + cf,
@@ -268,9 +318,15 @@ def blackbox_CovidSim(i, args, params):
                 "/D:" + wpop_bin, # Binary pop density file (speedup)
                 "/L:" + network_bin, # Network to load
                 "/R:{0}".format(rs),
-                "/CLP1:"+str(args[0]), # default is 1.0 (Individual level compliance with quarantine) [0.6 - 1.0] E
-                "/CLP2:"+str(args[1]), # default is 0.1 (Relative spatial contact rate given social distancing) [0 - 0.4] S
-                "/CLP3:"+str(args[2]), # default is 0.9 (Proportion of detected cases isolated) [0.0 - 1.0] T
+                "/CLP1:"+str(args[0]), # default is 1.0 (Individual level compliance with quarantine) [1.0 - 0.9] E
+                "/CLP3:"+str(args[2]), # default is 0.9 (Proportion of detected cases isolated) [0.1 - 0.9] T
+                "/CLP21:"+str(SD_scaling[0]), # default is 1.0 (Relative spatial contact rate given social distancing) [5.0 - 1.0] S
+                "/CLP22:"+str(SD_scaling[1]), 
+                "/CLP23:"+str(SD_scaling[2]), 
+                "/CLP24:"+str(SD_scaling[3]), 
+                "/CLP25:"+str(SD_scaling[4]), 
+                "/CLP26:"+str(SD_scaling[5]), 
+                "/CLP27:"+str(SD_scaling[6]), 
                 str(random_seed_1[0]), # These four numbers are RNG seeds
                 str(random_seed_1[1]),
                 str(random_seed_2[0]),

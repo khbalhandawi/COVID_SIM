@@ -17,10 +17,6 @@ if __name__ == '__main__':
                        [   0.0001, 0.15  ], # Social distancing factor
                        [   10    , 51    ]]) # Testing capacity
 
-    bounds_CovidSim = np.array([[   1.0     , 0.0   ],      # compliance rate (inversely proportional to number of essential workers)
-                                [   3.0     , 0.05  ],      # Contact rate given Social distancing (inversely proportional to Social distancing factor)
-                                [   0.1     , 0.9   ]])     # Testing capacity
-
     run = 0 # starting point
 
     # Points to plot
@@ -41,11 +37,32 @@ if __name__ == '__main__':
     #                  [0.8664750000, 0.4196950000, 0.9809600000]])
 
     # Points to plot
+    # best results with different algorithms
+    # opts = np.array([[0.993099908, 0.271845930, 0.999995677],   # NOMAD
+    #                  [0.681266709, 0.251691324, 0.991071774],   # StoMADS
+    #                  [0.804693604, 0.310076383, 0.940647972]])  # GA
+
+    # Points to plot
     # trail points with CovidSim
-    opts = np.array([[0.500000000 , 0.500000000 , 0.500000000 ],
-                     [0.433109873 , 0.684745762 , 0.993190799 ],    # United Kingdom
-                     [0.1164501187, 0.524594992 , 0.9041672301],    # United Kingdom
-                     [0.3039501187, 0.441967874 , 0.6541672301]])   # United Kingdom
+    ###################### UNITED KINGDOM ######################
+    # bounds_CovidSim = np.array([[   1.0     , 0.0   ],      # compliance rate (inversely proportional to number of essential workers)
+    #                             [   3.0     , 0.05  ],      # Contact rate given Social distancing (inversely proportional to Social distancing factor)
+    #                             [   0.1     , 0.9   ]])     # Testing capacity
+
+    # opts = np.array([[0.500000000 , 0.500000000 , 0.500000000 ],
+    #                  [0.433109873 , 0.684745762 , 0.993190799 ],    # United Kingdom
+    #                  [0.1164501187, 0.524594992 , 0.9041672301],    # United Kingdom
+    #                  [0.3039501187, 0.441967874 , 0.6541672301]])   # United Kingdom
+
+    ########################## CANADA ##########################
+    bounds_CovidSim = np.array([[   1.0     , 0.9   ],      # compliance rate (inversely proportional to number of essential workers)
+                                [   5.0     , 1.0   ],      # Contact rate given Social distancing (inversely proportional to Social distancing factor)
+                                [   0.1     , 0.9   ]])     # Testing capacity
+
+    opts = np.array([[0.5000000000, 0.5000000000, 0.5000000000],
+                     [0.3762299506, 0.1908116385, 0.4284971336],    # Canada
+                     [0.9218750000, 0.3437500000, 0.4375000000],    # Canada
+                     [0.5425358063, 0.1014413537, 0.9212206925]])   # Canada
 
     # COVID_SIM_UI
     opts_unscaled = scaling(opts, bounds[:3,0], bounds[:3,1], 2)
@@ -129,8 +146,8 @@ if __name__ == '__main__':
             # Model parameters
             healthcare_capacity = 90
             healthcare_capacity_CovidSim = 0.09
-            country = "United_Kingdom"
-            pop_size_CovidSim = 66777534
+            country = "Canada"
+            pop_size_CovidSim = 36460098
             pop_size = 1000
             time_shift = 0
 

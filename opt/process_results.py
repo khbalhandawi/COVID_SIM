@@ -36,6 +36,20 @@ def build_fig(x_label='number of function evaluations',
     return fig,ax
 
 #=========================================================#
+#                  SETUP VISUALIZATION                    #
+#=========================================================#
+def build_fig_blank():
+    
+    # Comment to disable latex like labels
+    mpl.rc('text', usetex = True)
+    mpl.rcParams['text.latex.preamble'] = r'\usepackage{amsmath} \usepackage{amssymb}'
+    mpl.rcParams['font.family'] = 'serif'
+
+    fig = plt.figure(figsize=(18,2))
+
+    return fig
+
+#=========================================================#
 #                    CONSTRUCT LEGEND                     #
 #=========================================================#
 def build_legend(fig,ax,labels,palette,styles=None,location='upper right'):
@@ -63,6 +77,27 @@ def build_legend(fig,ax,labels,palette,styles=None,location='upper right'):
     # bb.x0 += xOffset; bb.x1 += xOffset # Move anchor point x0 and x1 to gether
     # bb.y0 += yOffset; bb.y1 += yOffset # Move anchor point y0 and y1 to gether
     # lx.set_bbox_to_anchor(bb, transform = ax.transAxes)
+
+#=========================================================#
+#                    CONSTRUCT LEGEND                     #
+#=========================================================#
+def build_legend_horizontal(fig,labels,palette,styles=None):
+
+    # Legend
+    import matplotlib.lines as mlines
+
+    handles = []; i = 0
+    for label in labels:
+        if styles is not None:
+            style = styles[i]
+        else:
+            style ="-"
+
+        handle = mlines.Line2D([], [], color=palette[i], marker='', markersize=5, linestyle=style)
+        handles += [handle]
+        i += 1
+
+    lx = fig.legend(handles, labels, loc="center", fontsize = 11, ncol=len(handles))
 
 #=========================================================#
 #          PROCESS RESULTS OF SINGLE ALGORITHM            #
@@ -240,12 +275,12 @@ if __name__ == "__main__":
     NOMAD_dict = {
         "folder" : "NOMAD",
         "stats" : {
-            0   : { "index" : 1,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
-            1   : { "index" : 2,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
-            2   : { "index" : 3,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
-            3   : { "index" : 4,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
-            4   : { "index" : 5,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-6,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
-            5   : { "index" : 6,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-6,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0},
+            0   : { "index" : 1,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0}, # best ignore
+            1   : { "index" : 2,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0}, # best ignore
+            2   : { "index" : 3,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0}, # best ignore
+            3   : { "index" : 4,    "n_k" : 20, "min_mesh_size_enabled" : True,   "min_mesh_size" : None,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0}, # best ignore
+            4   : { "index" : 5,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-6,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0}, # best ignore
+            5   : { "index" : 6,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-6,     "epsilon" : 1e-13, "config" : "default",   "n_cores" : 8, "group" : 0}, # best ignore
             6   : { "index" : 7,    "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 8, "group" : 1},
             7   : { "index" : 16,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 8, "group" : 1},
             8   : { "index" : 17,   "n_k" : 1,  "min_mesh_size_enabled" : False,  "min_mesh_size" : 1e-31,    "epsilon" : 1e-31, "config" : "default",   "n_cores" : 8, "group" : 1},
@@ -288,20 +323,20 @@ if __name__ == "__main__":
             9   : { "index" : 10,   "n_k" : 20, "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 3},
             10  : { "index" : 11,   "n_k" : 20, "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 3},
             11  : { "index" : 12,   "n_k" : 20, "n_population" : 50,    "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 3},
-            12  : { "index" : 13,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 8}, # running
-            13  : { "index" : 14,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 8}, # running
-            14  : { "index" : 15,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4}, # running
-            15  : { "index" : 16,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4}, # running
-            16  : { "index" : 17,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5}, # running
-            17  : { "index" : 18,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5}, # running
-            18  : { "index" : 19,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5}, # running
-            19  : { "index" : 20,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5}, # running
+            12  : { "index" : 13,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4},
+            13  : { "index" : 14,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4},
+            14  : { "index" : 15,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4},
+            15  : { "index" : 16,   "n_k" : 1,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 4},
+            16  : { "index" : 17,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5},
+            17  : { "index" : 18,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5},
+            18  : { "index" : 19,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5},
+            19  : { "index" : 20,   "n_k" : 4,  "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 5},
             20  : { "index" : 21,   "n_k" : 20, "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 6},
             21  : { "index" : 22,   "n_k" : 20, "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 6},
             22  : { "index" : 23,   "n_k" : 20, "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 6},
             23  : { "index" : 24,   "n_k" : 20, "n_population" : 100,   "R_initial" : "auto",   "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 6},
-            24  : { "index" : 25,   "n_k" : 4,  "n_population" : 50,    "R_initial" : 5.0,      "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 0},
-            25  : { "index" : 26,   "n_k" : 4,  "n_population" : 50,    "R_initial" : 2.0,      "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 0},
+            24  : { "index" : 25,   "n_k" : 4,  "n_population" : 50,    "R_initial" : 5.0,      "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 4,  "group" : 0}, # best ignore
+            25  : { "index" : 26,   "n_k" : 4,  "n_population" : 50,    "R_initial" : 2.0,      "R_factor" : 100,   "max_stall_G" : 50, "config" : "default",   "n_cores" : 8,  "group" : 0}, # best ignore
         },
     }
 
@@ -315,6 +350,11 @@ if __name__ == "__main__":
     for key in NOMAD_dict["stats"].keys():
         NOMAD_data_dict[key] = ''
 
+    # Initialize data dictionaries (dictionaries are mutable)
+    GA_data_dict = copy.deepcopy(GA_dict["stats"])
+    for key in GA_dict["stats"].keys():
+        GA_data_dict[key] = ''
+
     #==========================================================
     # Setup color palette (fixed random seed)
 
@@ -325,15 +365,15 @@ if __name__ == "__main__":
         # random.seed(i)
         palette += ['#%02X%02X%02X' % (r(),r(),r())]
 
-    styles = ['-','-','-','--','--',]
+    styles = ['-','-','-','--','--',':',':',]
     # xlims = [0, 3250]
     # ylims1 = [-6.5, -0.6]
     # ylims2 = [-60, 800]
     xlims = None
     ylims1 = None
     ylims2 = None
-    plot = False
-    load_results = True
+    plot = True
+    load_results = False
 
     # best known result
     best_x = np.array([[1, 0.31, 0.94],])
@@ -389,9 +429,23 @@ if __name__ == "__main__":
 
         i = process_group(axs,group_indices,algo,NOMAD_dict,palette,labels,i,NOMAD_data_dict,best_x,style='--',plot=plot)
 
+        #---------------------- GA RESULTS ---------------------#
+
+        group_indices = [1,4] # groups for n_k = 1
+
+        algo = {
+            "folder" : GA_dict["folder"],
+            "file_suffix" : "GA",
+            "legend_title" : r'GA ',
+            "legend_labels" : [r'population size $N=%i$',],
+            "algo_params" : ["n_population",]
+        }
+
+        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style=':',plot=plot)
+
         if plot:
-            build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
-            build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
+            # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
+            # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
             figs[0].savefig('opt_data/f_nk=1.pdf', format='pdf', dpi=200)
             figs[1].savefig('opt_data/g_nk=1.pdf', format='pdf', dpi=200)
@@ -442,9 +496,23 @@ if __name__ == "__main__":
 
         i = process_group(axs,group_indices,algo,NOMAD_dict,palette,labels,i,NOMAD_data_dict,best_x,style='--',plot=plot)
 
+        #---------------------- GA RESULTS ---------------------#
+
+        group_indices = [2,5] # groups for n_k = 1
+
+        algo = {
+            "folder" : GA_dict["folder"],
+            "file_suffix" : "GA",
+            "legend_title" : r'GA ',
+            "legend_labels" : [r'population size $N=%i$',],
+            "algo_params" : ["n_population",]
+        }
+
+        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style=':',plot=plot)
+
         if plot:
-            build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
-            build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
+            # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
+            # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
             figs[0].savefig('opt_data/f_nk=4.pdf', format='pdf', dpi=200)
             figs[1].savefig('opt_data/g_nk=4.pdf', format='pdf', dpi=200)
@@ -495,24 +563,47 @@ if __name__ == "__main__":
 
         i = process_group(axs,group_indices,algo,NOMAD_dict,palette,labels,i,NOMAD_data_dict,best_x,style='--',plot=plot)
 
+        #---------------------- GA RESULTS ---------------------#
+
+        group_indices = [3,6] # groups for n_k = 1
+
+        algo = {
+            "folder" : GA_dict["folder"],
+            "file_suffix" : "GA",
+            "legend_title" : r'GA ',
+            "legend_labels" : [r'population size $N=%i$',],
+            "algo_params" : ["n_population",]
+        }
+
+        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style=':',plot=plot)
+
         if plot:
-            build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
-            build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
+            # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
+            # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
             figs[0].savefig('opt_data/f_nk=20.pdf', format='pdf', dpi=200)
             figs[1].savefig('opt_data/g_nk=20.pdf', format='pdf', dpi=200)
 
             plt.show()
 
+        if plot:
+            fig_leg = build_fig_blank()
+            build_legend_horizontal(fig_leg,labels,palette,styles=styles)
+            fig_leg.savefig('opt_data/legend.pdf', format='pdf', dpi=200)
+
+            plt.show()
+
         with open('opt_data/data_dicts.pkl', 'wb') as file:
             pickle.dump(StoMADS_data_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
             pickle.dump(NOMAD_data_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(GA_data_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     else:
 
         with open('opt_data/data_dicts.pkl', 'rb') as file:
             StoMADS_data_dict = pickle.load(file)
             NOMAD_data_dict = pickle.load(file)
+            GA_data_dict = pickle.load(file)
 
     #==========================================================
     # find best known solution 
@@ -570,6 +661,27 @@ if __name__ == "__main__":
                 converged = np.vstack((converged,np.inf))
 
             algos += [NOMAD_dict['folder']]
+
+    # Append GA final results
+    for key,value in GA_data_dict.items():
+        if isinstance(value, pd.DataFrame):
+            n += [key]
+            bbe += [value['bbe'].iloc[-1]]
+            x_opt = np.vstack((x_opt,value[x_keys].iloc[-1].to_numpy()))
+            f_opt = np.vstack((f_opt,value['true_f'].iloc[-1]))
+            c_opt = np.vstack((c_opt,value['true_cstr'].iloc[-1]))
+            p_opt = np.vstack((p_opt,value['true_p_value'].iloc[-1]))
+            n_k = np.vstack((n_k,GA_dict['stats'][key]['n_k']))
+            d_best = np.vstack((d_best,value['distance'].iloc[-1]))
+
+            # find iteration threshold
+            close_iterations = value[value['distance'] < d_threshold]['bbe']
+            if len(close_iterations.index) > 0:
+                converged = np.vstack((converged,close_iterations.iloc[0]))
+            else:
+                converged = np.vstack((converged,np.inf))
+
+            algos += [GA_dict['folder']]
 
     columns = ['n','bbe','x1*','x2*','x3*','f','c','p','d_best','converged','algo','n_k']
     data = [n,bbe,x_opt[:,0],x_opt[:,1],x_opt[:,2],f_opt,c_opt,p_opt,d_best,converged,algos,n_k]
