@@ -71,16 +71,18 @@ def draw_SIR(fig, ax1, data=None,
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/SIRF_plot.png' %(plot_path), dpi=1000, facecolor=bg_color, bbox_inches='tight')
+    fig.savefig('%s/SIRF_plot.pdf' %(plot_path), dpi=1000, facecolor=bg_color, bbox_inches='tight')
 
 def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
     plot_path = 'render/', save_name = 'X_compare',
     xlim = None, ylim = None, leg_location = 'center right',
-    y_label = 'Population size', threshold=None, threshold_label=None):
+    y_label = 'Population size', threshold=None, threshold_label=None,styles=None):
 
     #get color palettes
     palette = palette
+    if styles is None:
+        styles = ["-"]*len(data)
 
     if xlim is not None:
         ax1.set_xlim(0, xlim)
@@ -92,29 +94,43 @@ def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
         artist.remove()
 
     n = 1; n_pts = len(data)
-    for x_data,datum,lb,ub,label,color in zip(time,data,lb_data,ub_data,labels,palette):
+    legned_labels = []; legend_handles = []
+    for x_data,datum,lb,ub,label,color,style in zip(time,data,lb_data,ub_data,labels,palette,styles):
         
         if n_pts > 1:
             transparency = (-0.15 / (n_pts - 1)) * n + (0.15/ (n_pts - 1)) + 0.25
         else:
             transparency = 0.25
 
-        ax1.plot(x_data, datum, color=color, label=label, linewidth = 1)
+        a1 = ax1.plot(x_data, datum, color=color, label=label, linewidth = 1.0,linestyle=style)
+        # ax1.plot(x_data, lb, color=color, linewidth = 0.25, linestyle=(0, (20, 10, 20, 10)))
+        # ax1.plot(x_data, ub, color=color, linewidth = 0.25, linestyle=(0, (20, 10, 20, 10)))
+        ax1.plot(x_data, lb, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)))
+        ax1.plot(x_data, ub, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)))
         ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency)
+
+        a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
+
         print("%s: max = %f, cumilative = %f" %(save_name,max(datum),datum[-1]))
         n +=1 
+
+        legend_handles += [(a1[0],a2[0])]
+        legned_labels += [label]
     
     if (threshold is not None) and (threshold_label is not None):
-        ax1.plot(time[0], [threshold for x in range(len(data[0]))], 
-                 'k:', label=threshold_label)
+        at = ax1.plot(time[0], [threshold for x in range(len(data[0]))], 
+                 'k:', label=threshold_label,linestyle=(0, (5, 2, 5, 2)), linewidth = 0.7)
 
-    ax1.legend(loc=leg_location, ncol=1, fontsize = 8)
+        legend_handles += [at[0]]
+        legned_labels += [threshold_label]
+
+    ax1.legend(legend_handles, legned_labels, loc=leg_location, ncol=1, fontsize = 8)
     ax1.set_ylabel(y_label, fontsize = 14)
 
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/%s.png' %(plot_path,save_name), dpi=100, facecolor=bg_color, bbox_inches='tight')
+    fig.savefig('%s/%s.pdf' %(plot_path,save_name), dpi=100, facecolor=bg_color, bbox_inches='tight')
 
 def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
@@ -193,4 +209,4 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/%s.png' %(plot_path,save_name), dpi=1000, facecolor=bg_color, bbox_inches='tight')
+    fig.savefig('%s/%s.pdf' %(plot_path,save_name), dpi=1000, facecolor=bg_color, bbox_inches='tight')

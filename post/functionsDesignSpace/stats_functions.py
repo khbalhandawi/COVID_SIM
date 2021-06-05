@@ -118,34 +118,38 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
                       discrete = False, min_bin_width = 0, 
                       fig_swept = None, run_label = 'PDF', color = u'b', hatch_pattern = u'',
                       dataXLim = None, dataYLim = None, constraint = None,
-                      fit_distribution = True, handles = [], labels = []):
+                      fit_distribution = True, handles = [], labels = [],
+                      scaling=1,transparency=0.5,zorder=0):
 
     if constraint is not None:
-        data_cstr = [d - constraint for d in data]
-        rel_data = sum(map(lambda x : x < 0, data_cstr)) / len(data_cstr)
-        mean_data = np.mean(data_cstr)
-        std_data = np.std(data_cstr,ddof=1)
+        # data_f = [d*scaling - constraint for d in data] # for demo points only
+        data_f = [d*scaling for d in data] # for everything else
+        data_p = [d*scaling - constraint for d in data] # for everything else
+        rel_data = sum(map(lambda x : x < 0, data_p)) / len(data_p)
+        mean_data = np.mean(data_f)
+        std_data = np.std(data_f,ddof=1)
     else:
+        data_f = [d*scaling for d in data]
         rel_data = 0.0
-        mean_data = np.mean(data)
-        std_data = np.std(data,ddof=1)
+        mean_data = np.mean(data_f)
+        std_data = np.std(data_f,ddof=1)
 
     # Plot raw data
     fig0 = plt.figure(figsize=(6,5))
 
     if discrete:
         # discrete bin numbers
-        d = max(min(np.diff(np.unique(np.asarray(data)))), min_bin_width)
-        left_of_first_bin = min(data) - float(d)/2
-        right_of_last_bin = max(data) + float(d)/2
+        d = max(min(np.diff(np.unique(np.asarray(data_f)))), min_bin_width)
+        left_of_first_bin = min(data_f) - float(d)/2
+        right_of_last_bin = max(data_f) + float(d)/2
         bins = np.arange(left_of_first_bin, right_of_last_bin + d, d)
 
         # plt.hist(data, bins, alpha=0.5, density=True)
-        plt.hist(data, bins = n_bins, facecolor=color, alpha=0.5,
+        plt.hist(data_f, bins = n_bins, facecolor=color, alpha=0.5,
                  hatch=hatch_pattern, edgecolor='k',fill=True, density=True, linewidth=0.3)
     else:
         # plt.hist(data, bins = n_bins, alpha=0.5, density=True)
-        plt.hist(data, bins = n_bins, facecolor=color, alpha=0.5,
+        plt.hist(data_f, bins = n_bins, facecolor=color, alpha=0.5,
                  hatch=hatch_pattern, edgecolor='k',fill=True, density=True, linewidth=0.3)
 
     ax = fig0.gca()
@@ -168,9 +172,9 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
 
     if discrete:
         # discrete bin numbers
-        plt.hist(data, bins, alpha=0.5, density=True)
+        plt.hist(data_f, bins, alpha=0.5, density=True)
     else:
-        plt.hist(data, bins = n_bins, alpha=0.5, density=True)
+        plt.hist(data_f, bins = n_bins, alpha=0.5, density=True)
     
     ax = fig1.gca()
 
@@ -200,7 +204,7 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     # Fit and plot distribution
     if fit_distribution:
 
-        best_fit_name, best_fit_params, best_10_fits = best_fit_distribution(data, data_bins, ax)
+        best_fit_name, best_fit_params, best_10_fits = best_fit_distribution(data_f, data_bins, ax)
 
         best_dist = getattr(st, best_fit_name)
         print('Best fit: %s' %(best_fit_name.upper()) )
@@ -220,12 +224,12 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     if discrete:
         # discrete bin numbers
         # ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
-        ax2.hist(data, bins, linewidth=0.5, facecolor=color, alpha=0.5,
-                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
+        ax2.hist(data_f, bins, linewidth=0.5, facecolor=color, alpha=transparency,
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True,zorder=zorder)
     else:
         # ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
-        ax2.hist(data, bins = n_bins, linewidth=0.5, facecolor=color, alpha=0.5, 
-                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
+        ax2.hist(data_f, bins = n_bins, linewidth=0.5, facecolor=color, alpha=transparency, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True,zorder=zorder)
     
     # Save plot limits
     if dataYLim is None and dataXLim is None:

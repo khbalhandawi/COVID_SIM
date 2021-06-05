@@ -34,7 +34,7 @@ def main():
         std_d_runs = pickle.load(fid)
         mean_gc_runs = pickle.load(fid)
         std_gc_runs = pickle.load(fid)
-
+    
     with open('data_vis/opts/MCS_data_stats_opts.pkl','rb') as fid:
         mean_i_opts = pickle.load(fid)
         std_i_opts = pickle.load(fid)
@@ -69,12 +69,14 @@ def main():
     # Visualize surrogate model of expectation 
     # Outputs
     obj = np.array(mean_gc_runs[:n_samples_LH])
-    cstr = np.array(rel_i_runs[:n_samples_LH])
+    cstr = np.array(mean_i_runs[:n_samples_LH])
+    # cstr = np.array(rel_i_runs[:n_samples_LH]) # this is for reliability
     
     training_Y = np.column_stack((obj, cstr))
 
     variable_lbls = ['Essential workers $n_E$','Social distancing $S_D$','Tests/frame $n_T$']
-    output_lbls = [r'$-\bar{{f}_{\Theta}}(\mathbf{x})$', '$\mathbb{P}({g}_{\Theta}(\mathbf{x}) - H_{\mathrm{max}} \le 0) \le 0.9$' ]
+    # output_lbls = [r'$-\bar{{f}_{\Theta}}(\mathbf{x})$', '$\mathbb{P}({g}_{\Theta}(\mathbf{x}) - H_{\mathrm{max}} \le 0) \le 0.9$' ] # this is for reliability
+    output_lbls = [r'$-\bar{{f}_{\Theta}}(\mathbf{x})$', r'$\bar{{c}_{\Theta}}(\mathbf{x}) > 0.0$']
 
     # Train surrogate model for use in subsequent plotting
     server_mean = train_server(training_X,training_Y,bounds)
@@ -91,7 +93,7 @@ def main():
 
     # For design space projections only
     visualize_surrogate(bounds,variable_lbls,server_mean,training_X,
-                        training_Y,plt,threshold=0.9,
+                        training_Y,plt,threshold=0.0, # for reliability set threshold to 0.9
                         resolution=resolution,output_lbls=output_lbls,
                         opts=None,cmax=4,cmin=1,base_name='sensitivity_E')
 

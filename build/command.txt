@@ -9,3 +9,5 @@ python simulation.py -- 1 100 0.175 25 50
 
 cd %MATLAB%\..\extern\engines\python
 python setup.py install
+
+COVID_SIM_UI 0 0 94 0.084 28 90 MCS_data_r0_0.log

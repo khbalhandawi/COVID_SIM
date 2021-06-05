@@ -200,11 +200,11 @@ def plot_countour_code(q,bounds,bounds_n,lob,upb,d,nominal,nn,training_X,server,
 
 		#======================== NONLINEAR CONSTRAINTS ============================#	
 		# %% Nonlinear constraints
-		if threshold:
+		if threshold is not None:
 			YX_cstr = YX[:,1] - threshold
 			YX_cstr = np.reshape(YX_cstr, np.shape(X1))
-			c1 = ax.contourf( X1, X2, YX_cstr, alpha=0.0, levels=[-20, 0, 20], colors=['#FF0000','#FF0000'], 
-							hatches=['//', None])
+			c1 = ax.contourf( X1, X2, YX_cstr, alpha=0.0, levels=[-2000, 0, 2000], colors=['#FF0000','#FF0000'], 
+							hatches=[None, '//'])
 			ax.contour(c1, colors='#FF0000', linewidths = 2.0, zorder=1)
 			a1 = patches.Rectangle((20,20), 20, 20, linewidth=2, edgecolor='#FF0000', facecolor='none', fill='None', hatch='///')
 
@@ -277,34 +277,35 @@ def visualize_surrogate(bounds,variable_lbls,server,training_X,training_Y,plt,cu
 	else:
 		hyperplane_SGTE_vis_norm(server,training_X,bounds,variable_lbls,nominal,training_Y,nn,fig,plt,opts=opts,threshold=threshold, cmax=cmax, cmin=cmin)
 
-	fig_name = '%s.png' %(base_name)
-	fig_file_name = os.path.join(current_path,fig_name)
+	fig_name = '%s.pdf' %(base_name)
+	fig_file_name = os.path.join(current_path,'data_vis',fig_name)
 	fig.savefig(fig_file_name, bbox_inches='tight')
 
 #==============================================================================#
 # POSTPROCESS DOE DATA
 def train_server(training_X, training_Y, bounds):
     
-    #======================== SURROGATE META MODEL ============================#
-    # %% SURROGATE modeling
-    lob = bounds[:,0]
-    upb = bounds[:,1]
-    
-    Y = training_Y; S_n = scaling(training_X, lob, upb, 1)
-    # fitting_names = ['KRIGING','LOWESS','KS','RBF','PRS','ENSEMBLE']
-    # run_types = ['optimize hyperparameters','load hyperparameters'] (1 or 2)
-    fit_type = 5; run_type = 1 # optimize all hyperparameters
-    model,sgt_file = define_SGTE_model(fit_type,run_type)
-    server = SGTE_server(model)
-    server.sgtelib_server_start()
-    server.sgtelib_server_ping()
-    server.sgtelib_server_newdata(S_n,Y)    
-    #===========================================================================
-    # M = server.sgtelib_server_metric('RMSECV')
-    # print('RMSECV Metric: %f' %(M[0]))
-    #===========================================================================    
+	#======================== SURROGATE META MODEL ============================#
+	# %% SURROGATE modeling
+	lob = bounds[:,0]
+	upb = bounds[:,1]
 
-    return server
+	Y = training_Y; S_n = scaling(training_X, lob, upb, 1)
+	# fitting_names = ['KRIGING','LOWESS','KS','RBF','PRS','ENSEMBLE']
+	# run_types = ['optimize hyperparameters','load hyperparameters'] (1 or 2)
+	fit_type = 5; run_type = 1 # optimize all hyperparameters
+	fit_type = 2; run_type = 2 # optimize all hyperparameters
+	model,sgt_file = define_SGTE_model(fit_type,run_type)
+	server = SGTE_server(model)
+	server.sgtelib_server_start()
+	server.sgtelib_server_ping()
+	server.sgtelib_server_newdata(S_n,Y)    
+	#===========================================================================
+	# M = server.sgtelib_server_metric('RMSECV')
+	# print('RMSECV Metric: %f' %(M[0]))
+	#===========================================================================    
+
+	return server
 
 #  MAIN FILE
 def main():

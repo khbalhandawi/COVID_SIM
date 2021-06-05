@@ -46,6 +46,7 @@ post/covid_sim/network_files
 post/maps/
 post/borders/html
 post/borders/*png
+post/export_fig
 # Created by XCode and Qt Creater
 *.pdf
 *.sgt

@@ -2,7 +2,7 @@
 import pickle
 import numpy as np
 
-def process_statistics(run,folder='data_dynamic/',x_scaling=1,time_shift=0):
+def process_statistics(run,folder='data_dynamic/',x_scaling=1,y_scaling=1,time_shift=0,conf_interval=50,use_percentiles=True):
 
     with open('%s/MCS_process_data_r%i.pkl' %(folder,run),'rb') as fid:
         process_I = pickle.load(fid)
@@ -14,6 +14,11 @@ def process_statistics(run,folder='data_dynamic/',x_scaling=1,time_shift=0):
     # Shift all data by a certain amount of time
     process_I_shift=[];process_R_shift=[];process_F_shift=[];process_M_shift=[];process_R0_shift=[];
     for I,R,F,M,R0 in zip(process_I,process_R,process_F,process_M,process_R0):
+
+        I = [x * y_scaling for x in I]
+        R = [x * y_scaling for x in R]
+        F = [x * y_scaling for x in F]
+
         I = [I[0]]*time_shift + I
         R = [R[0]]*time_shift + R
         F = [F[0]]*time_shift + F
@@ -46,14 +51,18 @@ def process_statistics(run,folder='data_dynamic/',x_scaling=1,time_shift=0):
     # Get distributions first (for SIRF and Mobility)
 
     ub_process_I = []
-    lb_process_I = []
     ub_process_R = []
-    lb_process_R = []
     ub_process_F = []
-    lb_process_F = []
     ub_process_M = []
+    lb_process_I = []
+    lb_process_R = []
+    lb_process_F = []
     lb_process_M = []
-    
+    median_process_I = []
+    median_process_R = []
+    median_process_F = []
+    median_process_M = []
+
     for k in range(n_increments):
         
         dist_I = []; dist_R = []; dist_F = []; dist_M = []; dist_R0 = [];
@@ -64,14 +73,29 @@ def process_statistics(run,folder='data_dynamic/',x_scaling=1,time_shift=0):
             dist_F += [F[k]]
             dist_M += [M[k]*(2000/3500)]
 
-        ub_I = np.percentile(dist_I, 90); ub_process_I += [ub_I]
-        lb_I = np.percentile(dist_I, 10); lb_process_I += [lb_I]
-        ub_R = np.percentile(dist_R, 90); ub_process_R += [ub_R]
-        lb_R = np.percentile(dist_R, 10); lb_process_R += [lb_R]
-        ub_F = np.percentile(dist_F, 90); ub_process_F += [ub_F]
-        lb_F = np.percentile(dist_F, 10); lb_process_F += [lb_F]
-        ub_M = np.percentile(dist_M, 90); ub_process_M += [ub_M]
-        lb_M = np.percentile(dist_M, 10); lb_process_M += [lb_M]
+        if use_percentiles:
+            ub_I = np.percentile(dist_I, 50+conf_interval/2); ub_process_I += [ub_I]
+            ub_R = np.percentile(dist_R, 50+conf_interval/2); ub_process_R += [ub_R]
+            ub_F = np.percentile(dist_F, 50+conf_interval/2); ub_process_F += [ub_F]
+            ub_M = np.percentile(dist_M, 50+conf_interval/2); ub_process_M += [ub_M]
+            lb_I = np.percentile(dist_I, 50-conf_interval/2); lb_process_I += [lb_I]
+            lb_R = np.percentile(dist_R, 50-conf_interval/2); lb_process_R += [lb_R]
+            lb_F = np.percentile(dist_F, 50-conf_interval/2); lb_process_F += [lb_F]
+            lb_M = np.percentile(dist_M, 50-conf_interval/2); lb_process_M += [lb_M]
+
+            median_I = np.percentile(dist_I, 50); median_process_I += [median_I]
+            median_R = np.percentile(dist_R, 50); median_process_R += [median_R]
+            median_F = np.percentile(dist_F, 50); median_process_F += [median_F]
+            median_M = np.percentile(dist_M, 50); median_process_M += [median_M]
+        else:
+            ub_I = np.mean(dist_I) + conf_interval*np.std(dist_I,ddof=1); ub_process_I += [ub_I]
+            ub_R = np.mean(dist_R) + conf_interval*np.std(dist_R,ddof=1); ub_process_R += [ub_R]
+            ub_F = np.mean(dist_F) + conf_interval*np.std(dist_F,ddof=1); ub_process_F += [ub_F]
+            ub_M = np.mean(dist_M) + conf_interval*np.std(dist_M,ddof=1); ub_process_M += [ub_M]
+            lb_I = np.mean(dist_I) - conf_interval*np.std(dist_I,ddof=1); lb_process_I += [lb_I]
+            lb_R = np.mean(dist_R) - conf_interval*np.std(dist_R,ddof=1); lb_process_R += [lb_R]
+            lb_F = np.mean(dist_F) - conf_interval*np.std(dist_F,ddof=1); lb_process_F += [lb_F]
+            lb_M = np.mean(dist_M) - conf_interval*np.std(dist_M,ddof=1); lb_process_M += [lb_M]
 
     #================================================
     # Get distributions first (for R0)
@@ -112,14 +136,19 @@ def process_statistics(run,folder='data_dynamic/',x_scaling=1,time_shift=0):
     #================================================
     # return stats data
 
-    data = [mean_process_I, mean_process_F, mean_process_R, mean_process_M, mean_process_R0, 
-            ub_process_I, lb_process_I, ub_process_R, lb_process_R, ub_process_F, lb_process_F, 
-            ub_process_M, lb_process_M, ub_process_R0, lb_process_R0, R0_time_axis,time_data]
+    if use_percentiles:
+        data = [median_process_I, median_process_F, median_process_R, median_process_M, mean_process_R0, 
+                ub_process_I, lb_process_I, ub_process_R, lb_process_R, ub_process_F, lb_process_F, 
+                ub_process_M, lb_process_M, ub_process_R0, lb_process_R0, R0_time_axis,time_data]
+    else:
+        data = [mean_process_I, mean_process_F, mean_process_R, mean_process_M, mean_process_R0, 
+                ub_process_I, lb_process_I, ub_process_R, lb_process_R, ub_process_F, lb_process_F, 
+                ub_process_M, lb_process_M, ub_process_R0, lb_process_R0, R0_time_axis,time_data]
 
     return data
 
     
-def process_statistics_CovidSim(run,folder='data_dynamic/',x_scaling=1):
+def process_statistics_CovidSim(run,folder='data_dynamic/',x_scaling=1,conf_interval=50,use_percentiles=True):
     
     with open('%s/MCS_process_data_CovidSim_r%i.pkl' %(folder,run),'rb') as fid:
         process_I = pickle.load(fid)
@@ -141,15 +170,20 @@ def process_statistics_CovidSim(run,folder='data_dynamic/',x_scaling=1):
     # Get distributions first (for SIRF and Mobility)
 
     ub_process_I = []
-    lb_process_I = []
     ub_process_R = []
-    lb_process_R = []
     ub_process_F = []
-    lb_process_F = []
     ub_process_S = []
-    lb_process_S = []
     ub_process_Critical = []
+    lb_process_I = []
+    lb_process_R = []
+    lb_process_F = []
+    lb_process_S = []
     lb_process_Critical = []
+    median_process_I = []
+    median_process_R = []
+    median_process_F = []
+    median_process_S = []
+    median_process_Critical = []
 
     for k in range(n_increments):
         
@@ -162,16 +196,35 @@ def process_statistics_CovidSim(run,folder='data_dynamic/',x_scaling=1):
             dist_S += [S[k]]
             dist_Critical += [Critical[k]]
 
-        ub_I = np.percentile(dist_I, 90); ub_process_I += [ub_I]
-        lb_I = np.percentile(dist_I, 10); lb_process_I += [lb_I]
-        ub_R = np.percentile(dist_R, 90); ub_process_R += [ub_R]
-        lb_R = np.percentile(dist_R, 10); lb_process_R += [lb_R]
-        ub_F = np.percentile(dist_F, 90); ub_process_F += [ub_F]
-        lb_F = np.percentile(dist_F, 10); lb_process_F += [lb_F]
-        ub_S = np.percentile(dist_S, 90); ub_process_S += [ub_S]
-        lb_S = np.percentile(dist_S, 10); lb_process_S += [lb_S]
-        ub_Critical = np.percentile(dist_S, 90); ub_process_Critical += [ub_Critical]
-        lb_Critical = np.percentile(dist_S, 10); lb_process_Critical += [lb_Critical]
+        if use_percentiles:
+            ub_I =          np.percentile(dist_I, 50+conf_interval/2);          ub_process_I +=         [ub_I]
+            ub_R =          np.percentile(dist_R, 50+conf_interval/2);          ub_process_R +=         [ub_R]
+            ub_F =          np.percentile(dist_F, 50+conf_interval/2);          ub_process_F +=         [ub_F]
+            ub_S =          np.percentile(dist_S, 50+conf_interval/2);          ub_process_S +=         [ub_S]
+            ub_Critical =   np.percentile(dist_Critical, 50+conf_interval/2);   ub_process_Critical +=  [ub_Critical]
+            lb_I =          np.percentile(dist_I, 50-conf_interval/2);          lb_process_I +=         [lb_I]
+            lb_R =          np.percentile(dist_R, 50-conf_interval/2);          lb_process_R +=         [lb_R]
+            lb_F =          np.percentile(dist_F, 50-conf_interval/2);          lb_process_F +=         [lb_F]
+            lb_S =          np.percentile(dist_S, 50-conf_interval/2);          lb_process_S +=         [lb_S]
+            lb_Critical =   np.percentile(dist_Critical, 50-conf_interval/2);   lb_process_Critical +=  [lb_Critical]
+
+            median_I =          np.percentile(dist_I, 50);          median_process_I +=         [median_I]
+            median_R =          np.percentile(dist_R, 50);          median_process_R +=         [median_R]
+            median_F =          np.percentile(dist_F, 50);          median_process_F +=         [median_F]
+            median_S =          np.percentile(dist_S, 50);          median_process_S +=         [median_S]
+            median_Critical =   np.percentile(dist_Critical, 50);   median_process_Critical +=  [median_Critical]
+
+        else:
+            ub_I =          np.mean(dist_I) + conf_interval*np.std(dist_I,ddof=1); ub_process_I += [ub_I]
+            ub_R =          np.mean(dist_R) + conf_interval*np.std(dist_R,ddof=1); ub_process_R += [ub_R]
+            ub_F =          np.mean(dist_F) + conf_interval*np.std(dist_F,ddof=1); ub_process_F += [ub_F]
+            ub_S =          np.mean(dist_S) + conf_interval*np.std(dist_S,ddof=1); ub_process_S += [ub_S]
+            ub_Critical =   np.mean(dist_Critical) + conf_interval*np.std(dist_Critical,ddof=1); ub_process_Critical += [ub_Critical]
+            lb_I =          np.mean(dist_I) - conf_interval*np.std(dist_I,ddof=1); lb_process_I += [lb_I]
+            lb_R =          np.mean(dist_R) - conf_interval*np.std(dist_R,ddof=1); lb_process_R += [lb_R]
+            lb_F =          np.mean(dist_F) - conf_interval*np.std(dist_F,ddof=1); lb_process_F += [lb_F]
+            lb_S =          np.mean(dist_S) - conf_interval*np.std(dist_S,ddof=1); lb_process_S += [lb_S]
+            lb_Critical =   np.mean(dist_Critical) - conf_interval*np.std(dist_Critical,ddof=1); lb_process_Critical += [lb_Critical]
 
     #================================================
     # Get means
@@ -194,8 +247,13 @@ def process_statistics_CovidSim(run,folder='data_dynamic/',x_scaling=1):
     #================================================
     # return stats data
 
-    data = [mean_process_I, mean_process_F, mean_process_R, mean_process_S, mean_process_Critical, 
+    if use_percentiles:
+        data = [median_process_I, median_process_F, median_process_R, median_process_S, median_process_Critical, 
             ub_process_I, lb_process_I, ub_process_R, lb_process_R, ub_process_F, lb_process_F, 
             ub_process_S, lb_process_S, ub_process_Critical, lb_process_Critical,time_data]
+    else:
+        data = [mean_process_I, mean_process_F, mean_process_R, mean_process_S, mean_process_Critical, 
+                ub_process_I, lb_process_I, ub_process_R, lb_process_R, ub_process_F, lb_process_F, 
+                ub_process_S, lb_process_S, ub_process_Critical, lb_process_Critical,time_data]
 
     return data
