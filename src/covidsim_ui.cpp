@@ -196,13 +196,73 @@ int main(int argc, char* argv[])
 		// Model parameters
 		healthcare_capacity = stoi(argv[6]);
 
+	}
+
+	/*-----------------------------------------------------------*/
+	/*                        Run blackbox                       */
+	/*-----------------------------------------------------------*/
+
+	// seed random generator
+	/* using nano-seconds instead of seconds */
+	unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
+	#ifdef GPU_ACC
+		cublasHandle_t handle;
+		cublascheck(cublasCreate(&handle)); // construct cublas handle
+	#endif
+	COVID_SIM::simulation* sim;
+
+	if (debug) {
+
+		if (Config.visualise) {
+			// use QT to run the simulation while loop
+			#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+			QApplication::setGraphicsSystem("raster");
+			#endif
+			QApplication application(argc, argv);
+
+			qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
+			qRegisterMetaType<int>("int"); // register "double" for queued connection type
+			qRegisterMetaType<float>("float"); // register "double" for queued connection type
+
+			/*-----------------------------------------------------------*/
+			/*            Simulation configuration variables             */
+			/*-----------------------------------------------------------*/
+			// initialize
+			const char config_file[] = "configuration_debug.ini";
+
+			load_config_ui(&Config, config_file, &application);
+			Config.set_from_file();
+			#ifdef GPU_ACC
+			sim = new COVID_SIM::simulation(Config, seed, handle);
+			#else
+			sim = new COVID_SIM::simulation(Config, seed);
+			#endif
+
+			MainWindow mainWindow(sim);
+			mainWindow.show();
+
+			return application.exec();
+		}
+		else {
+			// run the simulation while loop without QT
+			#ifdef GPU_ACC
+			sim = new COVID_SIM::simulation(Config, seed, handle);
+			#else
+			sim = new COVID_SIM::simulation(Config, seed);
+			#endif
+		}
+
+		sim->run();
+	}
+	else {
+
 		/*-----------------------------------------------------------*/
 		/*            Simulation configuration variables             */
 		/*-----------------------------------------------------------*/
 		// initialize
 		const char config_file[] = "configuration.ini";
 
-        load_config_ui(&Config, config_file);
+		load_config_ui(&Config, config_file);
 		Config.set_from_file();
 
 		if (Config.verbose) {
@@ -216,135 +276,108 @@ int main(int argc, char* argv[])
 		/*                      Design variables                     */
 		/*-----------------------------------------------------------*/
 
-        Config.social_distance_factor = 1e-6 * SD * Config.force_scaling;
-        Config.social_distance_violation = n_violators; // number of people
-        Config.healthcare_capacity = healthcare_capacity;
+		Config.social_distance_factor = 1e-6 * SD * Config.force_scaling;
+		Config.social_distance_violation = n_violators; // number of people
+		Config.healthcare_capacity = healthcare_capacity;
 		Config.number_of_tests = test_capacity;
 		Config.log_file = log_file;
 		Config.run_i = run;
 
-	}
+		if (Config.visualise) {
+			// use QT to run the simulation while loop
+			#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+			QApplication::setGraphicsSystem("raster");
+			#endif
+			QApplication application(argc, argv);
 
-	/*-----------------------------------------------------------*/
-	/*                        Run blackbox                       */
-	/*-----------------------------------------------------------*/
+			qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
+			qRegisterMetaType<int>("int"); // register "double" for queued connection type
+			qRegisterMetaType<float>("float"); // register "double" for queued connection type
 
-	// seed random generator
-	/* using nano-seconds instead of seconds */
-	unsigned long seed = static_cast<uint32_t>(chrono::high_resolution_clock::now().time_since_epoch().count());
-#ifdef GPU_ACC
-	cublasHandle_t handle;
-	cublascheck(cublasCreate(&handle)); // construct cublas handle
-#endif
-	COVID_SIM::simulation* sim;
+			// initialize
+			#ifdef GPU_ACC
+			sim = new COVID_SIM::simulation(Config, seed, handle);
+			#else
+			sim = new COVID_SIM::simulation(Config, seed);
+			#endif
 
-	if (Config.visualise) {
-		// use QT to run the simulation while loop
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-		QApplication::setGraphicsSystem("raster");
-#endif
-		QApplication application(argc, argv);
+			MainWindow mainWindow(sim);
+			mainWindow.show();
 
-		qRegisterMetaType<QVector<double>>("QVector<double>"); // register QVector<double> for queued connection type
-		qRegisterMetaType<int>("int"); // register "double" for queued connection type
-		qRegisterMetaType<float>("float"); // register "double" for queued connection type
-
-        /*-----------------------------------------------------------*/
-        /*            Simulation configuration variables             */
-        /*-----------------------------------------------------------*/
-        // initialize
-        const char config_file[] = "configuration_debug.ini";
-
-        load_config_ui(&Config, config_file, &application);
-        Config.set_from_file();
-#ifdef GPU_ACC
-		sim = new COVID_SIM::simulation(Config, seed, handle);
-#else
-		sim = new COVID_SIM::simulation(Config, seed);
-#endif
-
-        MainWindow mainWindow(sim);
-        mainWindow.show();
-
-		return application.exec();
-	}
-	else {
-		// run the simulation while loop without QT
-#ifdef GPU_ACC
-		sim = new COVID_SIM::simulation(Config, seed, handle);
-#else
-		sim = new COVID_SIM::simulation(Config, seed);
-#endif
-		if (debug) {
-			sim->run();
+			return application.exec();
 		}
 		else {
-
-			/*-----------------------------------------------------------*/
-			/*                    Log blackbox outputs                   */
-			/*-----------------------------------------------------------*/
-			if (Config.verbose) {
-				cout << "initialized simulation" << endl;
-			}
-			COVID_SIM::check_folder("data");
-			string filename = to_string(sample) + "-matlab_out_Blackbox.log";
-			string full_filename = "data/" + filename;
-
-			// Output evaluation to file
-
-			vector<double> matrix_opt;
-
-			if (!Config.write_bb_output) {
-				ofstream output_file;
-
-				if (run == 0) {
-					output_file.open(log_file, ofstream::out);
-
-					output_file.precision(11);
-					output_file << "index,SD_factor,threshold,essential_workers,testing_capacity," <<
-						"n_infected,n_fatalaties,mean_distance,mean_GC,n_steps" << endl;
-				}
-				else {
-					output_file.open(log_file, ofstream::app);
-					output_file.precision(11);
-				}
-
-				matrix_opt = COVID_SIM::processInput(run, sim, &output_file);
-				output_file.close();
-			}
-			else {
-				matrix_opt = COVID_SIM::processInput(run, sim);
-			}
-
-			double infected = matrix_opt[0];
-			double fatalities = matrix_opt[1];
-			double mean_distance = matrix_opt[2];
-			double mean_GC = matrix_opt[3];
-
-			double obj_1 = -mean_GC;
-			double obj_2 = fatalities;
-			double c1 = infected - healthcare_capacity;
-
-			if (Config.write_bb_output) {
-				ofstream output_file_opt(full_filename);
-				output_file_opt.precision(10); // number of decimal places to output
-				output_file_opt << obj_1 << " " << obj_2 << " " << c1 << endl;
-				output_file_opt.close();
-				if (Config.verbose) {
-					cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
-				}
-			}
+			// run the simulation while loop without QT
+			#ifdef GPU_ACC
+			sim = new COVID_SIM::simulation(Config, seed, handle);
+			#else
+			sim = new COVID_SIM::simulation(Config, seed);
+			#endif
 		}
 
+		/*-----------------------------------------------------------*/
+		/*                    Log blackbox outputs                   */
+		/*-----------------------------------------------------------*/
+		if (Config.verbose) {
+			cout << "initialized simulation" << endl;
+		}
+		COVID_SIM::check_folder("data");
+		string filename = to_string(sample) + "-matlab_out_Blackbox.log";
+		string full_filename = "data/" + filename;
+
+		// Output evaluation to file
+
+		vector<double> matrix_opt;
+
+		if (!Config.write_bb_output) {
+			ofstream output_file;
+
+			if (run == 0) {
+				output_file.open(log_file, ofstream::out);
+
+				output_file.precision(11);
+				output_file << "index,SD_factor,threshold,essential_workers,testing_capacity," <<
+					"n_infected,n_fatalaties,mean_distance,mean_GC,n_steps" << endl;
+			}
+			else {
+				output_file.open(log_file, ofstream::app);
+				output_file.precision(11);
+			}
+
+			matrix_opt = COVID_SIM::processInput(run, sim, &output_file);
+			output_file.close();
+		}
+		else {
+			matrix_opt = COVID_SIM::processInput(run, sim);
+		}
+
+		double infected = matrix_opt[0];
+		double fatalities = matrix_opt[1];
+		double mean_distance = matrix_opt[2];
+		double mean_GC = matrix_opt[3];
+
+		double obj_1 = -mean_GC;
+		double obj_2 = fatalities;
+		double c1 = infected - healthcare_capacity;
+
+		if (Config.write_bb_output) {
+			ofstream output_file_opt(full_filename);
+			output_file_opt.precision(10); // number of decimal places to output
+			output_file_opt << obj_1 << " " << obj_2 << " " << c1 << endl;
+			output_file_opt.close();
+			if (Config.verbose) {
+				cout << "obj_1: " << obj_1 << " obj_2: " << obj_2 << " c1: " << c1 << endl;
+			}
+		}
 	}
 
 	delete sim;
 
-#ifdef GPU_ACC
+	#ifdef GPU_ACC
 	cublasDestroy(handle); // destroy cublas handle to avoid malloc errors
 	if (Config.verbose) {
 		cout << "CuBLAS destroyed" << endl;
 	}
-#endif
+	#endif
 
 }

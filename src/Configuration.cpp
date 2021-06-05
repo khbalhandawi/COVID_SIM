@@ -177,9 +177,9 @@ COVID_SIM::Configuration::Configuration()
 	// UI settings
 	IC_max = 0.5; ; IC_max_in = "0.5";// maximum slider position
 	IC_min = 0.1; IC_min_in = "0.1"; // minimum slider position
-	SD_max = 0.3; SD_max_in = "0.3";// maximum slider position
+	SD_max = 0.15; SD_max_in = "0.15";// maximum slider position
 	SD_min = 0.0; SD_min_in = "0.0"; // minimum slider position
-	TC_max = 40; TC_max_in = "40"; // maximum slider position
+	TC_max = 51; TC_max_in = "51"; // maximum slider position
 	TC_min = 0; TC_min_in = "0"; // minimum slider position
 
 };

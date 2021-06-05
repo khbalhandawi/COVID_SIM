@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>$(QmlDebug)0 30 0.1 10 150 MCS_data_r0.log</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>$(QmlDebug)0 0 62 0.06 48 90 MCS_data_r0_0.log</LocalDebuggerCommandArguments>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\build\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>$(QmlDebug)1 1 59.0000 0.0751 31.0000 90.00 MCS_data_r0.log</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>$(QmlDebug)0 0 62 0.06 48 90 MCS_data_r0_0.log</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\build\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>

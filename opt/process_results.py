@@ -68,7 +68,7 @@ def build_legend(fig,ax,labels,palette,styles=None,location='upper right'):
         handles += [handle]
         i += 1
 
-    lx = ax.legend(handles, labels, loc=location, fontsize = 11, )
+    lx = ax.legend(handles, labels, loc=location, fontsize = 11 )
 
     # # Get the bounding box of the original legend
     # bb = lx.get_bbox_to_anchor().transformed(ax.transAxes.inverted())
@@ -97,7 +97,7 @@ def build_legend_horizontal(fig,labels,palette,styles=None):
         handles += [handle]
         i += 1
 
-    lx = fig.legend(handles, labels, loc="center", fontsize = 11, ncol=len(handles))
+    lx = fig.legend(handles, labels, loc="center", fontsize = 13, ncol=4)
 
 #=========================================================#
 #          PROCESS RESULTS OF SINGLE ALGORITHM            #
@@ -162,6 +162,7 @@ def process_group(axs,group_indices,algo,algo_dict,palette,labels,i,data_dict,be
             # axs[0].fill_between(df_group.index,df_group['min_f'], df_group['max_f'], color=palette[i], alpha=0.2)
             axs[1].plot(df_group.index[:limit],df_group['mean_c'][:limit],color=palette[i],linestyle=style)
             # axs[1].fill_between(df_group.index,df_group['min_p'], df_group['max_p'], color=palette[i], alpha=0.2)
+            axs[1].plot(np.arange(limit),np.zeros(limit),color='k',linestyle=(0, (30, 20, 30, 20)), linewidth=0.25, label=r'$\bar{c}_{\Theta}=0$') # plot c=0 line
 
         legend_string = algo["legend_title"]
         for param_label,param_value in zip(algo["legend_labels"],algo_params):
@@ -365,7 +366,7 @@ if __name__ == "__main__":
         # random.seed(i)
         palette += ['#%02X%02X%02X' % (r(),r(),r())]
 
-    styles = ['-','-','-','--','--',':',':',]
+    styles = ['-','-','-','--','--','-.','-.',]
     # xlims = [0, 3250]
     # ylims1 = [-6.5, -0.6]
     # ylims2 = [-60, 800]
@@ -376,8 +377,9 @@ if __name__ == "__main__":
     load_results = False
 
     # best known result
-    best_x = np.array([[1, 0.31, 0.94],])
+    # best_x = np.array([[1, 0.31, 0.94],])
     # best_x = np.array([[0.75674921, 0.417047454, 0.971785993],])
+    best_x = np.array([[0.804693604,0.310076383,0.940647972]])
 
     if not load_results:
         #=========================================================#
@@ -389,8 +391,8 @@ if __name__ == "__main__":
 
         # Setup figures
         x_label = 'number of function evaluations'
-        y_label1 = r'average objective function value $\bar{f_\Theta}$'
-        y_label2 = r'average constraint function value $\bar{g_\Theta}$'
+        y_label1 = r'Objective function estimate $\bar{f_{\Theta}}$'
+        y_label2 = r'Constraint function estimate $\bar{c_{\Theta}}$'
         # y_label2 = r'Probability of satisfying constraint $\bar{P}$'
 
         if plot:
@@ -437,18 +439,18 @@ if __name__ == "__main__":
             "folder" : GA_dict["folder"],
             "file_suffix" : "GA",
             "legend_title" : r'GA ',
-            "legend_labels" : [r'population size $N=%i$',],
+            "legend_labels" : [r'population size $\bar{p}=%i$',],
             "algo_params" : ["n_population",]
         }
 
-        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style=':',plot=plot)
+        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style='-.',plot=plot)
 
         if plot:
             # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
             # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
-            figs[0].savefig('opt_data/f_nk=1.pdf', format='pdf', dpi=200)
-            figs[1].savefig('opt_data/g_nk=1.pdf', format='pdf', dpi=200)
+            figs[0].savefig('opt_data/f_nk=1.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
+            figs[1].savefig('opt_data/g_nk=1.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
 
             plt.show()
 
@@ -504,18 +506,18 @@ if __name__ == "__main__":
             "folder" : GA_dict["folder"],
             "file_suffix" : "GA",
             "legend_title" : r'GA ',
-            "legend_labels" : [r'population size $N=%i$',],
+            "legend_labels" : [r'population size $\bar{p}=%i$',],
             "algo_params" : ["n_population",]
         }
 
-        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style=':',plot=plot)
+        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style='-.',plot=plot)
 
         if plot:
             # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
             # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
-            figs[0].savefig('opt_data/f_nk=4.pdf', format='pdf', dpi=200)
-            figs[1].savefig('opt_data/g_nk=4.pdf', format='pdf', dpi=200)
+            figs[0].savefig('opt_data/f_nk=4.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
+            figs[1].savefig('opt_data/g_nk=4.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
 
             plt.show()
 
@@ -571,25 +573,26 @@ if __name__ == "__main__":
             "folder" : GA_dict["folder"],
             "file_suffix" : "GA",
             "legend_title" : r'GA ',
-            "legend_labels" : [r'population size $N=%i$',],
+            "legend_labels" : [r'population size $\bar{p}=%i$',],
             "algo_params" : ["n_population",]
         }
 
-        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style=':',plot=plot)
+        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style='-.',plot=plot)
 
         if plot:
             # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
             # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
-            figs[0].savefig('opt_data/f_nk=20.pdf', format='pdf', dpi=200)
-            figs[1].savefig('opt_data/g_nk=20.pdf', format='pdf', dpi=200)
+            figs[0].savefig('opt_data/f_nk=20.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
+            figs[1].savefig('opt_data/g_nk=20.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
 
             plt.show()
 
         if plot:
+            labels += [r'$\bar{c}_{\Theta}=0$']; palette[len(labels)] = 'k'; styles += ['--'] # c= 0 label, line color, and style
             fig_leg = build_fig_blank()
             build_legend_horizontal(fig_leg,labels,palette,styles=styles)
-            fig_leg.savefig('opt_data/legend.pdf', format='pdf', dpi=200)
+            fig_leg.savefig('opt_data/legend.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
 
             plt.show()
 
@@ -609,7 +612,7 @@ if __name__ == "__main__":
     # find best known solution 
     x_keys = ['x1','x2','x3']
     d_threshold = 0.08
-    d_threshold = 0.3
+    d_threshold = 0.5
 
     x_opt = np.empty((0,3))
     f_opt = np.empty((0,1))

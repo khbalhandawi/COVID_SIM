@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 #endif
 		sim->run();
 
-
+		delete sim;
 	} 
 	else if (!debug) {
 
@@ -358,9 +358,9 @@ int main(int argc, char* argv[])
 			}
 		}
 
-	}
+		delete sim;
 
-	delete sim;
+	}
 
 #ifdef GPU_ACC
 	cublasDestroy(handle); // destroy cublas handle to avoid malloc errors
