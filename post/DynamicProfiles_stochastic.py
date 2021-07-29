@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pickle
+import sys
 
 from functionsDynamics.visStochastic import build_fig_SIR,draw_SIR_compare,draw_R0_compare
 from functionsDynamics.statsStochastic import process_statistics
@@ -60,6 +61,8 @@ if __name__ == '__main__':
 
     ########################## COVID_SIM_UI ##############################
     styles = [(0, (5, 0, 5, 0)),(0, (5, 5, 5, 5)),(0, (5, 1, 5, 1))]
+    z_orders = [2,3,1]
+    hatches = ["xxxx","++++","////"]
 
     for point,run,prefix in zip(points_unscaled,runs,prefixes):
 
@@ -93,28 +96,29 @@ if __name__ == '__main__':
 
     fig_1, _, ax1_1 = build_fig_SIR()
     draw_SIR_compare(data_I, time, lb_data_I, ub_data_I, fig_1, ax1_1, labels=labels, palette = palette, 
-        save_name = 'I_compare', xlim = xlims[0], ylim = ylims[0], leg_location = 'upper right', plot_path="data_dynamic",
+        save_name = 'I_compare_opt', xlim = xlims[0], ylim = ylims[0], leg_location = 'upper right', plot_path="data_dynamic",
         y_label = 'Infections%s $n_I^t$' %y_label_add, threshold=threshold, threshold_label="Healthcare capacity $H_{\mathrm{max}}$",
-        styles=styles)
+        styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
     fig_2, _, ax1_2 = build_fig_SIR()
     draw_SIR_compare(data_F, time, lb_data_F, ub_data_F, fig_2, ax1_2, labels=labels, palette = palette, 
-        save_name = 'F_compare', xlim = xlims[1], ylim = ylims[1], leg_location = 'upper left', plot_path="data_dynamic",
-        y_label = 'Fatalities%s $n_F^t$' %y_label_add)
+        save_name = 'F_compare_opt', xlim = xlims[1], ylim = ylims[1], leg_location = 'upper left', plot_path="data_dynamic",
+        y_label = 'Fatalities%s $n_F^t$' %y_label_add, styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
     fig_3, _, ax1_3 = build_fig_SIR()
     draw_SIR_compare(data_R, time, lb_data_R, ub_data_R, fig_3, ax1_3, labels=labels, palette = palette, 
-        save_name = 'R_compare', xlim = xlims[2], ylim = ylims[2], leg_location = 'upper left', plot_path="data_dynamic",
-        y_label = 'Recoveries%s $n_R^t$' %y_label_add)
+        save_name = 'R_compare_opt', xlim = xlims[2], ylim = ylims[2], leg_location = 'upper left', plot_path="data_dynamic",
+        y_label = 'Recoveries%s $n_R^t$' %y_label_add, styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
     fig_4, _, ax1_4 = build_fig_SIR()
     draw_SIR_compare(data_M, time_COVID_SIM_UI, lb_data_M, ub_data_M, fig_4, ax1_4, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
-        save_name = 'M_compare', xlim = xlims[3], ylim = ylims[3], leg_location = 'lower right', plot_path="data_dynamic",
-        y_label = 'Mobility $M^t$', styles=styles)
+        save_name = 'M_compare_opt', xlim = xlims[3], ylim = ylims[3], leg_location = 'lower right', plot_path="data_dynamic",
+        y_label = 'Mobility $M^t$', styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
     fig_5, _, ax1_5 = build_fig_SIR()
     draw_R0_compare(data_R0, R0_time_data, lb_data_R0, ub_data_R0, fig_5, ax1_5, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
-        save_name = 'R0_compare', xlim = 350, leg_location = 'upper right', plot_path="data_dynamic",
-        y_label = 'Basic reproductive number $R_0$', line_label = "$R_0$", threshold = 1, threshold_label='$R_0=1$')
+        save_name = 'R0_compare_opt', xlim = 350, leg_location = 'upper right', plot_path="data_dynamic",
+        y_label = 'Basic reproductive number $R_0$', line_label = "$R_0$", threshold = 1, threshold_label='$R_0=1$',
+        styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
     plt.show()

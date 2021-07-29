@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pickle
 import matplotlib.patches as patches
+import sys
 
 from functionsDesignSpace.stats_functions import plot_distribution
 
@@ -11,7 +12,7 @@ if __name__ == '__main__':
 
     #===================================================================#
     fit_cond = False # Do not fit data
-    color_mode = 'color' # Choose color mode (black_White)
+    color_mode = 'color' # Choose color mode (black_white)
     run_index = 0 # starting point
 
     # load optimization points in LHS format file
@@ -33,9 +34,17 @@ if __name__ == '__main__':
     same_axis = True
     if same_axis:
         fig_infections = plt.figure(figsize=(6,5))
+        plt.subplots_adjust(top = 0.95, bottom = 0.12, right = 0.95, left = 0.13, 
+            hspace = 0.0, wspace = 0.0)
         fig_fatalities = plt.figure(figsize=(6,5))
+        plt.subplots_adjust(top = 0.95, bottom = 0.12, right = 0.99, left = 0.13, 
+            hspace = 0.0, wspace = 0.0)
         fig_dist = plt.figure(figsize=(6,5))
+        plt.subplots_adjust(top = 0.95, bottom = 0.12, right = 0.99, left = 0.13, 
+            hspace = 0.0, wspace = 0.0)
         fig_GC = plt.figure(figsize=(6,5))
+        plt.subplots_adjust(top = 0.95, bottom = 0.12, right = 0.99, left = 0.13, 
+            hspace = 0.0, wspace = 0.0)
     else:
         fig_infections = fig_fatalities = fig_dist = fig_GC = None
 
@@ -77,12 +86,14 @@ if __name__ == '__main__':
 
     if color_mode == 'color':
         # hatches = ['/'] * 10
-        hatches = [''] * 10
+        hatches = ['///','++','xx','o','|||']
         colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
         colors = colors * 30 # repeat colors 30 times
     elif color_mode == 'black_white':
         hatches = ['/','//','x','o','|||']
         colors = ['#FFFFFF'] * 300
+
+    mpl.rcParams['hatch.linewidth'] = 0.05  # previous pdf hatch linewidth
 
     # for plotting demo points
     # select_indices = [0,1,2,3]
@@ -97,7 +108,7 @@ if __name__ == '__main__':
 
     # for plotting best optimization results
     select_indices = [0,1,2]
-    zorders = [1,2,0]
+    zorders = [3,2,1]
     prefixes = ['StoMADS-PB solution', 'GA solution', 'NOMAD solution']
     y_label_add = ''
     # y_label_add = ' ($\%$ population)'
@@ -142,7 +153,7 @@ if __name__ == '__main__':
             distance_i = pickle.load(fid)
 
         # Legend entries
-        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='k', alpha=0.5, facecolor=colors[run_index], fill=True ,hatch=hatches[run])
+        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='k', facecolor=colors[run_index], fill=True ,hatch=hatches[run])
 
         handles_lgd += [a]
         labels_lgd += [legend_label]
@@ -171,7 +182,7 @@ if __name__ == '__main__':
         label_name = u'Number of fatalities $n_I^T$'
         fun_name = 'fatalities'
         data = fatalities_i
-
+        
         [dataXLim_f_out, dataYLim_f_out, mean_f, std_f, _] = plot_distribution(data, fun_name, label_name, n_bins, run, 
             discrete = discrete, min_bin_width = min_bin_width_f, fig_swept = fig_fatalities, 
             run_label = legend_label, color = colors[run_index], hatch_pattern = hatches[run], 
@@ -210,14 +221,16 @@ if __name__ == '__main__':
         mean_gc_runs += [mean_gc]
         std_gc_runs += [std_gc]
 
+        run_index += 1
+        continue
         if auto_limits != "determine":
-            fig_infections.savefig('data_vis/%i_PDF_%s.pdf' %(run , 'infections'), 
+            fig_infections.savefig('data_vis/%i_PDF_%s.eps' %(run , 'infections'), 
                                     format='pdf', dpi=100,bbox_inches='tight')
-            fig_fatalities.savefig('data_vis/%i_PDF_%s.pdf' %(run , 'fatalities'), 
+            fig_fatalities.savefig('data_vis/%i_PDF_%s.eps' %(run , 'fatalities'), 
                                 format='pdf', dpi=100,bbox_inches='tight')
-            fig_dist.savefig('data_vis/%i_PDF_%s.pdf' %(run , 'distance'), 
+            fig_dist.savefig('data_vis/%i_PDF_%s.eps' %(run , 'distance'), 
                             format='pdf', dpi=100,bbox_inches='tight')
-            fig_GC.savefig('data_vis/%i_PDF_%s.pdf' %(run , 'ground_covered'), 
+            fig_GC.savefig('data_vis/%i_PDF_%s.eps' %(run , 'ground_covered'), 
                             format='pdf', dpi=100,bbox_inches='tight')
 
         print('==============================================')
@@ -227,7 +240,6 @@ if __name__ == '__main__':
         print('mean distance: %f; std distance: %f' %(mean_d,std_d))
         print('mean ground covered: %f; std ground covered: %f' %(mean_gc,std_gc))
         print('==============================================')
-        run_index += 1
 
     with open('data_vis/MCS_data_limits.pkl','wb') as fid:
         pickle.dump(dataXLim_i_out,fid)
@@ -251,12 +263,12 @@ if __name__ == '__main__':
         pickle.dump(std_gc_runs,fid)
 
     if same_axis:
-        fig_infections.savefig('data_vis/PDF_%s.pdf' %('infections'), 
-                                format='pdf', dpi=100,bbox_inches='tight')
-        fig_fatalities.savefig('data_vis/PDF_%s.pdf' %('fatalities'), 
-                            format='pdf', dpi=100,bbox_inches='tight')
-        fig_dist.savefig('data_vis/PDF_%s.pdf' %('distance'), 
-                        format='pdf', dpi=100,bbox_inches='tight')
-        fig_GC.savefig('data_vis/PDF_%s.pdf' %('ground_covered'), 
-                       format='pdf', dpi=100,bbox_inches='tight')
+        fig_infections.savefig('data_vis/PDF_%s_opt.eps' %('infections'), 
+                                format='eps', dpi=100,bbox_inches=None)
+        fig_fatalities.savefig('data_vis/PDF_%s_opt.eps' %('fatalities'), 
+                            format='eps', dpi=100,bbox_inches=None)
+        fig_dist.savefig('data_vis/PDF_%s_opt.eps' %('distance'), 
+                        format='eps', dpi=100,bbox_inches=None)
+        fig_GC.savefig('data_vis/PDF_%s_opt.eps' %('ground_covered'), 
+                       format='eps', dpi=100,bbox_inches=None)
         plt.show()
