@@ -22,7 +22,7 @@ n_imgs=size(a,1);
 % end
 
 %% Single image
-Visualize_CovSim(folder,prefix,n_imgs-720+90,'pdf',false)
+Visualize_CovSim(folder,prefix,n_imgs-720+90,'eps',false)
 
 %% CovidSim
 Create a movie

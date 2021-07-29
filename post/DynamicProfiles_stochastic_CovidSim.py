@@ -27,7 +27,8 @@ if __name__ == '__main__':
             points = pickle.load(fid)
             points_unscaled = pickle.load(fid)
 
-    run = 0; labels = []; time = []; time_COVID_SIM_UI = []; time_CovidSim = []; labels_COVID_SIM_UI = []; styles = []
+    run = 0; labels = []; time = []; time_COVID_SIM_UI = []; time_CovidSim = []; labels_COVID_SIM_UI = []; 
+    styles = []; z_orders = []; hatches = []
 
     data_I = []; data_F = []; data_R = []; data_M = []; data_R0 = []; 
     lb_data_I = []; lb_data_F = []; lb_data_R = []; lb_data_M = []; lb_data_R0 = []
@@ -88,6 +89,8 @@ if __name__ == '__main__':
     ######################################################################
 
     styles_COVID_SIM_UI = [(0, (5, 0, 5, 0)),(0, (5, 5, 5, 5))]
+    z_orders_COVID_SIM_UI = [2,1]
+    hatches_COVID_SIM_UI = ["+","////"]
 
     ########################## COVID_SIM_UI ##############################
     for point,run,prefix in zip(points_unscaled,runs,prefixes):
@@ -119,7 +122,12 @@ if __name__ == '__main__':
         labels_COVID_SIM_UI += [legend_label]
     
     styles += styles_COVID_SIM_UI
+    z_orders += z_orders_COVID_SIM_UI
+    hatches += hatches_COVID_SIM_UI
+
     styles_CovidSim = [(0, (5, 1, 5, 1)),(0, (1, 1, 1, 1))]
+    z_orders_CovidSim = [4,3]
+    hatches_CovidSim = ["xxxx","\\"]
 
     ############################ CovidSim ################################
     for point,run,prefix in zip(points_unscaled,runs,prefixes_CovidSim):
@@ -149,6 +157,8 @@ if __name__ == '__main__':
         labels += [legend_label]
         # styles += [(0, (5, 5, 5, 5))]
     styles += styles_CovidSim
+    z_orders += z_orders_CovidSim
+    hatches += hatches_CovidSim
 
     data_I = [y for x,y in sorted(zip(m,data_I))] 
     data_F = [y for x,y in sorted(zip(m,data_F))] 
@@ -168,32 +178,34 @@ if __name__ == '__main__':
     labels = [y for x,y in sorted(zip(m,labels))] 
     time = [y for x,y in sorted(zip(m,time))] 
     styles = [y for x,y in sorted(zip(m,styles))] 
+    z_orders = [y for x,y in sorted(zip(m,z_orders))] 
+    hatches = [y for x,y in sorted(zip(m,hatches))] 
     ######################################################################
 
     fig_1, _, ax1_1 = build_fig_SIR()
     draw_SIR_compare(data_I, time, lb_data_I, ub_data_I, fig_1, ax1_1, labels=labels, palette = palette, 
-        save_name = 'I_compare', xlim = xlims[0], ylim = ylims[0], leg_location = 'upper right', plot_path="data_dynamic",
+        save_name = 'I_compare_CovidSim', xlim = xlims[0], ylim = ylims[0], leg_location = 'upper right', plot_path="data_dynamic",
         y_label = 'Infections%s $n_I^t$' %y_label_add, threshold=threshold, threshold_label="Healthcare capacity $H_{\mathrm{max}}$",
-        styles=styles)
+        styles=styles, z_orders=z_orders, hatch_patterns=hatches)
 
-    fig_2, _, ax1_2 = build_fig_SIR()
+    fig_2, _, ax1_2 = build_fig_SIR() 
     draw_SIR_compare(data_F, time, lb_data_F, ub_data_F, fig_2, ax1_2, labels=labels, palette = palette, 
-        save_name = 'F_compare', xlim = xlims[1], ylim = ylims[1], leg_location = 'upper left', plot_path="data_dynamic",
+        save_name = 'F_compare_CovidSim', xlim = xlims[1], ylim = ylims[1], leg_location = 'upper left', plot_path="data_dynamic",
         y_label = 'Fatalities%s $n_F^t$' %y_label_add)
 
     fig_3, _, ax1_3 = build_fig_SIR()
     draw_SIR_compare(data_R, time, lb_data_R, ub_data_R, fig_3, ax1_3, labels=labels, palette = palette, 
-        save_name = 'R_compare', xlim = xlims[2], ylim = ylims[2], leg_location = 'upper left', plot_path="data_dynamic",
+        save_name = 'R_compare_CovidSim', xlim = xlims[2], ylim = ylims[2], leg_location = 'upper left', plot_path="data_dynamic",
         y_label = 'Recoveries%s $n_R^t$' %y_label_add)
 
     fig_4, _, ax1_4 = build_fig_SIR()
     draw_SIR_compare(data_M, time_COVID_SIM_UI, lb_data_M, ub_data_M, fig_4, ax1_4, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
-        save_name = 'M_compare', xlim = xlims[3], ylim = ylims[3], leg_location = 'lower right', plot_path="data_dynamic",
-        y_label = 'Mobility $M^t$', styles=styles_COVID_SIM_UI)
+        save_name = 'M_compare_CovidSim', xlim = xlims[3], ylim = ylims[3], leg_location = 'lower right', plot_path="data_dynamic",
+        y_label = 'Mobility $M^t$', styles=styles_COVID_SIM_UI, z_orders=z_orders_COVID_SIM_UI, hatch_patterns=hatches_COVID_SIM_UI)
 
     fig_5, _, ax1_5 = build_fig_SIR()
     draw_R0_compare(data_R0, R0_time_data, lb_data_R0, ub_data_R0, fig_5, ax1_5, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
-        save_name = 'R0_compare', xlim = 350, leg_location = 'upper right', plot_path="data_dynamic",
+        save_name = 'R0_compare_CovidSim', xlim = 350, leg_location = 'upper right', plot_path="data_dynamic",
         y_label = 'Basic reproductive number $R_0$', line_label = "$R_0$", threshold = 1, threshold_label='$R_0=1$')
 
     plt.show()

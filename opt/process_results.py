@@ -33,6 +33,9 @@ def build_fig(x_label='number of function evaluations',
     if yLim is not None:
         ax.set_ylim(yLim)
 
+    plt.subplots_adjust(top = 0.99, bottom = 0.11, right = 0.99, left = 0.125, 
+            hspace = 0.0, wspace = 0.0)
+
     return fig,ax
 
 #=========================================================#
@@ -85,6 +88,9 @@ def build_legend_horizontal(fig,labels,palette,styles=None):
 
     # Legend
     import matplotlib.lines as mlines
+
+    plt.subplots_adjust(top = None, bottom = None, right = None, left = None, 
+            hspace = None, wspace = None)
 
     handles = []; i = 0
     for label in labels:
@@ -448,11 +454,11 @@ if __name__ == "__main__":
         if plot:
             # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
             # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
+            
+            from matplotlib.transforms import Bbox, TransformedBbox, Affine2D
 
-            figs[0].savefig('opt_data/f_nk=1.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
-            figs[1].savefig('opt_data/g_nk=1.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
-
-            plt.show()
+            figs[0].savefig('opt_data/f_nk=1.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
+            figs[1].savefig('opt_data/g_nk=1.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
 
         #=========================================================#
         #                        n_k = 4                          #
@@ -516,10 +522,10 @@ if __name__ == "__main__":
             # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
             # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
-            figs[0].savefig('opt_data/f_nk=4.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
-            figs[1].savefig('opt_data/g_nk=4.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
+            figs[0].savefig('opt_data/f_nk=4.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
+            figs[1].savefig('opt_data/g_nk=4.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
 
-            plt.show()
+
 
         #=========================================================#
         #                       n_k = 20                          #
@@ -583,16 +589,16 @@ if __name__ == "__main__":
             # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
             # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
-            figs[0].savefig('opt_data/f_nk=20.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
-            figs[1].savefig('opt_data/g_nk=20.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
+            figs[0].savefig('opt_data/f_nk=20.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
+            figs[1].savefig('opt_data/g_nk=20.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
 
-            plt.show()
+
 
         if plot:
             labels += [r'$\bar{c}_{\Theta}=0$']; palette[len(labels)] = 'k'; styles += ['--'] # c= 0 label, line color, and style
             fig_leg = build_fig_blank()
             build_legend_horizontal(fig_leg,labels,palette,styles=styles)
-            fig_leg.savefig('opt_data/legend.pdf', format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0)
+            fig_leg.savefig('opt_data/legend.eps', format='eps', dpi=200, bbox_inches = 'tight', pad_inches = 0.0)
 
             plt.show()
 

@@ -193,7 +193,7 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     # plot constraint limits
     if constraint is not None:
         print("Healthcare capacity: %f" %constraint)
-        a_cstr = ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='k')
+        a_cstr = ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='k',zorder=20)
         handles += [a_cstr]; labels += ['Healthcare capacity $H_{\mathrm{max}}$']
 
     if discrete:
@@ -224,11 +224,11 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     if discrete:
         # discrete bin numbers
         # ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
-        ax2.hist(data_f, bins, linewidth=0.5, facecolor=color, alpha=transparency,
+        ax2.hist(data_f, bins, linewidth=0.5, facecolor=color,
                  hatch=hatch_pattern, edgecolor='k',fill=True, density=True,zorder=zorder)
     else:
         # ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
-        ax2.hist(data_f, bins = n_bins, linewidth=0.5, facecolor=color, alpha=transparency, 
+        ax2.hist(data_f, bins = n_bins, linewidth=0.5, facecolor=color, 
                  hatch=hatch_pattern, edgecolor='k',fill=True, density=True,zorder=zorder)
     
     # Save plot limits
