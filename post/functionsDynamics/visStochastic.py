@@ -76,7 +76,7 @@ def draw_SIR(fig, ax1, data=None,
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/SIRF_plot.eps' %(plot_path), format='eps', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
+    fig.savefig('%s/SIRF_plot.pdf' %(plot_path), format='pdf', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
 
 def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
@@ -90,7 +90,8 @@ def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
     if styles is None:
         styles = ["-"]*len(data)
     if hatch_patterns is None:
-        hatch_patterns = ["//"]*len(data)
+        # hatch_patterns = ["//"]*len(data)
+        hatch_patterns = [None]*len(data)
     if z_orders is None:
         z_orders = [1]*len(data)
     if xlim is not None:
@@ -116,9 +117,13 @@ def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
         # ax1.plot(x_data, ub, color=color, linewidth = 0.25, linestyle=(0, (20, 10, 20, 10)))
         ax1.plot(x_data, lb, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)), zorder=20)
         ax1.plot(x_data, ub, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)), zorder=20)
-        ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
-
-        a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
+        
+        if hatches == None:
+            ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency, zorder=order)
+            a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
+        else:
+            ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
+            a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
 
         print("%s: max = %f, cumilative = %f" %(save_name,max(datum),datum[-1]))
         n +=1 
@@ -139,7 +144,7 @@ def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/%s.eps' %(plot_path,save_name), format='eps', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
+    fig.savefig('%s/%s.pdf' %(plot_path,save_name), format='pdf', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
 
 def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
@@ -154,7 +159,8 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
     if styles is None:
         styles = ["-"]*len(data)
     if hatch_patterns is None:
-        hatch_patterns = ["//"]*len(data)
+        # hatch_patterns = ["//"]*len(data)
+        hatch_patterns = [None]*len(data)
     if z_orders is None:
         z_orders = [1]*len(data)
     if xlim is not None:
@@ -177,7 +183,13 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
         x_data = data_x # time vector for plot
         y_data = datum # R0 vector for plot
         ax1.plot(x_data, y_data, color=color, label=label, linewidth = 1)
-        ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
+
+        if hatches == None:
+            ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency, zorder=order)
+            a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
+        else:
+            ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
+            a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
 
         epidemic = True; prev_R0 = 10.0
         for x,y in zip(x_data,y_data):
@@ -203,7 +215,12 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
         x_data = data_x # time vector for plot
         y_data = datum # R0 vector for plot
         axins.plot(x_data, y_data, color=color, label=label, linewidth = 1)
-        axins.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
+        if hatches == None:
+            axins.fill_between(x_data, lb, ub, color=color, alpha=transparency, zorder=order)
+            a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
+        else:
+            axins.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
+            a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
 
         n +=1 
 
@@ -226,4 +243,4 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
     bg_color = 'w'
 
     check_folder(plot_path)
-    fig.savefig('%s/%s.eps' %(plot_path,save_name), format='eps', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
+    fig.savefig('%s/%s.pdf' %(plot_path,save_name), format='pdf', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
