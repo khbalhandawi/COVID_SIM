@@ -7,177 +7,7 @@ import matplotlib as mpl
 import random
 import copy
 
-#=========================================================#
-#                  SETUP VISUALIZATION                    #
-#=========================================================#
-def build_fig(x_label='number of function evaluations',
-    y_label=r'average objective function value $\bar{f_\Theta}$',
-    xLim=None,yLim=None):
-    
-    # Comment to disable latex like labels
-    mpl.rc('text', usetex = True)
-    mpl.rcParams['text.latex.preamble'] = r'\usepackage{amsmath} \usepackage{amssymb}'
-    mpl.rcParams['font.family'] = 'serif'
-
-    fig, ax = plt.subplots(figsize=(7,5))
-    fig.subplots_adjust()
-
-    ax.set_xlabel(x_label,fontsize=18)
-    ax.set_ylabel(y_label,fontsize=18)
-    ax.tick_params(axis='both', which='major', labelsize=14)
-    ax.tick_params(axis='both', which='minor', labelsize=14)
-
-    if xLim is not None:
-        ax.set_xlim(xLim)
-    
-    if yLim is not None:
-        ax.set_ylim(yLim)
-
-    plt.subplots_adjust(top = 0.98, bottom = 0.11, right = 0.99, left = 0.125, 
-            hspace = 0.0, wspace = 0.0)
-
-    return fig,ax
-
-#=========================================================#
-#                  SETUP VISUALIZATION                    #
-#=========================================================#
-def build_fig_blank():
-    
-    # Comment to disable latex like labels
-    mpl.rc('text', usetex = True)
-    mpl.rcParams['text.latex.preamble'] = r'\usepackage{amsmath} \usepackage{amssymb}'
-    mpl.rcParams['font.family'] = 'serif'
-
-    fig = plt.figure(figsize=(18,2))
-
-    return fig
-
-#=========================================================#
-#                    CONSTRUCT LEGEND                     #
-#=========================================================#
-def build_legend(fig,ax,labels,palette,styles=None,location='upper right'):
-
-    # Legend
-    import matplotlib.lines as mlines
-
-    handles = []; i = 0
-    for label in labels:
-        if styles is not None:
-            style = styles[i]
-        else:
-            style ="-"
-
-        handle = mlines.Line2D([], [], color=palette[i], marker='', markersize=5, linestyle=style)
-        handles += [handle]
-        i += 1
-
-    lx = ax.legend(handles, labels, loc=location, fontsize = 11 )
-
-    # # Get the bounding box of the original legend
-    # bb = lx.get_bbox_to_anchor().transformed(ax.transAxes.inverted())
-    # # Change to location of the legend. 
-    # xOffset = -0.14; yOffset = -0.15
-    # bb.x0 += xOffset; bb.x1 += xOffset # Move anchor point x0 and x1 to gether
-    # bb.y0 += yOffset; bb.y1 += yOffset # Move anchor point y0 and y1 to gether
-    # lx.set_bbox_to_anchor(bb, transform = ax.transAxes)
-
-#=========================================================#
-#                    CONSTRUCT LEGEND                     #
-#=========================================================#
-def build_legend_horizontal(fig,labels,palette,styles=None):
-
-    # Legend
-    import matplotlib.lines as mlines
-
-    plt.subplots_adjust(top = None, bottom = None, right = None, left = None, 
-            hspace = None, wspace = None)
-
-    handles = []; i = 0
-    for label in labels:
-        if styles is not None:
-            style = styles[i]
-        else:
-            style ="-"
-
-        handle = mlines.Line2D([], [], color=palette[i], marker='', markersize=5, linestyle=style)
-        handles += [handle]
-        i += 1
-
-    lx = fig.legend(handles, labels, loc="center", fontsize = 13, ncol=4)
-
-#=========================================================#
-#          PROCESS RESULTS OF SINGLE ALGORITHM            #
-#=========================================================#
-def process_group(axs,group_indices,algo,algo_dict,palette,labels,i,data_dict,best_x,style='-',limit=6000,plot=True):
-
-    # Group by "group" index
-    for group in group_indices:
-        group_keys = [key for key,value in algo_dict["stats"].items() if value['group'] == group]
-        group_values = [value for key,value in algo_dict["stats"].items() if value['group'] == group]
-
-        # algorithmic parameters labels
-        algo_params = [group_values[0][p] for p in algo["algo_params"]]
-
-        # Average results over a group
-        columns = ['mean_f','min_f','max_f','mean_c','min_c','max_c','mean_p','min_p','max_p']
-        df_group = pd.DataFrame(index=range(11000), columns=columns) # create an empty data frame
-
-        df_true_f = pd.Series(dtype=np.float64); df_true_c = pd.Series(dtype=np.float64); df_true_p = pd.Series(dtype=np.float64); 
-        for key,value in zip(group_keys,group_values):
-            index = value["index"]
-            n_k = value["n_k"]
-
-            run_folder = r'opt_data/%s/Run_%i/' %(algo["folder"],index)\
-            
-            f_filename = run_folder + "f_hist_%s.txt" %(algo["file_suffix"])
-            f_true = run_folder + "f_progress_%s.txt" %(algo["file_suffix"])
-
-            data = pd.read_csv(f_filename, sep=",") 
-            data_true = pd.read_csv(f_true, sep=",") 
-
-            map = np.searchsorted(data_true['bbe'], data['bbe'])
-            data['true_f'] = [data_true['f'][x-1] for x in map]
-            data['true_cstr'] = [data_true['cstr'][x-1] for x in map]
-            data['true_p_value'] = [data_true['p_value'][x-1] for x in map]
-            
-            # Compute norm with respect to best known solution
-            x_keys = ['x1','x2','x3']
-            x_diffs = data[x_keys].sub(best_x)
-            data['distance'] = np.sqrt(np.square(x_diffs).sum(axis=1))
-
-            data_dict[key] = data # store dataframe in data dictionary
-
-            df_true_f = pd.concat([df_true_f,data['true_f']], ignore_index=True, axis=1)
-            df_true_c = pd.concat([df_true_c,data['true_cstr']], ignore_index=True, axis=1)
-            df_true_p = pd.concat([df_true_p,data['true_p_value']], ignore_index=True, axis=1)
-
-        df_group['mean_f'] = df_true_f.mean(axis=1)
-        df_group['min_f'] = df_true_f.min(axis=1)
-        df_group['max_f'] = df_true_f.max(axis=1)
-
-        df_group['mean_c'] = df_true_c.mean(axis=1)
-        df_group['min_c'] = df_true_c.min(axis=1)
-        df_group['max_c'] = df_true_c.max(axis=1)
-
-        df_group['mean_p'] = df_true_p.mean(axis=1)
-        df_group['min_p'] = df_true_p.min(axis=1)
-        df_group['max_p'] = df_true_p.max(axis=1)
-
-        if plot:
-            axs[0].plot(df_group.index[:limit],df_group['mean_f'][:limit],color=palette[i],linestyle=style)
-            # axs[0].fill_between(df_group.index,df_group['min_f'], df_group['max_f'], color=palette[i], alpha=0.2)
-            axs[1].plot(df_group.index[:limit],df_group['mean_c'][:limit],color=palette[i],linestyle=style)
-            # axs[1].fill_between(df_group.index,df_group['min_p'], df_group['max_p'], color=palette[i], alpha=0.2)
-            axs[1].plot(np.arange(limit),np.zeros(limit),color='k',linestyle=(0, (30, 20, 30, 20)), linewidth=0.25, label=r'$\bar{c}_{\Theta}=0$') # plot c=0 line
-
-        legend_string = algo["legend_title"]
-        for param_label,param_value in zip(algo["legend_labels"],algo_params):
-            legend_string += param_label %(param_value)
-
-        labels += [legend_string]
-        i += 1
-
-    return i
+from process_results import process_group,build_legend_horizontal,build_legend,build_fig_blank,build_fig
 
 #=========================================================#
 #                          MAIN                           #
@@ -365,167 +195,36 @@ if __name__ == "__main__":
     #==========================================================
     # Setup color palette (fixed random seed)
 
-    r = lambda: random.randint(0,255)
-    # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
-    palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    for i in range(20):
-        # random.seed(i)
-        palette += ['#%02X%02X%02X' % (r(),r(),r())]
-
-    styles = ['-','-','-','--','--','-.','-.',]
-    # xlims = [0, 3250]
-    # ylims1 = [-6.5, -0.6]
-    # ylims2 = [-60, 800]
-    xlims = None
-    ylims1 = None
-    ylims2 = None
+    styles = ['-','--','-.',]
+    xlims = [-10, 6250]
+    ylims1 = [-2.75, -0.5]
+    ylims2 = [-100, 250]
+    # xlims = None
+    # ylims1 = None
+    # ylims2 = None
     plot = True
-    load_results = False
 
     # best known result
     # best_x = np.array([[1, 0.31, 0.94],])
     # best_x = np.array([[0.75674921, 0.417047454, 0.971785993],])
     best_x = np.array([[0.804693604,0.310076383,0.940647972]])
 
-    if not load_results:
-        #=========================================================#
-        #                        n_k = 1                          #
-        #=========================================================#
 
-        labels = [] # mutable
-        i = 0 # immutable
-
-        # Setup figures
-        x_label = 'number of function evaluations'
-        y_label1 = r'Objective function estimate $\bar{f_{\Theta}}$'
-        y_label2 = r'Constraint function estimate $\bar{c_{\Theta}}$'
-        # y_label2 = r'Probability of satisfying constraint $\bar{P}$'
-
-        if plot:
-            fig1,ax1 = build_fig(x_label,y_label1,xLim=xlims,yLim=ylims1)
-            fig2,ax2 = build_fig(x_label,y_label2,xLim=xlims,yLim=ylims2)
-
-            figs = [fig1,fig2]; axs = [ax1,ax2]
-        else:
-            figs = None; axs = None
-
-        #-------------------- STOMADS RESULTS --------------------#
-
-        group_indices = [1,4,7] # groups for n_k = 1
-
-        algo = {
-            "folder" : StoMADS_dict["folder"],
-            "file_suffix" : "STOMADS34",
-            "legend_title" : r'StoMADS-PB ',
-            "legend_labels" : [r'$\epsilon_f=%.2f$',],
-            "algo_params" : ["epsilon_f",]
-        }
-
-        i = process_group(axs,group_indices,algo,StoMADS_dict,palette,labels,i,StoMADS_data_dict,best_x,style='-',plot=plot)
-
-        #-------------------- NOMAD RESULTS --------------------#
-
-        group_indices = [1,4] # groups for n_k = 1
-
-        algo = {
-            "folder" : NOMAD_dict["folder"],
-            "file_suffix" : "NOMAD",
-            "legend_title" : r'NOMAD-',
-            "legend_labels" : [r'%s',],
-            "algo_params" : ["config",]
-        }
-
-        i = process_group(axs,group_indices,algo,NOMAD_dict,palette,labels,i,NOMAD_data_dict,best_x,style='--',plot=plot)
-
-        #---------------------- GA RESULTS ---------------------#
-
-        group_indices = [1,4] # groups for n_k = 1
-
-        algo = {
-            "folder" : GA_dict["folder"],
-            "file_suffix" : "GA",
-            "legend_title" : r'GA ',
-            "legend_labels" : [r'population size $\bar{p}=%i$',],
-            "algo_params" : ["n_population",]
-        }
-
-        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style='-.',plot=plot)
-
-        if plot:
-            # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
-            # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
+    # Setup figures
+    x_label = 'number of function evaluations'
+    y_label1 = r'Objective function estimate $\bar{f_{\Theta}}$'
+    y_label2 = r'Constraint function estimate $\bar{c_{\Theta}}$'
+    # y_label2 = r'Probability of satisfying constraint $\bar{P}$'
+    
+    for n_plot in range(3):
             
-            from matplotlib.transforms import Bbox, TransformedBbox, Affine2D
+        # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
+        palette = ['#1f77b4', '#2ca02c', '#ff7f0e', '#d62728']
+        for i in range(20):
+            palette += ['#FF0000']
 
-            figs[0].savefig('opt_data/f_nk=1.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
-            figs[1].savefig('opt_data/g_nk=1.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
-
-        #=========================================================#
-        #                        n_k = 4                          #
-        #=========================================================#
-
-        labels = [] # mutable
-        i = 0 # immutable
-
-        # Setup figures
-        if plot:
-            fig1,ax1 = build_fig(x_label,y_label1,xLim=xlims,yLim=ylims1)
-            fig2,ax2 = build_fig(x_label,y_label2,xLim=xlims,yLim=ylims2)
-
-            figs = [fig1,fig2]; axs = [ax1,ax2]
-        else:
-            figs = None; axs = None
-
-        #-------------------- STOMADS RESULTS --------------------#
-
-        group_indices = [2,5,8] # groups for n_k = 4
-
-        algo = {
-            "folder" : StoMADS_dict["folder"],
-            "file_suffix" : "STOMADS34",
-            "legend_title" : r'StoMADS-PB ',
-            "legend_labels" : [r'$\epsilon_f=%.2f$',],
-            "algo_params" : ["epsilon_f",]
-        }
-
-        i = process_group(axs,group_indices,algo,StoMADS_dict,palette,labels,i,StoMADS_data_dict,best_x,style='-',plot=plot)
-
-        #-------------------- NOMAD RESULTS --------------------#
-
-        group_indices = [2,5] # groups for n_k = 4
-
-        algo = {
-            "folder" : NOMAD_dict["folder"],
-            "file_suffix" : "NOMAD",
-            "legend_title" : r'NOMAD-',
-            "legend_labels" : [r'%s',],
-            "algo_params" : ["config",]
-        }
-
-        i = process_group(axs,group_indices,algo,NOMAD_dict,palette,labels,i,NOMAD_data_dict,best_x,style='--',plot=plot)
-
-        #---------------------- GA RESULTS ---------------------#
-
-        group_indices = [2,5] # groups for n_k = 1
-
-        algo = {
-            "folder" : GA_dict["folder"],
-            "file_suffix" : "GA",
-            "legend_title" : r'GA ',
-            "legend_labels" : [r'population size $\bar{p}=%i$',],
-            "algo_params" : ["n_population",]
-        }
-
-        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style='-.',plot=plot)
-
-        if plot:
-            # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
-            # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
-
-            figs[0].savefig('opt_data/f_nk=4.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
-            figs[1].savefig('opt_data/g_nk=4.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
-
-
+        styles_leg = []
+        palette_leg = []
 
         #=========================================================#
         #                       n_k = 20                          #
@@ -545,161 +244,68 @@ if __name__ == "__main__":
 
         #-------------------- STOMADS RESULTS --------------------#
 
-        group_indices = [3,6,9] # groups for n_k = 20
+        group_indices = [3,] # groups for n_k = 20
 
         algo = {
             "folder" : StoMADS_dict["folder"],
             "file_suffix" : "STOMADS34",
             "legend_title" : r'StoMADS-PB ',
             "legend_labels" : [r'$\epsilon_f=%.2f$',],
-            "algo_params" : ["epsilon_f",]
+            "algo_params" : []
         }
 
-        i = process_group(axs,group_indices,algo,StoMADS_dict,palette,labels,i,StoMADS_data_dict,best_x,style='-',plot=plot)
+        if n_plot >= 0 :
+            styles_leg += [styles[i]]
+            palette_leg += [palette[i]]
+            i = process_group(axs,group_indices,algo,StoMADS_dict,palette,labels,i,StoMADS_data_dict,best_x,style='-',plot=plot)
 
         #-------------------- NOMAD RESULTS --------------------#
 
-        group_indices = [3,6] # groups for n_k = 20
+        group_indices = [3,] # groups for n_k = 20
 
         algo = {
             "folder" : NOMAD_dict["folder"],
             "file_suffix" : "NOMAD",
-            "legend_title" : r'NOMAD-',
+            "legend_title" : r'NOMAD',
             "legend_labels" : [r'%s',],
-            "algo_params" : ["config",]
+            "algo_params" : []
         }
 
-        i = process_group(axs,group_indices,algo,NOMAD_dict,palette,labels,i,NOMAD_data_dict,best_x,style='--',plot=plot)
+        if n_plot >= 1:
+            styles_leg += [styles[i]]
+            palette_leg += [palette[i]]
+            i = process_group(axs,group_indices,algo,NOMAD_dict,palette,labels,i,NOMAD_data_dict,best_x,style='--',plot=plot)
 
         #---------------------- GA RESULTS ---------------------#
 
-        group_indices = [3,6] # groups for n_k = 1
+        group_indices = [3,] # groups for n_k = 1
 
         algo = {
             "folder" : GA_dict["folder"],
             "file_suffix" : "GA",
             "legend_title" : r'GA ',
             "legend_labels" : [r'population size $\bar{p}=%i$',],
-            "algo_params" : ["n_population",]
+            "algo_params" : []
         }
 
-        i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style='-.',plot=plot)
+        if n_plot >= 2:
+            styles_leg += [styles[i]]
+            palette_leg += [palette[i]]
+            i = process_group(axs,group_indices,algo,GA_dict,palette,labels,i,GA_data_dict,best_x,style='-.',plot=plot)
 
         if plot:
             # build_legend(figs[0],axs[0],labels,palette,styles=styles,location='upper right')
             # build_legend(figs[1],axs[1],labels,palette,styles=styles,location='lower right')
 
-            figs[0].savefig('opt_data/f_nk=20.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
-            figs[1].savefig('opt_data/g_nk=20.eps', format='eps', dpi=200, bbox_inches = None, pad_inches = 0.0)
+            figs[0].savefig('opt_data/f_nk=20_%i.pdf' %n_plot, format='pdf', dpi=200, bbox_inches = None, pad_inches = 0.0)
+            figs[1].savefig('opt_data/g_nk=20_%i.pdf' %n_plot, format='pdf', dpi=200, bbox_inches = None, pad_inches = 0.0)
 
 
 
         if plot:
-            labels += [r'$\bar{c}_{\Theta}=0$']; palette[len(labels)] = 'k'; styles += ['--'] # c= 0 label, line color, and style
+            labels += [r'$\bar{c}_{\Theta}=0$']; palette_leg += 'k'; styles_leg += ['--'] # c= 0 label, line color, and style
             fig_leg = build_fig_blank()
-            build_legend_horizontal(fig_leg,labels,palette,styles=styles)
-            fig_leg.savefig('opt_data/legend.eps', format='eps', dpi=200, bbox_inches = 'tight', pad_inches = 0.0)
+            build_legend_horizontal(fig_leg,labels,palette_leg,styles=styles_leg)
+            fig_leg.savefig('opt_data/legend_%i.pdf' %n_plot, format='pdf', dpi=200, bbox_inches = 'tight', pad_inches = 0.0)
 
-            plt.show()
-
-        with open('opt_data/data_dicts.pkl', 'wb') as file:
-            pickle.dump(StoMADS_data_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
-            pickle.dump(NOMAD_data_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
-            pickle.dump(GA_data_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
-
-    else:
-
-        with open('opt_data/data_dicts.pkl', 'rb') as file:
-            StoMADS_data_dict = pickle.load(file)
-            NOMAD_data_dict = pickle.load(file)
-            GA_data_dict = pickle.load(file)
-
-    #==========================================================
-    # find best known solution 
-    x_keys = ['x1','x2','x3']
-    d_threshold = 0.08
-    d_threshold = 0.5
-
-    x_opt = np.empty((0,3))
-    f_opt = np.empty((0,1))
-    c_opt = np.empty((0,1))
-    p_opt = np.empty((0,1))
-    n_k = np.empty((0,1))
-    d_best = np.empty((0,1))
-    converged = np.empty((0,1))
-    algos = []; n = []; bbe = []
-
-    # Append StoMADS final results
-    for key,value in StoMADS_data_dict.items():
-        if isinstance(value, pd.DataFrame):
-            n += [key]
-            bbe += [value['bbe'].iloc[-1]]
-            x_opt = np.vstack((x_opt,value[x_keys].iloc[-1].to_numpy()))
-            f_opt = np.vstack((f_opt,value['true_f'].iloc[-1]))
-            c_opt = np.vstack((c_opt,value['true_cstr'].iloc[-1]))
-            p_opt = np.vstack((p_opt,value['true_p_value'].iloc[-1]))
-            n_k = np.vstack((n_k,StoMADS_dict['stats'][key]['n_k']))
-            d_best = np.vstack((d_best,value['distance'].iloc[-1]))
-
-            # find iteration threshold
-            close_iterations = value[value['distance'] < d_threshold]['bbe']
-            if len(close_iterations.index) > 0:
-                converged = np.vstack((converged,close_iterations.iloc[0]))
-            else:
-                converged = np.vstack((converged,np.inf))
-
-            algos += [StoMADS_dict['folder']]
-
-    # Append NOMAD final results
-    for key,value in NOMAD_data_dict.items():
-        if isinstance(value, pd.DataFrame):
-            n += [key]
-            bbe += [value['bbe'].iloc[-1]]
-            x_opt = np.vstack((x_opt,value[x_keys].iloc[-1].to_numpy()))
-            f_opt = np.vstack((f_opt,value['true_f'].iloc[-1]))
-            c_opt = np.vstack((c_opt,value['true_cstr'].iloc[-1]))
-            p_opt = np.vstack((p_opt,value['true_p_value'].iloc[-1]))
-            n_k = np.vstack((n_k,NOMAD_dict['stats'][key]['n_k']))
-            d_best = np.vstack((d_best,value['distance'].iloc[-1]))
-
-            # find iteration threshold
-            close_iterations = value[value['distance'] < d_threshold]['bbe']
-            if len(close_iterations.index) > 0:
-                converged = np.vstack((converged,close_iterations.iloc[0]))
-            else:
-                converged = np.vstack((converged,np.inf))
-
-            algos += [NOMAD_dict['folder']]
-
-    # Append GA final results
-    for key,value in GA_data_dict.items():
-        if isinstance(value, pd.DataFrame):
-            n += [key]
-            bbe += [value['bbe'].iloc[-1]]
-            x_opt = np.vstack((x_opt,value[x_keys].iloc[-1].to_numpy()))
-            f_opt = np.vstack((f_opt,value['true_f'].iloc[-1]))
-            c_opt = np.vstack((c_opt,value['true_cstr'].iloc[-1]))
-            p_opt = np.vstack((p_opt,value['true_p_value'].iloc[-1]))
-            n_k = np.vstack((n_k,GA_dict['stats'][key]['n_k']))
-            d_best = np.vstack((d_best,value['distance'].iloc[-1]))
-
-            # find iteration threshold
-            close_iterations = value[value['distance'] < d_threshold]['bbe']
-            if len(close_iterations.index) > 0:
-                converged = np.vstack((converged,close_iterations.iloc[0]))
-            else:
-                converged = np.vstack((converged,np.inf))
-
-            algos += [GA_dict['folder']]
-
-    columns = ['n','bbe','x1*','x2*','x3*','f','c','p','d_best','converged','algo','n_k']
-    data = [n,bbe,x_opt[:,0],x_opt[:,1],x_opt[:,2],f_opt,c_opt,p_opt,d_best,converged,algos,n_k]
-    
-    df_final_results = pd.DataFrame(index=range(len(n)), columns=columns) # create an empty data frame
-    for column,data_column in zip(columns,data):
-        df_final_results[column] = data_column
-
-    df_final_results.to_excel('opt_data/opt_results.xlsx') # save optimal results
-    
-    df_final_results = df_final_results.sort_values(['p', 'converged'], ascending=[False, True])
-    print(df_final_results)
+    plt.show()

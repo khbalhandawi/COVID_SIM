@@ -2,6 +2,54 @@
 import pickle
 import numpy as np
 
+def process_realizations(run,folder='data_dynamic/',x_scaling=1,y_scaling=1,time_shift=0, n_realization=5):
+
+    with open('%s/MCS_process_data_r%i.pkl' %(folder,run),'rb') as fid:
+        process_I = pickle.load(fid)
+        process_F = pickle.load(fid)
+        process_R = pickle.load(fid)
+        process_M = pickle.load(fid)
+        process_R0 = pickle.load(fid)
+
+    # Shift all data by a certain amount of time
+    process_I_shift=[];process_R_shift=[];process_F_shift=[];process_M_shift=[];process_R0_shift=[];
+    for I,R,F,M,R0 in zip(process_I,process_R,process_F,process_M,process_R0):
+
+        I = [x * y_scaling for x in I]
+        R = [x * y_scaling for x in R]
+        F = [x * y_scaling for x in F]
+        M = [x *(2000/3500) for x in M]
+
+        I = [I[0]]*time_shift + I
+        R = [R[0]]*time_shift + R
+        F = [F[0]]*time_shift + F
+        M = [M[0]]*time_shift + M
+        R0 = np.vstack((np.repeat([R0[0,:],], repeats=int(time_shift/20), axis=0),R0))
+
+        process_I_shift+=[I]
+        process_R_shift+=[R]
+        process_F_shift+=[F]
+        process_M_shift+=[M]
+        process_R0_shift+=[R0]
+
+    process_I = process_I_shift[n_realization]
+    process_F = process_R_shift[n_realization]
+    process_R = process_F_shift[n_realization]
+    process_M = process_M_shift[n_realization]
+    process_R0 = process_R0_shift[n_realization]
+
+    #================================================
+    # Get simulation time
+    R0_time_axis = process_R0_shift[0][:,0] * x_scaling
+    time_data = np.arange(len(process_I_shift[0])) * x_scaling # time vector for plot
+
+    #================================================
+    # return stats data
+
+    data = [process_I, process_F, process_R, process_M, process_R0, R0_time_axis, time_data]
+
+    return data
+
 def process_statistics(run,folder='data_dynamic/',x_scaling=1,y_scaling=1,time_shift=0,conf_interval=50,use_percentiles=True):
 
     with open('%s/MCS_process_data_r%i.pkl' %(folder,run),'rb') as fid:

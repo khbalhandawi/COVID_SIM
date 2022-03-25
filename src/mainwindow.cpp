@@ -466,7 +466,7 @@ void MainWindow::realtimeDataInputSlot(QVector<double> x0, QVector<double> y0,
 
 	// take a screenshot
 	if ((sim->Config.save_plot) && ((frame % sim->Config.save_pop_freq) == 0)) {
-		screenShot();
+		//screenShot();
 		//QTimer::singleShot(4000, this, SLOT(screenShot()));
 		//pdfrender(); // only works in debug mode
 		pngrender(); // works everytime

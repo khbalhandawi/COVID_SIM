@@ -78,17 +78,23 @@ def draw_SIR(fig, ax1, data=None,
     check_folder(plot_path)
     fig.savefig('%s/SIRF_plot.pdf' %(plot_path), format='pdf', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
 
-def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
+def draw_SIR_compare(data, time, fig, ax1, lb_data=None,ub_data=None,labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
     plot_path = 'render/', save_name = 'X_compare',
     xlim = None, ylim = None, leg_location = 'center right',
     y_label = 'Population size', threshold=None, threshold_label=None, 
-    styles=None, z_orders=None, hatch_patterns=None):
+    styles=None, z_orders=None, hatch_patterns=None, linewidth=1.0):
 
     #get color palettes
     palette = palette
+    if labels is None:
+        labels = ['']*len(data)
     if styles is None:
         styles = ["-"]*len(data)
+    if lb_data is None:
+        lb_data = [None,]*len(data)
+    if ub_data is None:
+        ub_data = [None,]*len(data)
     if hatch_patterns is None:
         # hatch_patterns = ["//"]*len(data)
         hatch_patterns = [None]*len(data)
@@ -112,28 +118,36 @@ def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
         else:
             transparency = 0.25
 
-        a1 = ax1.plot(x_data, datum, color=color, label=label, linewidth = 1.0,linestyle=style, zorder=20)
-        # ax1.plot(x_data, lb, color=color, linewidth = 0.25, linestyle=(0, (20, 10, 20, 10)))
-        # ax1.plot(x_data, ub, color=color, linewidth = 0.25, linestyle=(0, (20, 10, 20, 10)))
-        ax1.plot(x_data, lb, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)), zorder=20)
-        ax1.plot(x_data, ub, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)), zorder=20)
+        a1 = ax1.plot(x_data, datum, color=color, label=label, linewidth = linewidth,linestyle=style, zorder=20)
+        if lb is not None and ub is not None:
+            # ax1.plot(x_data, lb, color=color, linewidth = 0.25, linestyle=(0, (20, 10, 20, 10)))
+            # ax1.plot(x_data, ub, color=color, linewidth = 0.25, linestyle=(0, (20, 10, 20, 10)))
+            ax1.plot(x_data, lb, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)), zorder=20)
+            ax1.plot(x_data, ub, color=color, linewidth = 0.1, linestyle=(0, (20, 0, 20, 0)), zorder=20)
         
-        if hatches == None:
-            ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency, zorder=order)
-            a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
+            if hatches == None:
+                ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency, zorder=order)
+                a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
+            else:
+                ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
+                a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
+
+            legend_handles += [(a1[0],a2[0])]
         else:
-            ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
-            a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
+            legend_handles += [a1[0],]
 
         print("%s: max = %f, cumilative = %f" %(save_name,max(datum),datum[-1]))
         n +=1 
 
-        legend_handles += [(a1[0],a2[0])]
         legned_labels += [label]
     
+    if all([l == '' for l in labels]):
+        legned_labels = []
+        legend_handles = []
+
     if (threshold is not None) and (threshold_label is not None):
         at = ax1.plot(time[0], [threshold for x in range(len(data[0]))], 
-                 'k:', label=threshold_label,linestyle=(0, (5, 2, 5, 2)), linewidth = 0.7, zorder=20)
+                 'k:', label=threshold_label, linewidth = 0.7, zorder=20)
 
         legend_handles += [at[0]]
         legned_labels += [threshold_label]
@@ -146,18 +160,22 @@ def draw_SIR_compare(data, time, lb_data, ub_data, fig, ax1, labels=None,
     check_folder(plot_path)
     fig.savefig('%s/%s.pdf' %(plot_path,save_name), format='pdf', dpi=600, facecolor=bg_color, bbox_inches=None, pad_inches = 0.0)
 
-def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
+def draw_R0_compare(data, data_x, fig, ax1, lb_data=None,ub_data=None, labels=None,
     palette = ['#1C758A', '#CF5044', '#BBBBBB', '#444444'],
     plot_path = 'render/', save_name = 'X_compare',
     xlim = None, ylim = None, leg_location = 'center right',
     y_label = 'Population size', line_label = None, threshold = None, 
-    threshold_label=None, styles=None, z_orders=None, hatch_patterns=None):
+    threshold_label=None, styles=None, z_orders=None, hatch_patterns=None, linewidth=1.0):
 
     #get color palettes
     palette = palette
 
     if styles is None:
         styles = ["-"]*len(data)
+    if lb_data is None:
+        lb_data = [None,]*len(data)
+    if ub_data is None:
+        ub_data = [None,]*len(data)
     if hatch_patterns is None:
         # hatch_patterns = ["//"]*len(data)
         hatch_patterns = [None]*len(data)
@@ -182,14 +200,14 @@ def draw_R0_compare(data, data_x, lb_data, ub_data, fig, ax1, labels=None,
 
         x_data = data_x # time vector for plot
         y_data = datum # R0 vector for plot
-        ax1.plot(x_data, y_data, color=color, label=label, linewidth = 1)
-
-        if hatches == None:
-            ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency, zorder=order)
-            a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
-        else:
-            ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
-            a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
+        ax1.plot(x_data, y_data, color=color, label=label, linewidth = linewidth)
+        if lb is not None and ub is not None:
+            if hatches == None:
+                ax1.fill_between(x_data, lb, ub, color=color, alpha=transparency, zorder=order)
+                a2 = ax1.fill(np.NaN, np.NaN, color=color, alpha=transparency) # dummy actor
+            else:
+                ax1.fill_between(x_data, lb, ub, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1, zorder=order)
+                a2 = ax1.fill(np.NaN, np.NaN, facecolor="none", hatch=hatches, edgecolor=color, linewidth=0.1) # dummy actor
 
         epidemic = True; prev_R0 = 10.0
         for x,y in zip(x_data,y_data):

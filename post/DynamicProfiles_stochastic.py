@@ -39,31 +39,36 @@ if __name__ == '__main__':
     ub_data_S = []; ub_data_Critical = []
 
     # for plotting best demo points
-    # select_indices = [0,1,2,3]
-    # y_label_add = ''
-    # prefixes = ['',] * len(select_indices)
-    # y_scaling = 1000
-    # threshold = 90
-    # ylims = [None]*4
-    # runs = select_indices
+    select_indices = [1,3]
+    y_label_add = ''
+    prefixes = ['',] * len(select_indices)
+    y_scaling = 1
+    threshold = 90
+    ylims = [None]*4
+    runs = select_indices
+    z_orders = [1,2,3,4]
+    hatches = None
+    styles = None
+    ylims = [350,None,None,2.5]
+    xlims = [350,350,350,350]
 
     # for plotting best optimization results
-    select_indices = [0,1,2]
-    prefixes = ['StoMADS-PB solution', 'GA solution', 'NOMAD solution']
-    y_label_add = ''
-    y_scaling = 1000
-    threshold = 90
-    ylims = [120,None,None,2.5]
-    xlims = [350,350,350,350]
-    runs = select_indices
-    xlim = 250
-    palette = [y for x,y in sorted(zip(select_indices,palette))] 
+    # select_indices = [0,1,2]
+    # prefixes = ['StoMADS-PB solution', 'GA solution', 'NOMAD solution']
+    # y_label_add = ''
+    # y_scaling = 1000
+    # threshold = 90
+    # ylims = [120,None,None,2.5]
+    # xlims = [350,350,350,350]
+    # runs = select_indices
+    # xlim = 250
+    # palette = [y for x,y in sorted(zip(select_indices,palette))] 
 
     ########################## COVID_SIM_UI ##############################
-    styles = [(0, (5, 0, 5, 0)),(0, (5, 5, 5, 5)),(0, (5, 1, 5, 1))]
-    z_orders = [2,3,1]
-    hatches = ["xxxx","++++","////"]
-    hatches = None
+    # styles = [(0, (5, 0, 5, 0)),(0, (5, 5, 5, 5)),(0, (5, 1, 5, 1))]
+    # z_orders = [2,3,1]
+    # hatches = ["xxxx","++++","////"]
+    # hatches = None
 
     for point,run,prefix in zip(points_unscaled,runs,prefixes):
 
@@ -89,6 +94,11 @@ if __name__ == '__main__':
 
         legend_label = "%s: $n_E$ = %i, $S_D$ = %.3f, $n_T$ = %i" %(prefix,round(point[0]),point[1],round(point[2])) # generic legend labels
 
+        if run == 1:
+            legend_label = "no intervention"
+        elif run == 3:
+            legend_label = "intervention"
+
         labels += [legend_label]
         # styles += ["-"]
         labels_COVID_SIM_UI += [legend_label]
@@ -96,28 +106,28 @@ if __name__ == '__main__':
         ######################################################################
 
         fig_1, _, ax1_1 = build_fig_SIR()
-        draw_SIR_compare(data_I, time, lb_data_I, ub_data_I, fig_1, ax1_1, labels=labels, palette = palette, 
+        draw_SIR_compare(data_I, time, fig_1, ax1_1, lb_data_I, ub_data_I, labels=labels, palette = palette, 
             save_name = 'I_compare_opt_%i' %run, xlim = xlims[0], ylim = ylims[0], leg_location = 'upper right', plot_path="data_dynamic",
             y_label = 'Infections%s $n_I^t$' %y_label_add, threshold=threshold, threshold_label="Healthcare capacity $H_{\mathrm{max}}$",
             styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
         fig_2, _, ax1_2 = build_fig_SIR()
-        draw_SIR_compare(data_F, time, lb_data_F, ub_data_F, fig_2, ax1_2, labels=labels, palette = palette, 
+        draw_SIR_compare(data_F, time, fig_2, ax1_2, lb_data_F, ub_data_F, labels=labels, palette = palette, 
             save_name = 'F_compare_opt_%i' %run, xlim = xlims[1], ylim = ylims[1], leg_location = 'upper left', plot_path="data_dynamic",
             y_label = 'Fatalities%s $n_F^t$' %y_label_add, styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
         fig_3, _, ax1_3 = build_fig_SIR()
-        draw_SIR_compare(data_R, time, lb_data_R, ub_data_R, fig_3, ax1_3, labels=labels, palette = palette, 
+        draw_SIR_compare(data_R, time, fig_3, ax1_3, lb_data_R, ub_data_R, labels=labels, palette = palette, 
             save_name = 'R_compare_opt_%i' %run, xlim = xlims[2], ylim = ylims[2], leg_location = 'upper left', plot_path="data_dynamic",
             y_label = 'Recoveries%s $n_R^t$' %y_label_add, styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
         fig_4, _, ax1_4 = build_fig_SIR()
-        draw_SIR_compare(data_M, time_COVID_SIM_UI, lb_data_M, ub_data_M, fig_4, ax1_4, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
+        draw_SIR_compare(data_M, time_COVID_SIM_UI, fig_4, ax1_4, lb_data_M, ub_data_M, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
             save_name = 'M_compare_opt_%i' %run, xlim = xlims[3], ylim = ylims[3], leg_location = 'lower right', plot_path="data_dynamic",
             y_label = 'Mobility $M^t$', styles=styles,z_orders=z_orders,hatch_patterns=hatches)
 
         fig_5, _, ax1_5 = build_fig_SIR()
-        draw_R0_compare(data_R0, R0_time_data, lb_data_R0, ub_data_R0, fig_5, ax1_5, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
+        draw_R0_compare(data_R0, R0_time_data, fig_5, ax1_5, lb_data_R0, ub_data_R0, labels=labels_COVID_SIM_UI, palette = palette_COVID_SIM_UI, 
             save_name = 'R0_compare_opt_%i' %run, xlim = 350, leg_location = 'upper right', plot_path="data_dynamic",
             y_label = 'Basic reproductive number $R_0$', line_label = "$R_0$", threshold = 1, threshold_label='$R_0=1$',
             styles=styles,z_orders=z_orders,hatch_patterns=hatches)
