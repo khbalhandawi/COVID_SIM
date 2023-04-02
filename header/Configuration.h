@@ -12,7 +12,7 @@
 
 namespace COVID_SIM {
 
-MACOS_API_BEGIN
+API_BEGIN
 	class DLL_API Configuration
 	{
 	public:
@@ -340,7 +340,7 @@ MACOS_API_BEGIN
 		/*-----------------------------------------------------------*/
 		~Configuration();
 	};
-MACOS_API_END
+API_END
 
 }
 

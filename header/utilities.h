@@ -19,7 +19,7 @@ namespace COVID_SIM {
 	/*-----------------------------------------------------------*/
 	Eigen::ArrayXXf Select_block(Eigen::ArrayXXf input, std::vector<int> cols, int n_rows, Eigen::ArrayXf cond_vector, int cond_value, std::string cond_type);
 
-MACOS_API_BEGIN
+API_BEGIN
 	/*-----------------------------------------------------------*/
 	/*                    Select rows of data                    */
 	/*-----------------------------------------------------------*/
@@ -29,7 +29,7 @@ MACOS_API_BEGIN
 	/*                 Select rows of data (any)                 */
 	/*-----------------------------------------------------------*/
 	std::vector<int> DLL_API select_rows_any(ArrayXXb cond);
-MACOS_API_END
+API_END
 
 	/*-----------------------------------------------------------*/
 	/*                  Select elements of data                  */
@@ -51,12 +51,12 @@ MACOS_API_END
 	/*-----------------------------------------------------------*/
 	std::vector<int> sequence(int min, int max, int skip = 1);
 
-MACOS_API_BEGIN
+API_BEGIN
 	/*-----------------------------------------------------------*/
 	/*    Function for creating a directory if non-existent      */
 	/*-----------------------------------------------------------*/
     void DLL_API check_folder(std::string folder = "render");
-MACOS_API_END
+API_END
 
 	/*-----------------------------------------------------------*/
 	/*    Function for computing the pairwise norm of a vector   */

@@ -9,7 +9,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\CUDA_functions.h">
+    <ClInclude Include="..\header\CUDA_functions.cuh">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="..\header\Defines.cuh">

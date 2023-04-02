@@ -35,7 +35,7 @@
  \brief  GPU accelerate matrix functions (implementation)
  \author Khalil Al Handawi
  \date   2021-01-11
- \see    CUDA_functions.cuh
+ \see    CUDA_functions.cu
  */
 #include  "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -44,7 +44,7 @@
 #include <assert.h>
 #include <Eigen/Core>
 
-#include "CUDA_functions.h"
+#include "CUDA_functions.cuh"
 #include "kernels.cuh"
 #include "Utilities.cuh"
 

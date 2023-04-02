@@ -8,8 +8,18 @@
 #else
 #define CUDA_DLL_API __declspec(dllimport) 
 #endif
+// CASE GCC compiler
+#elif __GNUC__
+// #define CUDA_API_BEGIN extern "C" {
+// #define CUDA_API_END }
+// #define CUDA_DLL_API
+#define CUDA_API_BEGIN extern "C"
+#define CUDA_API_END
+#define CUDA_DLL_API __attribute__ ((visibility ("default")))
 #else
-#define DLL_API
+#define CUDA_DLL_API
+#define CUDA_API_BEGIN
+#define CUDA_API_END
 #endif
 
 //#define CUBLAS_NDEBUG

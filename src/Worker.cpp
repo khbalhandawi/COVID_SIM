@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QCoreApplication>
+#include <QVector>
 #include <iostream>
 #include <fstream>
 

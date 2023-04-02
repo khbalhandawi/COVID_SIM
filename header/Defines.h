@@ -11,21 +11,38 @@
 #define DLL_API __declspec(dllimport)
 #endif
 #define GPU_ACC // comment to disable GPU acceleration
-#else
-#define DLL_API
-#endif
-
-// CASE Xcode C++ compiler
-#ifdef __llvm__
+// CASE GCC compiler
+#elif __GNUC__
 #ifdef _DLL_EXPORTS
 /* The classes below are exported */
-#define MACOS_API_BEGIN _Pragma("GCC visibility push(default)")
-#define MACOS_API_END _Pragma("GCC visibility pop")
+// #define API_BEGIN extern "C" {
+// #define API_END }
+#define API_BEGIN extern "C"
+#define API_END
+#define DLL_API __attribute__ ((visibility ("default")))
 #else
-#define MACOS_API_BEGIN
-#define MACOS_API_END
+#define API_BEGIN
+#define API_END
+#define DLL_API
 #endif
+#define GPU_ACC // comment to disable GPU acceleration
+// CASE Xcode C++ compiler
+#elif __llvm__
+#define API_BEGIN
+#define API_END
+#ifdef _DLL_EXPORTS
+/* The classes below are exported */
+#define API_BEGIN _Pragma("GCC visibility push(default)")
+#define API_END _Pragma("GCC visibility pop")
+#define DLL_API
 #else
-#define MACOS_API_BEGIN
-#define MACOS_API_END
+#define API_BEGIN
+#define API_END
+#define DLL_API
+#endif
+// #define GPU_ACC // comment to disable GPU acceleration
+#else
+#define DLL_API
+#define API_BEGIN
+#define API_END
 #endif

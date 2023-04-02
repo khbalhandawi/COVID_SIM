@@ -15,7 +15,7 @@
 
 using namespace std;
 
-#include "CUDA_functions.h"
+#include "CUDA_functions.cuh"
 #include "kernels.cuh"
 #include "Utilities.cuh"
 

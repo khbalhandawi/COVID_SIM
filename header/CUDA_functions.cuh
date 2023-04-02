@@ -66,7 +66,7 @@ inline void __cublasSafeCall(cublasStatus_t err, const char *file, const int lin
 
 namespace CUDA_GPU {
 
-
+CUDA_API_BEGIN
 	class CUDA_DLL_API Kernels {
 
 
@@ -154,5 +154,6 @@ namespace CUDA_GPU {
 		~Kernels();
 
 	};
+CUDA_API_END
 
 }

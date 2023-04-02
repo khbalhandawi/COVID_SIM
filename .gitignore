@@ -74,3 +74,26 @@ opt/GA_exp/*
 opt/COVID_opt*
 opt/covid_sim/output_files
 opt/covid_sim/network_files
+
+
+# CMakeLists stuff
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+.cmake
+*.cmake
+
+# ninja stuff
+*.ninja*
+*_autogen
+
+# GCC stuff
+*.a

@@ -400,7 +400,7 @@ void COVID_SIM::infect(Eigen::ArrayXXf &population, Eigen::ArrayXXf &destination
 	population.col(18) = 0; // reset testing flag
 
 	if ((new_infections.size() > 0) && (Config.verbose) && (Config.report_status)) {
-		printf("\nat timestep %i these people got sick: %i", frame, new_infections.size());
+		printf("\nat timestep %i these people got sick: %zu", frame, new_infections.size());
 	}
 }
 
@@ -524,11 +524,11 @@ void COVID_SIM::recover_or_die(Eigen::ArrayXXf &population, Eigen::ArrayXXf &des
 	}
 
 	if ((fatalities.size() > 0) && (Config.verbose) && (Config.report_status)) {
-		printf("\nat timestep %i these people died: %i", frame, fatalities.size());
+		printf("\nat timestep %i these people died: %zu", frame, fatalities.size());
 	}
 
 	if ((recovered.size() > 0) && (Config.verbose) && (Config.report_status)) {
-		printf("\nat timestep %i these people recovered: %i", frame, recovered.size());
+		printf("\nat timestep %i these people recovered: %zu", frame, recovered.size());
 	}
 
 	// put array back into population

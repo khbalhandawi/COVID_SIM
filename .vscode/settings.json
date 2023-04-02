@@ -107,7 +107,19 @@
         "*.h": "cpp",
         "*.hpp": "cpp",
         "*.cu": "cpp",
-        "*.cuh": "cpp"
+        "*.cuh": "cpp",
+        "qthread": "cpp"
     },
-    "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe"
+    "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe",
+    "cmake.debugConfig": {
+        "args": [
+            "0",
+            "0",
+            "94",
+            "0.084",
+            "28",
+            "90",
+            "MCS_data_r0_0.log"
+        ]
+    }
 }

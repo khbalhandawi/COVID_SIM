@@ -1,41 +1,33 @@
 {
     "configurations": [
         {
-            "name": "x64",
+            "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/Include/**",
                 "${workspaceFolder}/libs/**",
-                "${QT}/include/**",
-                "${QT}/lib/**",
+                "${QTDIR}/include/**",
+                "${QTDIR}/lib/**",
                 "${CUDA_PATH}/bin/**",
                 "${CUDA_PATH}/libnvvp/**",
                 "${CUDA_PATH}/include/**"
             ],
             "defines": [
-                "_WINDOWS",
-                "UNICODE",
-                "_UNICODE",
-                "WIN32",
-                "_ENABLE_EXTENDED_ALIGNED_STORAGE",
-                "WIN64",
-                "NDEBUG",
                 "QT_NO_DEBUG"
             ],
-            "windowsSdkVersion": "10.0.17763.0",
-            "compilerPath": "${VC_ExcecutablePath_x64}/cl.exe",
+            "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "msvc-x64"
+            "intelliSenseMode": "clang-x64"
         },
         {
-            "name": "cpp_corona_simulation",
+            "name": "windows",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/Include/**",
                 "${workspaceFolder}/libs/**",
-                "${QT}/include/**",
-                "${QT}/lib/**",
+                "${QTDIR}/include/**",
+                "${QTDIR}/lib/**",
                 "${CUDA_PATH}/bin/**",
                 "${CUDA_PATH}/libnvvp/**",
                 "${CUDA_PATH}/include/**"
@@ -54,7 +46,8 @@
             "compilerPath": "${VC_ExcecutablePath_x64}/cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "msvc-x64"
+            "intelliSenseMode": "msvc-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         }
     ],
     "version": 4

@@ -44,7 +44,7 @@
 #include "utilities.h"
 #include "RandomDevice.h"
 #ifdef GPU_ACC
-#include "CUDA_functions.h"
+#include "CUDA_functions.cuh"
 #endif // GPU_ACC
 
  /*-----------------------------------------------------------*/

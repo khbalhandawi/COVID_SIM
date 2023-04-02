@@ -7,7 +7,7 @@
 #include "Defines.h"
 
 #ifdef GPU_ACC
-#include "CUDA_functions.h"
+#include "CUDA_functions.cuh"
 #endif
 
 #include<vector>
@@ -18,7 +18,7 @@
 
 namespace COVID_SIM {
 
-MACOS_API_BEGIN
+API_BEGIN
 #ifdef GPU_ACC
 	class DLL_API simulation : Population_trackers, RandomDevice, CUDA_GPU::Kernels
 #else
@@ -100,7 +100,7 @@ MACOS_API_BEGIN
 		/*-----------------------------------------------------------*/
 		~simulation();
 	};
-MACOS_API_END
+API_END
 
 }
 

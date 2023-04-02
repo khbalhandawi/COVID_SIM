@@ -4,7 +4,7 @@
 #include "Defines.h"
 
 #ifdef GPU_ACC
-#include "CUDA_functions.h"
+#include "CUDA_functions.cuh"
 #endif
 
 #include<Eigen/Core>

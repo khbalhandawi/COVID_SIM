@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iterator>
 #include <map>
 
 #ifdef __llvm__

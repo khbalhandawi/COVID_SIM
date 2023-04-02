@@ -15,7 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\CUDA_functions.h" />
+    <ClInclude Include="..\header\CUDA_functions.cuh" />
     <ClInclude Include="..\header\Defines.cuh" />
     <ClInclude Include="..\header\kernels.cuh" />
     <ClInclude Include="..\header\Utilities.cuh" />
