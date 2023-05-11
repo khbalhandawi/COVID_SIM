@@ -18,7 +18,7 @@ namespace CUDA_GPU {
 	/*-----------------------------------------------------------*/
 	/*           Reduce repulsive force matrix (kernel)          */
 	/*-----------------------------------------------------------*/
-	__global__ void calc_forces(float* force, float* force_m, int N);
+	__global__ void calc_forces(float* output, float* matrix, int N_rows, int N_cols, int N_sum);
 
 	/*-----------------------------------------------------------*/
 	/*              Compute tracking matrix (kernel)             */

@@ -4,7 +4,7 @@
 /*  COVID GPU - version 1.0.0 has been created by                                  */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                                                                                 */
-/*  The copyright of NOMAD - version 3.9.1 is owned by                             */
+/*  The copyright of COVID_SIM_GPU is owned by                                     */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                                                                                 */
 /*                                                                                 */
@@ -39,9 +39,10 @@
  */
 
 #include "kernels.cuh"
-#include  "cuda_runtime.h"
+#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+// TODO: convert all kernels to grid-stride loop paradigm
 /*-----------------------------------------------------------*/
 /*     Compute pairwise distance matrix matrix (kernel)      */
 /*-----------------------------------------------------------*/
@@ -83,17 +84,36 @@ __global__ void CUDA_GPU::calc_force_m(float* diffs_x, float* diffs_y, float* at
 /*-----------------------------------------------------------*/
 /*           Reduce repulsive force matrix (kernel)          */
 /*-----------------------------------------------------------*/
-__global__ void CUDA_GPU::calc_forces(float* force, float* force_m, int N)
+__global__ void CUDA_GPU::calc_forces(float* output, float* matrix, int N_rows, int N_cols, int N_sum)
 {
-	int i(threadIdx.x + blockIdx.x * blockDim.x);
 
-	if (i < N) {
-		float sum = 0;
-		for (int k = 0; k < N; k++) {
-			sum += force_m[i*N + k];
+	size_t start_x = blockIdx.x * blockDim.x + threadIdx.x;
+	size_t start_y = blockIdx.y * blockDim.y + threadIdx.y;
+	size_t stride_x = blockDim.x * gridDim.x;
+	size_t stride_y = blockDim.y * gridDim.y;
+	size_t Mx = blockDim.x;
+	size_t My = blockDim.y;
+	extern __shared__ float partial[];
+
+	for (int i = start_x; i < N_sum; i += stride_x) {
+		for (int j = start_y; j < N_cols; j += stride_y) {
+
+			// each thread loads one element from global to shared mem
+			partial[threadIdx.x + threadIdx.y*Mx] = matrix[i + j*N_rows];
+			__syncthreads();
+
+			// do reduction in shared mem
+			for(unsigned int s=1; s < blockDim.x; s *= 2) {
+				if (threadIdx.x % (2*s) == 0) {
+					partial[threadIdx.x + threadIdx.y*Mx] += partial[(threadIdx.x+s) + threadIdx.y*Mx];
+				}
+				__syncthreads();
+			}
+			// write result for this block to global mem
+			if (threadIdx.x == 0) {
+				output[blockIdx.x + j*N_rows] = partial[threadIdx.y*Mx];
+			}
 		}
-
-		force[i] = sum;
 	}
 }
 

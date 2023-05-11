@@ -63,11 +63,19 @@ if(${BUILD_WTIH_CUDA} STREQUAL ON)
 	set(CUDA_SEPARABLE_COMPILATION ON)
 	set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
-	# Pass options to NVCC
-	set(CUDA_NVCC_FLAGS
-		${CUDA_NVCC_FLAGS};
-		-O3 -w -gencode arch=compute_75,code=sm_75
-	)
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(CUDA_NVCC_FLAGS
+			${CUDA_NVCC_FLAGS};
+			-g -G -w --keep -gencode arch=compute_75,code=sm_75
+		)
+	else()
+		# Pass options to NVCC
+		set(CUDA_NVCC_FLAGS
+			${CUDA_NVCC_FLAGS};
+			-O3 -w -gencode arch=compute_75,code=sm_75
+		)
+	endif()
+
 endif()
 
 #-------------------------------------------------------------------------------
@@ -112,6 +120,13 @@ find_package(Threads REQUIRED)
 #	COMPILE FLAGS
 #-------------------------------------------------------------------------------
 
+# Common compiler flags for all build types
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+
+# Debug build flags
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+# Release build flags
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

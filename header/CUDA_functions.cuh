@@ -88,6 +88,7 @@ CUDA_API_BEGIN
 		float* diffs_y_d;
 		float* force_x_h; // Force x vector (host)
 		float* force_y_h; // Force y vector (host)
+		float* d_v_r; // for storing reduced sums
 		float* force_x_d; // Force x vector (device)
 		float* force_y_d; // Force y vector (device)
 		float* d_ones_force; // vector of ones to multiply matrix with (device)
@@ -109,6 +110,7 @@ CUDA_API_BEGIN
 		float beta;
 
 		int threads_per_block;
+		int shared_mem_size;
 
 #ifndef CUBLAS_NDEBUG
 		cublasHandle_t local_handle;
@@ -119,12 +121,17 @@ CUDA_API_BEGIN
 		Kernels(const int n_pop, const int n_grids, const int threads_per_block_in, const cublasHandle_t handle);
 
 		/*-----------------------------------------------------------*/
+		/*              Parallel matrix reduction (GPU)              */
+		/*-----------------------------------------------------------*/
+		void parallel_reduce(float *matrix, float *vector, int N_rows, int N_cols);
+		
+		/*-----------------------------------------------------------*/
 		/*              Repulsive force evaluation (GPU)             */
 		/*-----------------------------------------------------------*/
 		void pairwise_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms_y, float SD_factor);
 
 		/*-----------------------------------------------------------*/
-		/*              Repulsive force evaluation (GPU)             */
+		/*                 Position tracking (GPU)                   */
 		/*-----------------------------------------------------------*/
 		void tracker_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms_y);
 

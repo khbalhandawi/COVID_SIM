@@ -108,7 +108,10 @@
         "*.hpp": "cpp",
         "*.cu": "cpp",
         "*.cuh": "cpp",
-        "qthread": "cpp"
+        "qthread": "cpp",
+        "*.tcc": "cpp",
+        "__bit_reference": "cpp",
+        "__locale": "cpp"
     },
     "python.pythonPath": "C:\\ProgramData\\Anaconda3\\python.exe",
     "cmake.debugConfig": {

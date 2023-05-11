@@ -4,7 +4,7 @@
 /*  COVID GPU - version 1.0.0 has been created by                                  */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                                                                                 */
-/*  The copyright of NOMAD - version 3.9.1 is owned by                             */
+/*  The copyright of COVID_SIM_GPU is owned by                                     */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                                                                                 */
 /*                                                                                 */
@@ -37,7 +37,7 @@
  \date   2021-01-11
  \see    CUDA_functions.cu
  */
-#include  "cuda_runtime.h"
+#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <iostream>
 #include <stdio.h>
@@ -77,6 +77,8 @@ CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads
 	threads_per_block = threads_per_block_in;
 
 	bytes = N_rows * sizeof(float); // Size, in bytes, of each vector
+	shared_mem_size = sqrt(threads_per_block) * sqrt(threads_per_block) * sizeof(float);
+
 
 	check(cudaMallocHost(&atoms_x_h, bytes));
 	check(cudaMallocHost(&atoms_y_h, bytes));
@@ -91,6 +93,9 @@ CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads
 
 	//======================================================//
 	// Force outputs
+
+	// Allocate device memory
+	check(cudaMalloc(&d_v_r, N_rows * bytes)); // for storing reduced sums
 
 	check(cudaMalloc(&force_x_d, bytes));
 	check(cudaMalloc(&force_y_d, bytes));
@@ -125,7 +130,7 @@ CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads
 	// initialize vector with ones using CUDA (for tracking matrix multiplication)
 	check(cudaMalloc(&d_ones_track, bytes));
 	int n_blocks_cols(div_up(N_cols, sqrt(threads_per_block)));
-	CUDA_GPU::initKernel << <n_blocks_cols, threads_per_block >> > (d_ones_track, value, N_cols);
+	CUDA_GPU::initKernel <<<n_blocks_cols, threads_per_block>>> (d_ones_track, value, N_cols);
 
 	local_handle = handle;
 	//cublascheck(cublasCreate(&handle)); // construct cublas handle
@@ -137,10 +142,44 @@ CUDA_GPU::Kernels::Kernels(const int n_pop, const int n_grids, const int threads
 }
 
 /*-----------------------------------------------------------*/
+/*              Parallel matrix reduction (GPU)             */
+/*-----------------------------------------------------------*/
+void CUDA_GPU::Kernels::parallel_reduce(float *matrix, float *vector, int N_rows, int N_cols)
+{
+
+	// initial matrix grid
+	int n_blocks_x(div_up(N_rows, sqrt(threads_per_block)));
+	int n_blocks_y(div_up(N_cols, sqrt(threads_per_block)));
+
+	dim3 blockSize = dim3(sqrt(threads_per_block), sqrt(threads_per_block));
+	dim3 gridSize = dim3(n_blocks_x, n_blocks_y);
+
+	// reduced matrix grid
+	int n_blocks_r(div_up(N_rows, sqrt(threads_per_block)));
+	dim3 gridSize_r = dim3(n_blocks_r, n_blocks_y);
+	int N_sum(N_rows);
+
+	CUDA_GPU::calc_forces <<<gridSize, blockSize, shared_mem_size>>> (d_v_r, matrix, N_rows, N_cols, N_sum);
+	// recursively reduce the matrix until 1 block row is left
+	while (n_blocks_r > 1) {
+		N_sum = n_blocks_r;
+		n_blocks_r = div_up(n_blocks_r, sqrt(threads_per_block));
+		gridSize_r = dim3(n_blocks_r, n_blocks_y);
+		CUDA_GPU::calc_forces <<<gridSize_r, blockSize, shared_mem_size>>> (d_v_r, d_v_r, N_rows, N_cols, N_sum);
+	}
+	// Transfer the first row of the matrix to the vector
+	// TODO: check `spitch` argument of cudaMemcpy2D
+	check(cudaMemcpy2D(vector, sizeof(float), d_v_r, N_cols * sizeof(float), sizeof(float), N_rows, cudaMemcpyDeviceToDevice));
+}
+
+/*-----------------------------------------------------------*/
 /*              Repulsive force evaluation (GPU)             */
 /*-----------------------------------------------------------*/
 void CUDA_GPU::Kernels::pairwise_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms_y, float SD_factor)
 {
+
+	cudaEvent_t event;
+	cudaEventCreate(&event);
 
 	N_actual = atoms_x.rows(); // actual number of elements
 
@@ -164,24 +203,28 @@ void CUDA_GPU::Kernels::pairwise_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atom
 	//======================================================//
 	// Pairwise distance and difference calculation
 
-	CUDA_GPU::calc_force_m << <gridSize, blockSize >> > (diffs_x_d, diffs_y_d, atoms_x_d, atoms_y_d, SD_factor, N_actual);
+	CUDA_GPU::calc_force_m <<<gridSize, blockSize>>> (diffs_x_d, diffs_y_d, atoms_x_d, atoms_y_d, SD_factor, N_actual);
+
 	//======================================================//
 	// Force calculation (rowise matrix reduction by CUBLAS)
-
-
-#ifndef CUBLAS_NDEBUG
+#ifdef CUBLAS_NDEBUG
 	//======================================================//
 	// Rowewise multiplication initialization
 	const float value = 1.f;
 
 	// initialize vector with ones using CUDA (for force matrix multiplication)
 	int n_blocks_rows(div_up(N_actual, sqrt(threads_per_block)));
-	CUDA_GPU::initKernel << <n_blocks_rows, threads_per_block >> > (d_ones_force, value, N_actual);
+	CUDA_GPU::initKernel <<<n_blocks_rows, threads_per_block>>> (d_ones_force, value, N_actual);
 
 	cublascheck(cublasSgemv(local_handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_x_d, N_actual,
 		d_ones_force, 1, &beta, force_x_d, 1)); // rowwise multiplication x
 	cublascheck(cublasSgemv(local_handle, CUBLAS_OP_T, N_actual, N_actual, &alpha, diffs_y_d, N_actual,
 		d_ones_force, 1, &beta, force_y_d, 1)); // rowwise multiplication y
+#else
+	//======================================================//
+	// Force calculation (using interleaved addressing)
+	parallel_reduce(diffs_x_d,force_x_d, N_actual, N_actual);
+	parallel_reduce(diffs_y_d,force_y_d, N_actual, N_actual);
 #endif
 	//======================================================//
 
@@ -223,7 +266,7 @@ void CUDA_GPU::Kernels::tracker_gpu(Eigen::ArrayXf atoms_x, Eigen::ArrayXf atoms
 	//======================================================//
 	// Pairwise distance and difference calculation
 
-	CUDA_GPU::calc_tracking_matrix << <gridSize, blockSize >> > (G_d, G_track_d, atoms_x_d, atoms_y_d, N_grids, N_rows, N_cols);
+	CUDA_GPU::calc_tracking_matrix <<<gridSize, blockSize>>> (G_d, G_track_d, atoms_x_d, atoms_y_d, N_grids, N_rows, N_cols);
 
 	//======================================================//
 	// Percentage covered (rowise matrix reduction by CUBLAS)
@@ -350,6 +393,8 @@ CUDA_GPU::Kernels::~Kernels()
 
 	check(cudaFree(d_ones_force));
 	check(cudaFree(d_ones_track));
+
+	check(cudaFree(d_v_r));
 	//cublascheck(cublasDestroy(handle)); // destroy cublas handle to avoid malloc errors
 
 	/* Reset CUDA device (this is redundant) */

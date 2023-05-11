@@ -4,7 +4,7 @@
 /*  COVID GPU - version 1.0.0 has been created by                                  */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                                                                                 */
-/*  The copyright of NOMAD - version 3.9.1 is owned by                             */
+/*  The copyright of COVID_SIM_GPU is owned by                                     */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                                                                                 */
 /*                                                                                 */

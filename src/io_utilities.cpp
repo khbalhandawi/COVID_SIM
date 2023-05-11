@@ -1,10 +1,10 @@
 /*---------------------------------------------------------------------------------*/
-/*  COVID SIM - Agent-based model of a pandemic in a population -                  */
+/*  COVID_SIM_GPU - Agent-based model of a pandemic in a population -         	   */
 /*                                                                                 */
-/*  COVID SIM - version 1.0.0 has been created by                                  */
+/*  COVID_SIM_GPU - version 1.0.0 has been created by                              */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                                                                                 */
-/*  The copyright of NOMAD - version 3.9.1 is owned by                             */
+/*  The copyright of COVID_SIM_GPU is owned by                                     */
 /*                 Khalil Al Handawi           - McGill University                 */
 /*                 Michael Kokkolaras          - McGill University                 */
 /*                                                                                 */
